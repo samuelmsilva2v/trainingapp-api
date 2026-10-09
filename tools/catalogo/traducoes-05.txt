@@ -1,0 +1,134 @@
+Stairmaster | Simulador de escada
+Standing Alternating Dumbbell Press | Desenvolvimento alternado com halteres em pé
+Standing Barbell Calf Raise | Panturrilha em pé com barra
+Standing Barbell Press Behind Neck | Desenvolvimento atrás da nuca em pé com barra
+Standing Bent-Over One-Arm Dumbbell Triceps Extension | Extensão de tríceps unilateral curvado em pé com halter
+Standing Bent-Over Two-Arm Dumbbell Triceps Extension | Extensão de tríceps curvado em pé com halteres
+Standing Biceps Cable Curl | Rosca de bíceps em pé na polia
+Standing Biceps Stretch | Alongamento de bíceps em pé
+Standing Bradford Press | Desenvolvimento Bradford em pé
+Standing Cable Chest Press | Supino em pé na polia
+Standing Cable Lift | Levantamento diagonal na polia em pé
+Standing Cable Wood Chop | Lenhador na polia em pé
+Standing Calf Raises | Panturrilha em pé
+Standing Concentration Curl | Rosca concentrada em pé
+Standing Dumbbell Calf Raise | Panturrilha em pé com halteres
+Standing Dumbbell Press | Desenvolvimento com halteres em pé
+Standing Dumbbell Reverse Curl | Rosca inversa com halteres em pé
+Standing Dumbbell Straight-Arm Front Delt Raise Above Head | Elevação frontal acima da cabeça com halteres em pé
+Standing Dumbbell Triceps Extension | Extensão de tríceps com halter em pé
+Standing Dumbbell Upright Row | Remada alta com halteres em pé
+Standing Elevated Quad Stretch | Alongamento de quadríceps elevado em pé
+Standing Front Barbell Raise Over Head | Elevação frontal com barra acima da cabeça em pé
+Standing Gastrocnemius Calf Stretch | Alongamento de gastrocnêmio em pé
+Standing Hamstring and Calf Stretch | Alongamento de posterior e panturrilha em pé
+Standing Hip Circles | Círculos de quadril em pé
+Standing Hip Flexors | Alongamento de flexores do quadril em pé
+Standing Inner-Biceps Curl | Rosca interna em pé
+Standing Lateral Stretch | Alongamento lateral em pé
+Standing Leg Curl | Mesa flexora em pé
+Standing Long Jump | Salto em distância
+Standing Low-Pulley Deltoid Raise | Elevação de deltoide na polia baixa em pé
+Standing Low-Pulley One-Arm Triceps Extension | Extensão de tríceps unilateral na polia baixa em pé
+Standing Military Press | Desenvolvimento militar em pé
+Standing Olympic Plate Hand Squeeze | Pinça de anilha olímpica em pé
+Standing One-Arm Cable Curl | Rosca unilateral na polia em pé
+Standing One-Arm Dumbbell Curl Over Incline Bench | Rosca unilateral em pé sobre banco inclinado
+Standing One-Arm Dumbbell Triceps Extension | Extensão de tríceps unilateral com halter em pé
+Standing Overhead Barbell Triceps Extension | Tríceps francês com barra em pé
+Standing Palm-In One-Arm Dumbbell Press | Desenvolvimento unilateral com halter e palma para dentro em pé
+Standing Palms-In Dumbbell Press | Desenvolvimento com halteres e palmas para dentro em pé
+Standing Palms-Up Barbell Behind The Back Wrist Curl | Rosca de punho com barra atrás das costas em pé
+Standing Pelvic Tilt | Inclinação pélvica em pé
+Standing Rope Crunch | Abdominal com corda em pé
+Standing Soleus And Achilles Stretch | Alongamento de sóleo e tendão de Aquiles em pé
+Standing Toe Touches | Toque nos pés em pé
+Standing Towel Triceps Extension | Extensão de tríceps com toalha em pé
+Standing Two-Arm Overhead Throw | Arremesso acima da cabeça com as duas mãos em pé
+Star Jump | Salto estrela
+Step-up with Knee Raise | Subida no banco com elevação de joelho
+Step Mill | Escada rolante (step mill)
+Stiff-Legged Barbell Deadlift | Stiff com barra
+Stiff-Legged Dumbbell Deadlift | Stiff com halteres
+Stiff Leg Barbell Good Morning | Bom dia com barra e pernas estendidas
+Stomach Vacuum | Vácuo abdominal
+Straight-Arm Dumbbell Pullover | Pullover com halter e braços estendidos
+Straight-Arm Pulldown | Pulldown com braços estendidos
+Straight Bar Bench Mid Rows | Remada no banco com barra reta
+Straight Raises on Incline Bench | Elevação com braços estendidos no banco inclinado
+Stride Jump Crossover | Salto de passada cruzado
+Sumo Deadlift | Levantamento terra sumô
+Sumo Deadlift with Bands | Levantamento terra sumô com elásticos
+Sumo Deadlift with Chains | Levantamento terra sumô com correntes
+Superman | Superman
+Supine Chest Throw | Arremesso de peito deitado
+Supine One-Arm Overhead Throw | Arremesso unilateral acima da cabeça deitado
+Supine Two-Arm Overhead Throw | Arremesso acima da cabeça com as duas mãos deitado
+Suspended Fallout | Fallout suspenso
+Suspended Push-Up | Flexão suspensa
+Suspended Reverse Crunch | Abdominal invertido suspenso
+Suspended Row | Remada suspensa
+Suspended Split Squat | Agachamento dividido suspenso
+Svend Press | Svend press
+T-Bar Row with Handle | Remada cavalinho com pegada
+Tate Press | Tate press
+The Straddle | Alongamento em abertura (straddle)
+Thigh Abductor | Cadeira abdutora
+Thigh Adductor | Cadeira adutora
+Tire Flip | Virada de pneu
+Toe Touchers | Toque nos pés deitado
+Torso Rotation | Rotação de tronco
+Trail Running/Walking | Corrida e caminhada em trilha
+Trap Bar Deadlift | Levantamento terra com barra hexagonal
+Tricep Dumbbell Kickback | Tríceps coice com halter
+Tricep Side Stretch | Alongamento lateral de tríceps
+Triceps Overhead Extension with Rope | Tríceps francês com corda
+Triceps Pushdown | Tríceps pulley
+Triceps Pushdown - Rope Attachment | Tríceps na corda
+Triceps Pushdown - V-Bar Attachment | Tríceps na barra V
+Triceps Stretch | Alongamento de tríceps
+Tuck Crunch | Abdominal grupado
+Two-Arm Dumbbell Preacher Curl | Rosca Scott com halteres
+Two-Arm Kettlebell Clean | Clean com dois kettlebells
+Two-Arm Kettlebell Jerk | Jerk com kettlebells, dois braços
+Two-Arm Kettlebell Military Press | Desenvolvimento militar com dois kettlebells
+Two-Arm Kettlebell Row | Remada com dois kettlebells
+Underhand Cable Pulldowns | Puxada na polia com pegada supinada
+Upper Back-Leg Grab | Alongamento de costas segurando as pernas
+Upper Back Stretch | Alongamento da parte alta das costas
+Upright Barbell Row | Remada alta com barra
+Upright Cable Row | Remada alta na polia
+Upright Row - With Bands | Remada alta com elástico
+Upward Stretch | Alongamento para cima
+V-Bar Pulldown | Puxada na barra V
+V-Bar Pullup | Barra fixa na barra V
+Vertical Swing | Swing vertical
+Walking, Treadmill | Caminhada na esteira
+Weighted Ball Hyperextension | Extensão lombar com bola com peso
+Weighted Ball Side Bend | Flexão lateral com bola com peso
+Weighted Bench Dip | Mergulho no banco com peso
+Weighted Crunches | Abdominal com peso
+Weighted Jump Squat | Agachamento com salto e peso
+Weighted Pull Ups | Barra fixa com peso
+Weighted Sissy Squat | Agachamento sissy com peso
+Weighted Sit-Ups - With Bands | Abdominal completo com peso e elástico
+Weighted Squat | Agachamento com peso
+Wide-Grip Barbell Bench Press | Supino aberto com barra
+Wide-Grip Decline Barbell Bench Press | Supino declinado aberto com barra
+Wide-Grip Decline Barbell Pullover | Pullover declinado com barra, pegada aberta
+Wide-Grip Lat Pulldown | Puxada frontal aberta
+Wide-Grip Pulldown Behind The Neck | Puxada aberta atrás da nuca
+Wide-Grip Rear Pull-Up | Barra fixa aberta atrás da nuca
+Wide-Grip Standing Barbell Curl | Rosca direta aberta com barra em pé
+Wide Stance Barbell Squat | Agachamento sumô com barra
+Wide Stance Stiff Legs | Stiff com base aberta
+Wind Sprints | Tiros de velocidade
+Windmills | Moinho
+World's Greatest Stretch | Maior alongamento do mundo
+Wrist Circles | Círculos com os punhos
+Wrist Roller | Rolo de punho
+Wrist Rotations with Straight Bar | Rotação de punho com barra reta
+Yoke Walk | Caminhada com yoke
+Zercher Squats | Agachamento Zercher
+Zottman Curl | Rosca Zottman
+Zottman Preacher Curl | Rosca Zottman Scott

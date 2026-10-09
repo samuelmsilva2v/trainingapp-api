@@ -26,7 +26,7 @@ class CatalogoImportadorTest {
 	@Test
 	void importarEhIdempotente() {
 		int total = importador.importar();
-		assertThat(total).isGreaterThan(30);
+		assertThat(total).isEqualTo(876);
 		assertThat(repository.count()).isEqualTo(total);
 
 		importador.importar();
@@ -37,7 +37,7 @@ class CatalogoImportadorTest {
 	void reimportarRestauraOCatalogoSemTocarNosExerciciosDoUsuario() {
 		importador.importar();
 
-		Exercicio supino = repository.findBySlug("supino-reto-barra").orElseThrow();
+		Exercicio supino = repository.findBySlug("Barbell_Bench_Press_-_Medium_Grip").orElseThrow();
 		supino.setNome("Nome alterado");
 
 		Exercicio proprio = new Exercicio();
@@ -49,7 +49,7 @@ class CatalogoImportadorTest {
 
 		importador.importar();
 
-		assertThat(repository.findBySlug("supino-reto-barra").orElseThrow().getNome())
+		assertThat(repository.findBySlug("Barbell_Bench_Press_-_Medium_Grip").orElseThrow().getNome())
 				.isEqualTo("Supino reto com barra");
 		assertThat(repository.findById(proprio.getId()).orElseThrow().getNome()).isEqualTo("Meu exercicio");
 	}

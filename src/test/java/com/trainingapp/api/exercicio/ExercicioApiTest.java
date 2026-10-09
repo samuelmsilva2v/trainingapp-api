@@ -34,17 +34,17 @@ class ExercicioApiTest {
 
 	@Test
 	void buscaIgnoraAcentoECaixa() throws Exception {
-		mvc.perform(get("/api/exercicios").param("busca", "TRICEPS testa"))
+		mvc.perform(get("/api/exercicios").param("busca", "LIBERACAO miofascial do quadriceps"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
-				.andExpect(jsonPath("$[0].nome").value("Tríceps testa"))
+				.andExpect(jsonPath("$[0].nome").value("Liberação miofascial do quadríceps"))
 				.andExpect(jsonPath("$[0].personalizado").value(false));
 	}
 
 	@Test
 	void filtraPorGrupoMuscular() throws Exception {
 		mvc.perform(get("/api/exercicios").param("grupo", "CARDIO"))
-				.andExpect(jsonPath("$.length()").value(2));
+				.andExpect(jsonPath("$.length()").value(14));
 	}
 
 	@Test
@@ -54,7 +54,7 @@ class ExercicioApiTest {
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.personalizado").value(true));
 
-		mvc.perform(get("/api/exercicios").param("busca", "sled"))
+		mvc.perform(get("/api/exercicios").param("busca", "sled push"))
 				.andExpect(jsonPath("$.length()").value(1));
 	}
 
