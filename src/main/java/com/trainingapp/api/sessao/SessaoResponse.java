@@ -2,6 +2,7 @@ package com.trainingapp.api.sessao;
 
 import com.trainingapp.api.exercicio.Equipamento;
 import com.trainingapp.api.exercicio.GrupoMuscular;
+import com.trainingapp.api.gamificacao.GamificacaoService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +18,9 @@ public record SessaoResponse(
 		Instant iniciadaEm,
 		Instant finalizadaEm,
 		Instant atualizadoEm,
-		List<ExercicioResponse> exercicios) {
+		List<ExercicioResponse> exercicios,
+		int xpGanho,
+		List<UUID> recordes) {
 
 	public record ExercicioResponse(
 			UUID id,
@@ -37,7 +40,7 @@ public record SessaoResponse(
 	public record SerieResponse(UUID id, int ordem, Integer reps, BigDecimal carga, boolean concluida) {
 	}
 
-	static SessaoResponse de(Sessao s) {
+	static SessaoResponse de(Sessao s, GamificacaoService.Ganho ganho) {
 		return new SessaoResponse(s.getId(), s.getPlanoId(), s.getPlanoNome(), s.getDiaNome(), s.getDiaOrdem(),
 				s.getEstado(), s.getIniciadaEm(), s.getFinalizadaEm(), s.getAtualizadoEm(),
 				s.getExercicios().stream()
@@ -49,6 +52,7 @@ public record SessaoResponse(
 										.map(r -> new SerieResponse(r.getId(), r.getOrdem(), r.getReps(), r.getCarga(),
 												r.isConcluida()))
 										.toList()))
-						.toList());
+						.toList(),
+				ganho.xp(), ganho.recordes());
 	}
 }

@@ -1,5 +1,6 @@
 package com.trainingapp.api.sessao;
 
+import com.trainingapp.api.gamificacao.GamificacaoService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -14,9 +15,11 @@ public record SessaoResumoResponse(
 		Instant finalizadaEm,
 		int exercicios,
 		int seriesConcluidas,
-		BigDecimal volumeKg) {
+		BigDecimal volumeKg,
+		int xpGanho,
+		int recordes) {
 
-	static SessaoResumoResponse de(Sessao s) {
+	static SessaoResumoResponse de(Sessao s, GamificacaoService.Ganho ganho) {
 		int series = 0;
 		BigDecimal volume = BigDecimal.ZERO;
 		for (ExercicioSessao e : s.getExercicios()) {
@@ -31,6 +34,7 @@ public record SessaoResumoResponse(
 			}
 		}
 		return new SessaoResumoResponse(s.getId(), s.getPlanoNome(), s.getDiaNome(), s.getEstado(), s.getIniciadaEm(),
-				s.getFinalizadaEm(), s.getExercicios().size(), series, volume);
+				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, ganho.xp(),
+				ganho.recordes().size());
 	}
 }

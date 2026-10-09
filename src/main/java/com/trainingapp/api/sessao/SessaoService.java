@@ -4,6 +4,7 @@ import com.trainingapp.api.config.RecursoNaoEncontradoException;
 import com.trainingapp.api.config.RegraDeNegocioException;
 import com.trainingapp.api.exercicio.Exercicio;
 import com.trainingapp.api.exercicio.ExercicioRepository;
+import com.trainingapp.api.gamificacao.GamificacaoService;
 import com.trainingapp.api.plano.Plano;
 import com.trainingapp.api.plano.PlanoRepository;
 import com.trainingapp.api.plano.PlanoResponse;
@@ -35,10 +36,12 @@ public class SessaoService {
 	private final SessaoRepository sessoes;
 	private final PlanoRepository planos;
 	private final ExercicioRepository exercicios;
+	private final GamificacaoService gamificacao;
 	private final UsuarioAtual usuarioAtual;
 
 	public SessaoService(SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
-			UsuarioAtual usuarioAtual) {
+			GamificacaoService gamificacao, UsuarioAtual usuarioAtual) {
+		this.gamificacao = gamificacao;
 		this.sessoes = sessoes;
 		this.planos = planos;
 		this.exercicios = exercicios;
@@ -49,7 +52,7 @@ public class SessaoService {
 	public HojeResponse hoje() {
 		UUID usuarioId = usuarioAtual.obter().getId();
 		SessaoResponse emAndamento = sessoes.findFirstByUsuarioIdAndEstado(usuarioId, EstadoSessao.EM_ANDAMENTO)
-				.map(SessaoResponse::de)
+				.map(this::resposta)
 				.orElse(null);
 		Optional<Plano> ativo = planos.findFirstByUsuarioIdAndAtivoTrue(usuarioId);
 		if (ativo.isEmpty()) {
@@ -79,15 +82,17 @@ public class SessaoService {
 
 	@Transactional(readOnly = true)
 	public List<SessaoResumoResponse> historico(int pagina, int tamanho) {
-		return sessoes.findByUsuarioIdAndEstadoInOrderByIniciadaEmDesc(usuarioAtual.obter().getId(),
-				EnumSet.of(EstadoSessao.CONCLUIDA, EstadoSessao.ABANDONADA), PageRequest.of(pagina, tamanho)).stream()
-				.map(SessaoResumoResponse::de)
+		List<Sessao> sessoesDaPagina = sessoes.findByUsuarioIdAndEstadoInOrderByIniciadaEmDesc(usuarioAtual.obter().getId(),
+				EnumSet.of(EstadoSessao.CONCLUIDA, EstadoSessao.ABANDONADA), PageRequest.of(pagina, tamanho));
+		Map<UUID, GamificacaoService.Ganho> ganhos = gamificacao.ganhos(sessoesDaPagina.stream().map(Sessao::getId).toList());
+		return sessoesDaPagina.stream()
+				.map(s -> SessaoResumoResponse.de(s, ganhos.getOrDefault(s.getId(), GamificacaoService.Ganho.NENHUM)))
 				.toList();
 	}
 
 	@Transactional(readOnly = true)
 	public SessaoResponse obter(UUID id) {
-		return SessaoResponse.de(sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
+		return resposta(sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id)));
 	}
 
@@ -104,7 +109,7 @@ public class SessaoService {
 		if (existente != null) {
 			boolean encerrada = existente.getEstado() != EstadoSessao.EM_ANDAMENTO;
 			if (encerrada || request.atualizadoEm().isBefore(existente.getAtualizadoEm())) {
-				return SessaoResponse.de(existente);
+				return resposta(existente);
 			}
 		}
 
@@ -128,7 +133,16 @@ public class SessaoService {
 			planos.findByIdAndUsuarioId(request.planoId(), usuario.getId())
 					.ifPresent(plano -> plano.avancarApos(request.diaOrdem()));
 		}
-		return SessaoResponse.de(sessoes.save(sessao));
+		Sessao salva = sessoes.save(sessao);
+		if (concluindo) {
+			gamificacao.registrarSessaoConcluida(salva);
+		}
+		return resposta(salva);
+	}
+
+	private SessaoResponse resposta(Sessao sessao) {
+		return SessaoResponse.de(sessao,
+				gamificacao.ganhos(List.of(sessao.getId())).getOrDefault(sessao.getId(), GamificacaoService.Ganho.NENHUM));
 	}
 
 	private Sessao nova(UUID id, Usuario usuario) {
