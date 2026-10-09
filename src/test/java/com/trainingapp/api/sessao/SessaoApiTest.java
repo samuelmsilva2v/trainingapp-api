@@ -64,6 +64,7 @@ class SessaoApiTest {
 	void hojeMostraOPrimeiroDiaEConcluirAvancaARotacaoEDaAVolta() throws Exception {
 		mvc.perform(get("/api/hoje"))
 				.andExpect(jsonPath("$.planoNome").value("ABC"))
+				.andExpect(jsonPath("$.totalDias").value(2))
 				.andExpect(jsonPath("$.proximoDia.nome").value("Treino A"))
 				.andExpect(jsonPath("$.sessaoEmAndamento").doesNotExist());
 

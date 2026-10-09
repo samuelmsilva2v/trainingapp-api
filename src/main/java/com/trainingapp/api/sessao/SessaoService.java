@@ -53,13 +53,13 @@ public class SessaoService {
 				.orElse(null);
 		Optional<Plano> ativo = planos.findFirstByUsuarioIdAndAtivoTrue(usuarioId);
 		if (ativo.isEmpty()) {
-			return new HojeResponse(null, null, null, emAndamento);
+			return new HojeResponse(null, null, 0, null, emAndamento);
 		}
 		Plano plano = ativo.get();
 		PlanoResponse.DiaResponse proximo = plano.getDias().isEmpty()
 				? null
 				: PlanoResponse.de(plano).dias().get(plano.indiceProximoDia());
-		return new HojeResponse(plano.getId(), plano.getNome(), proximo, emAndamento);
+		return new HojeResponse(plano.getId(), plano.getNome(), plano.getDias().size(), proximo, emAndamento);
 	}
 
 	/** Pula o dia da rotacao sem registrar treino. */
