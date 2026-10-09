@@ -48,6 +48,10 @@ public class Plano {
 	@Column(nullable = false)
 	private boolean ativo;
 
+	// Indice do proximo dia da rotacao; avanca ao concluir ou pular um treino. Lido com modulo, pois o plano pode encolher.
+	@Column(nullable = false, columnDefinition = "integer default 0 not null")
+	private int proximoDia;
+
 	// A ordem da lista e a sequencia de rotacao (A, B, C...).
 	@OneToMany(mappedBy = "plano", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("ordem")
@@ -56,4 +60,14 @@ public class Plano {
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)
 	private Instant criadoEm;
+
+	/** Dia que o usuario treina a seguir (0 quando o plano nao tem dias). */
+	public int indiceProximoDia() {
+		return dias.isEmpty() ? 0 : proximoDia % dias.size();
+	}
+
+	/** Avanca a rotacao para o dia seguinte ao informado. */
+	public void avancarApos(int diaOrdem) {
+		proximoDia = dias.isEmpty() ? 0 : (diaOrdem + 1) % dias.size();
+	}
 }

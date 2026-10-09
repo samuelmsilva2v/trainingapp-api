@@ -31,7 +31,7 @@ public record PlanoResponse(
 			Integer descansoSegundos) {
 	}
 
-	static PlanoResponse de(Plano plano) {
+	public static PlanoResponse de(Plano plano) {
 		List<DiaResponse> dias = plano.getDias().stream()
 				.map(dia -> new DiaResponse(dia.getId(), dia.getNome(), dia.getOrdem(),
 						dia.getExercicios().stream()
