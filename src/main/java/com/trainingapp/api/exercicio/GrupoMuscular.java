@@ -1,0 +1,6 @@
+package com.trainingapp.api.exercicio;
+
+public enum GrupoMuscular {
+	PEITO, COSTAS, OMBROS, BICEPS, TRICEPS, ANTEBRACO, ABDOMEN,
+	QUADRICEPS, POSTERIORES, GLUTEOS, PANTURRILHA, CORPO_INTEIRO, CARDIO
+}

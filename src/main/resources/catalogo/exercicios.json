@@ -1,0 +1,61 @@
+[
+  {"slug": "supino-reto-barra", "nome": "Supino reto com barra", "grupoMuscular": "PEITO", "equipamento": "BARRA"},
+  {"slug": "supino-inclinado-halteres", "nome": "Supino inclinado com halteres", "grupoMuscular": "PEITO", "equipamento": "HALTERES"},
+  {"slug": "supino-reto-halteres", "nome": "Supino reto com halteres", "grupoMuscular": "PEITO", "equipamento": "HALTERES"},
+  {"slug": "crucifixo-maquina", "nome": "Crucifixo na máquina (peck deck)", "grupoMuscular": "PEITO", "equipamento": "MAQUINA"},
+  {"slug": "crossover-polia", "nome": "Crossover na polia", "grupoMuscular": "PEITO", "equipamento": "CABO"},
+  {"slug": "flexao-de-braco", "nome": "Flexão de braço", "grupoMuscular": "PEITO", "equipamento": "PESO_CORPORAL"},
+
+  {"slug": "barra-fixa", "nome": "Barra fixa", "grupoMuscular": "COSTAS", "equipamento": "PESO_CORPORAL"},
+  {"slug": "puxada-frontal", "nome": "Puxada frontal", "grupoMuscular": "COSTAS", "equipamento": "CABO"},
+  {"slug": "remada-curvada-barra", "nome": "Remada curvada com barra", "grupoMuscular": "COSTAS", "equipamento": "BARRA"},
+  {"slug": "remada-unilateral-halter", "nome": "Remada unilateral com halter", "grupoMuscular": "COSTAS", "equipamento": "HALTERES"},
+  {"slug": "remada-baixa-cabo", "nome": "Remada baixa no cabo", "grupoMuscular": "COSTAS", "equipamento": "CABO"},
+  {"slug": "levantamento-terra", "nome": "Levantamento terra", "grupoMuscular": "COSTAS", "equipamento": "BARRA"},
+
+  {"slug": "desenvolvimento-halteres", "nome": "Desenvolvimento com halteres", "grupoMuscular": "OMBROS", "equipamento": "HALTERES"},
+  {"slug": "desenvolvimento-barra", "nome": "Desenvolvimento militar com barra", "grupoMuscular": "OMBROS", "equipamento": "BARRA"},
+  {"slug": "elevacao-lateral", "nome": "Elevação lateral", "grupoMuscular": "OMBROS", "equipamento": "HALTERES"},
+  {"slug": "elevacao-frontal", "nome": "Elevação frontal", "grupoMuscular": "OMBROS", "equipamento": "HALTERES"},
+  {"slug": "crucifixo-inverso", "nome": "Crucifixo inverso", "grupoMuscular": "OMBROS", "equipamento": "HALTERES"},
+
+  {"slug": "rosca-direta-barra", "nome": "Rosca direta com barra", "grupoMuscular": "BICEPS", "equipamento": "BARRA"},
+  {"slug": "rosca-alternada-halteres", "nome": "Rosca alternada com halteres", "grupoMuscular": "BICEPS", "equipamento": "HALTERES"},
+  {"slug": "rosca-martelo", "nome": "Rosca martelo", "grupoMuscular": "BICEPS", "equipamento": "HALTERES"},
+  {"slug": "rosca-scott", "nome": "Rosca Scott", "grupoMuscular": "BICEPS", "equipamento": "BARRA"},
+
+  {"slug": "triceps-pulley", "nome": "Tríceps na polia (pulley)", "grupoMuscular": "TRICEPS", "equipamento": "CABO"},
+  {"slug": "triceps-testa", "nome": "Tríceps testa", "grupoMuscular": "TRICEPS", "equipamento": "BARRA"},
+  {"slug": "triceps-corda", "nome": "Tríceps na corda", "grupoMuscular": "TRICEPS", "equipamento": "CABO"},
+  {"slug": "mergulho-paralelas", "nome": "Mergulho nas paralelas", "grupoMuscular": "TRICEPS", "equipamento": "PESO_CORPORAL"},
+
+  {"slug": "rosca-punho", "nome": "Rosca de punho", "grupoMuscular": "ANTEBRACO", "equipamento": "BARRA"},
+
+  {"slug": "abdominal-crunch", "nome": "Abdominal crunch", "grupoMuscular": "ABDOMEN", "equipamento": "PESO_CORPORAL"},
+  {"slug": "prancha", "nome": "Prancha", "grupoMuscular": "ABDOMEN", "equipamento": "PESO_CORPORAL"},
+  {"slug": "elevacao-de-pernas", "nome": "Elevação de pernas", "grupoMuscular": "ABDOMEN", "equipamento": "PESO_CORPORAL"},
+  {"slug": "abdominal-polia", "nome": "Abdominal na polia", "grupoMuscular": "ABDOMEN", "equipamento": "CABO"},
+
+  {"slug": "agachamento-livre", "nome": "Agachamento livre", "grupoMuscular": "QUADRICEPS", "equipamento": "BARRA"},
+  {"slug": "leg-press-45", "nome": "Leg press 45°", "grupoMuscular": "QUADRICEPS", "equipamento": "MAQUINA"},
+  {"slug": "cadeira-extensora", "nome": "Cadeira extensora", "grupoMuscular": "QUADRICEPS", "equipamento": "MAQUINA"},
+  {"slug": "agachamento-bulgaro", "nome": "Agachamento búlgaro", "grupoMuscular": "QUADRICEPS", "equipamento": "HALTERES"},
+  {"slug": "afundo", "nome": "Afundo", "grupoMuscular": "QUADRICEPS", "equipamento": "HALTERES"},
+
+  {"slug": "mesa-flexora", "nome": "Mesa flexora", "grupoMuscular": "POSTERIORES", "equipamento": "MAQUINA"},
+  {"slug": "stiff", "nome": "Stiff", "grupoMuscular": "POSTERIORES", "equipamento": "BARRA"},
+  {"slug": "cadeira-flexora", "nome": "Cadeira flexora", "grupoMuscular": "POSTERIORES", "equipamento": "MAQUINA"},
+
+  {"slug": "elevacao-pelvica", "nome": "Elevação pélvica", "grupoMuscular": "GLUTEOS", "equipamento": "BARRA"},
+  {"slug": "cadeira-abdutora", "nome": "Cadeira abdutora", "grupoMuscular": "GLUTEOS", "equipamento": "MAQUINA"},
+  {"slug": "coice-no-cabo", "nome": "Coice no cabo", "grupoMuscular": "GLUTEOS", "equipamento": "CABO"},
+
+  {"slug": "panturrilha-em-pe", "nome": "Panturrilha em pé", "grupoMuscular": "PANTURRILHA", "equipamento": "MAQUINA"},
+  {"slug": "panturrilha-sentado", "nome": "Panturrilha sentado", "grupoMuscular": "PANTURRILHA", "equipamento": "MAQUINA"},
+
+  {"slug": "burpee", "nome": "Burpee", "grupoMuscular": "CORPO_INTEIRO", "equipamento": "PESO_CORPORAL"},
+  {"slug": "kettlebell-swing", "nome": "Kettlebell swing", "grupoMuscular": "CORPO_INTEIRO", "equipamento": "KETTLEBELL"},
+
+  {"slug": "esteira", "nome": "Esteira", "grupoMuscular": "CARDIO", "equipamento": "MAQUINA"},
+  {"slug": "bicicleta-ergometrica", "nome": "Bicicleta ergométrica", "grupoMuscular": "CARDIO", "equipamento": "MAQUINA"}
+]
