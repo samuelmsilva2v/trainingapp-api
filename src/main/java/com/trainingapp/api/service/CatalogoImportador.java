@@ -13,7 +13,11 @@ import tools.jackson.databind.json.JsonMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Importa o catalogo empacotado em catalogo/exercicios.json. Idempotente: o slug
@@ -39,14 +43,23 @@ public class CatalogoImportador {
 	@Transactional
 	public int importar() {
 		List<ItemCatalogo> itens = ler();
+		// Uma consulta so; os exercicios ja gerenciados sao atualizados pelo dirty checking.
+		Map<String, Exercicio> existentes = repository.findAll().stream()
+				.filter(e -> e.getSlug() != null)
+				.collect(Collectors.toMap(Exercicio::getSlug, Function.identity()));
+		List<Exercicio> novos = new ArrayList<>();
 		for (ItemCatalogo item : itens) {
-			Exercicio exercicio = repository.findBySlug(item.slug()).orElseGet(Exercicio::new);
+			Exercicio exercicio = existentes.get(item.slug());
+			if (exercicio == null) {
+				exercicio = new Exercicio();
+				novos.add(exercicio);
+			}
 			exercicio.setSlug(item.slug());
 			exercicio.setNome(item.nome());
 			exercicio.setGrupoMuscular(item.grupoMuscular());
 			exercicio.setEquipamento(item.equipamento());
-			repository.save(exercicio);
 		}
+		repository.saveAll(novos);
 		return itens.size();
 	}
 
