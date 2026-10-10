@@ -44,19 +44,33 @@ public class GamificacaoService {
 		if (eventos.existsBySessaoId(sessao.getId())) {
 			return;
 		}
+		eventos.saveAllAndFlush(calcularEventos(sessao, sessao.getFinalizadaEm()));
+	}
+
+	/**
+	 * Previa exata do XP de um treino em andamento: sao os mesmos eventos que seriam gravados se ele fosse
+	 * concluido agora (limite de um treino por dia, minimo de series e recordes incluidos), sem gravar nada.
+	 */
+	@Transactional(readOnly = true)
+	public Ganho previa(Sessao sessao) {
+		return Ganho.de(calcularEventos(sessao, Instant.now()));
+	}
+
+	/** Eventos de XP que a sessao rende se terminar em `fim`; vazio quando nao rende nada. */
+	private List<XpEvent> calcularEventos(Sessao sessao, Instant fim) {
 		Usuario usuario = sessao.getUsuario();
-		LocalDate dia = diaDoTreino(sessao.getFinalizadaEm(), usuario);
+		LocalDate dia = diaDoTreino(fim, usuario);
 		// Saldo > 0: o dia ja rendeu XP e nao foi estornado (apagar o treino libera o dia).
 		if (eventos.findByUsuarioIdAndTipoAndDia(usuario.getId(), TipoXp.SERIES, dia).stream()
 				.mapToInt(XpEvent::getPontos).sum() > 0) {
-			return;
+			return List.of();
 		}
 		List<SerieSessao> concluidas = sessao.getExercicios().stream()
 				.flatMap(e -> e.getSeries().stream())
 				.filter(SerieSessao::isConcluida)
 				.toList();
 		if (concluidas.size() < Regras.SERIES_MINIMAS) {
-			return;
+			return List.of();
 		}
 
 		List<XpEvent> novos = new ArrayList<>();
@@ -74,7 +88,7 @@ public class GamificacaoService {
 						exercicio.getExercicio().getId(), dia));
 			}
 		}
-		eventos.saveAllAndFlush(novos);
+		return novos;
 	}
 
 	/**

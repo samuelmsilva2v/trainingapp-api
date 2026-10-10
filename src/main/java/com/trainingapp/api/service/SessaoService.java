@@ -103,8 +103,12 @@ public class SessaoService {
 
 	@Transactional(readOnly = true)
 	public SessaoResponse obter(UUID id) {
-		return resposta(sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
-				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id)));
+		Sessao sessao = sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id));
+		// Em andamento: o XP devolvido e a previa exata do que o treino renderia se fosse concluido agora.
+		return sessao.getEstado() == EstadoSessao.EM_ANDAMENTO
+				? SessaoResponse.de(sessao, gamificacao.previa(sessao))
+				: resposta(sessao);
 	}
 
 	/** Para cada exercicio, as series concluidas do ultimo treino concluido em que ele apareceu. */

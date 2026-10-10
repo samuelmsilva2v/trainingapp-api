@@ -210,6 +210,39 @@ class GamificacaoApiTest {
 	}
 
 	@Test
+	void treinoEmAndamentoTemPreviaExataDoXpSemGravarNada() throws Exception {
+		UUID id = emAndamento(3, "60");
+
+		mvc.perform(get("/api/sessoes/" + id))
+				.andExpect(jsonPath("$.xpGanho").value(36))
+				.andExpect(jsonPath("$.exercicios[0].xp").value(36))
+				.andExpect(jsonPath("$.recordes.length()").value(0));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(0));
+	}
+
+	@Test
+	void previaIncluiORecordeEZeraQuandoOTreinoDoDiaJaRendeu() throws Exception {
+		definirFuso(FUSO_ADIANTADO);
+		concluir(3, "60");
+		definirFuso(FUSO_ATRASADO);
+
+		UUID comRecorde = emAndamento(3, "70");
+		mvc.perform(get("/api/sessoes/" + comRecorde))
+				.andExpect(jsonPath("$.xpGanho").value(67)) // 3 x 14 + 25 do recorde
+				.andExpect(jsonPath("$.recordes[0]").value(supino));
+	}
+
+	@Test
+	void previaEhZeroQuandoOUsuarioJaTreinouHoje() throws Exception {
+		concluir(3, "60");
+		UUID id = emAndamento(3, "60");
+
+		mvc.perform(get("/api/sessoes/" + id))
+				.andExpect(jsonPath("$.xpGanho").value(0))
+				.andExpect(jsonPath("$.exercicios[0].xp").value(0));
+	}
+
+	@Test
 	void sessaoAbandonadaNaoRendeXp() throws Exception {
 		Instant inicio = agora();
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
@@ -221,6 +254,15 @@ class GamificacaoApiTest {
 	}
 
 	// --- helpers ---
+
+	private UUID emAndamento(int series, String carga) throws Exception {
+		Instant inicio = agora().plusSeconds(++deslocamento * 10L);
+		UUID id = UUID.randomUUID();
+		mvc.perform(put("/api/sessoes/" + id).contentType(MediaType.APPLICATION_JSON)
+				.content(corpo("EM_ANDAMENTO", inicio, null, series, carga).replace("\"finalizadaEm\":\"null\"", "\"finalizadaEm\":null")
+				.replace("\"atualizadoEm\":\"null\"", "\"atualizadoEm\":\"" + inicio + "\""))).andExpect(status().isOk());
+		return id;
+	}
 
 	private static String idDe(org.springframework.test.web.servlet.ResultActions r) throws Exception {
 		return com.jayway.jsonpath.JsonPath.read(r.andReturn().getResponse().getContentAsString(), "$.id");
