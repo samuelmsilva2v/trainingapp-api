@@ -1,32 +1,32 @@
-Seated Front Deltoid | Alongamento de deltoide anterior sentado
+Seated Front Deltoid | Alongamento de deltoide anterior
 Seated Glute | Alongamento de glúteo sentado
 Seated Good Mornings | Bom dia sentado
 Seated Hamstring | Alongamento de posterior sentado
-Seated Hamstring and Calf Stretch | Alongamento de posterior e panturrilha sentado
-Seated Head Harness Neck Resistance | Resistência de pescoço com cabresto sentado
+Seated Hamstring and Calf Stretch | Alongamento posterior/panturrilha
+Seated Head Harness Neck Resistance | Pescoço com cabresto
 Seated Leg Curl | Cadeira flexora
-Seated Leg Tucks | Encolhimento de pernas sentado
-Seated One-Arm Dumbbell Palms-Down Wrist Curl | Rosca de punho inversa unilateral com halter sentado
-Seated One-Arm Dumbbell Palms-Up Wrist Curl | Rosca de punho unilateral com halter sentado
+Seated Leg Tucks | Joelhos ao peito sentado
+Seated One-Arm Dumbbell Palms-Down Wrist Curl | Rosca de punho inversa unilateral
+Seated One-Arm Dumbbell Palms-Up Wrist Curl | Rosca de punho unilateral
 Seated One-arm Cable Pulley Rows | Remada unilateral sentada na polia
 Seated Overhead Stretch | Alongamento acima da cabeça sentado
 Seated Palm-Up Barbell Wrist Curl | Rosca de punho com barra sentado
 Seated Palms-Down Barbell Wrist Curl | Rosca de punho inversa com barra sentado
 Seated Side Lateral Raise | Elevação lateral sentado
 Seated Triceps Press | Tríceps francês sentado
-Seated Two-Arm Palms-Up Low-Pulley Wrist Curl | Rosca de punho na polia baixa sentado
-See-Saw Press (Alternating Side Press) | Desenvolvimento gangorra (alternado lateral)
+Seated Two-Arm Palms-Up Low-Pulley Wrist Curl | Rosca de punho na polia baixa
+See-Saw Press (Alternating Side Press) | Desenvolvimento gangorra (lateral)
 Shotgun Row | Remada shotgun
 Shoulder Circles | Círculos com os ombros
 Shoulder Press - With Bands | Desenvolvimento com elástico
 Shoulder Raise | Elevação de ombros
 Shoulder Stretch | Alongamento de ombro
-Side-Lying Floor Stretch | Alongamento deitado de lado no chão
+Side-Lying Floor Stretch | Alongamento deitado de lado
 Side Bridge | Prancha lateral
 Side Hop-Sprint | Salto lateral com corrida
 Side Jackknife | Canivete lateral
 Side Lateral Raise | Elevação lateral
-Side Laterals to Front Raise | Elevação lateral para elevação frontal
+Side Laterals to Front Raise | Elevação lateral e frontal
 Side Leg Raises | Elevação lateral de pernas
 Side Lying Groin Stretch | Alongamento de virilha deitado de lado
 Side Neck Stretch | Alongamento lateral do pescoço
@@ -51,8 +51,8 @@ Sit-Up | Abdominal completo
 Sit Squats | Agachamento sentado
 Skating | Patinação
 Sled Drag - Harness | Arrasto de trenó com arnês
-Sled Overhead Backward Walk | Caminhada para trás com trenó e braços acima da cabeça
-Sled Overhead Triceps Extension | Extensão de tríceps acima da cabeça com trenó
+Sled Overhead Backward Walk | Caminhada para trás com trenó
+Sled Overhead Triceps Extension | Tríceps acima da cabeça com trenó
 Sled Push | Empurrada de trenó
 Sled Reverse Flye | Crucifixo inverso com trenó
 Sled Row | Remada com trenó
@@ -81,8 +81,8 @@ Snatch Balance | Snatch balance
 Snatch Deadlift | Levantamento terra para arranco
 Snatch Pull | Puxada de arranco
 Snatch Shrug | Encolhimento de arranco
-Snatch from Blocks | Arranco a partir de blocos
-Speed Band Overhead Triceps | Tríceps acima da cabeça com elástico de velocidade
+Snatch from Blocks | Arranco nos blocos
+Speed Band Overhead Triceps | Tríceps acima da cabeça com elástico
 Speed Box Squat | Agachamento na caixa de velocidade
 Speed Squats | Agachamento de velocidade
 Spell Caster | Spell caster

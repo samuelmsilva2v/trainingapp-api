@@ -2,7 +2,7 @@ Drag Curl | Rosca arrastada
 Drop Push | Flexão com queda
 Dumbbell Alternate Bicep Curl | Rosca alternada com halteres
 Dumbbell Bench Press | Supino reto com halteres
-Dumbbell Bench Press with Neutral Grip | Supino reto com halteres e pegada neutra
+Dumbbell Bench Press with Neutral Grip | Supino com halteres, pegada neutra
 Dumbbell Bicep Curl | Rosca direta com halteres
 Dumbbell Clean | Clean com halter
 Dumbbell Floor Press | Supino no chão com halteres
@@ -10,26 +10,26 @@ Dumbbell Flyes | Crucifixo com halteres
 Dumbbell Incline Row | Remada inclinada com halteres
 Dumbbell Incline Shoulder Raise | Elevação de ombro inclinada com halteres
 Dumbbell Lunges | Afundo com halteres
-Dumbbell Lying One-Arm Rear Lateral Raise | Elevação posterior unilateral deitado com halter
-Dumbbell Lying Pronation | Pronação deitado com halter
+Dumbbell Lying One-Arm Rear Lateral Raise | Elevação posterior unilateral deitado
+Dumbbell Lying Pronation | Pronação com halter
 Dumbbell Lying Rear Lateral Raise | Elevação posterior deitado com halteres
-Dumbbell Lying Supination | Supinação deitado com halter
+Dumbbell Lying Supination | Supinação com halter
 Dumbbell One-Arm Shoulder Press | Desenvolvimento unilateral com halter
-Dumbbell One-Arm Triceps Extension | Extensão de tríceps unilateral com halter
+Dumbbell One-Arm Triceps Extension | Tríceps unilateral com halter
 Dumbbell One-Arm Upright Row | Remada alta unilateral com halter
-Dumbbell Prone Incline Curl | Rosca no banco inclinado de bruços com halteres
+Dumbbell Prone Incline Curl | Rosca no banco inclinado de bruços
 Dumbbell Raise | Elevação com halteres
 Dumbbell Rear Lunge | Afundo reverso com halteres
-Dumbbell Scaption | Elevação em escápula com halteres
+Dumbbell Scaption | Elevação escapular com halteres
 Dumbbell Seated Box Jump | Salto na caixa sentado com halteres
-Dumbbell Seated One-Leg Calf Raise | Panturrilha sentado unilateral com halter
+Dumbbell Seated One-Leg Calf Raise | Panturrilha unilateral sentado
 Dumbbell Shoulder Press | Desenvolvimento com halteres
 Dumbbell Shrug | Encolhimento com halteres
 Dumbbell Side Bend | Flexão lateral com halter
 Dumbbell Squat | Agachamento com halteres
 Dumbbell Squat To A Bench | Agachamento com halteres até o banco
 Dumbbell Step Ups | Subida no banco com halteres
-Dumbbell Tricep Extension -Pronated Grip | Extensão de tríceps com halteres e pegada pronada
+Dumbbell Tricep Extension -Pronated Grip | Tríceps com halteres, pegada pronada
 Dynamic Back Stretch | Alongamento dinâmico das costas
 Dynamic Chest Stretch | Alongamento dinâmico do peito
 EZ-Bar Curl | Rosca direta com barra W
@@ -42,7 +42,7 @@ Elevated Cable Rows | Remada elevada na polia
 Elliptical Trainer | Elíptico
 Exercise Ball Crunch | Abdominal na bola
 Exercise Ball Pull-In | Flexão de quadril na bola
-Extended Range One-Arm Kettlebell Floor Press | Supino no chão unilateral com kettlebell (amplitude estendida)
+Extended Range One-Arm Kettlebell Floor Press | Supino no chão com kettlebell (amplo)
 External Rotation | Rotação externa
 External Rotation with Band | Rotação externa com elástico
 External Rotation with Cable | Rotação externa na polia
@@ -52,12 +52,12 @@ Fast Skipping | Skipping rápido
 Finger Curls | Rosca de dedos
 Flat Bench Cable Flyes | Crucifixo na polia no banco reto
 Flat Bench Leg Pull-In | Flexão de quadril no banco reto
-Flat Bench Lying Leg Raise | Elevação de pernas deitado no banco reto
+Flat Bench Lying Leg Raise | Elevação de pernas no banco reto
 Flexor Incline Dumbbell Curls | Rosca inclinada com halteres (flexores)
 Floor Glute-Ham Raise | Glute-ham raise no chão
 Floor Press | Supino no chão
 Floor Press with Chains | Supino no chão com correntes
-Flutter Kicks | Pernada alternada (flutter kicks)
+Flutter Kicks | Flutter kicks
 Foot-SMR | Liberação miofascial do pé
 Forward Drag with Press | Arrasto para frente com desenvolvimento
 Frankenstein Squat | Agachamento Frankenstein
@@ -65,7 +65,7 @@ Freehand Jump Squat | Agachamento com salto
 Frog Hops | Saltos do sapo
 Frog Sit-Ups | Abdominal do sapo
 Front Barbell Squat | Agachamento frontal com barra
-Front Barbell Squat To A Bench | Agachamento frontal com barra até o banco
+Front Barbell Squat To A Bench | Agachamento frontal até o banco
 Front Box Jump | Salto frontal na caixa
 Front Cable Raise | Elevação frontal na polia
 Front Cone Hops (or hurdle hops) | Saltos frontais sobre cones
@@ -89,7 +89,7 @@ Groin and Back Stretch | Alongamento de virilha e costas
 Groiners | Groiners
 Hack Squat | Agachamento hack
 Hammer Curls | Rosca martelo
-Hammer Grip Incline DB Bench Press | Supino inclinado com halteres e pegada neutra
+Hammer Grip Incline DB Bench Press | Supino inclinado pegada neutra
 Hamstring-SMR | Liberação miofascial do posterior
 Hamstring Stretch | Alongamento de posterior
 Handstand Push-Ups | Flexão em parada de mão
@@ -119,28 +119,28 @@ Incline Barbell Triceps Extension | Tríceps testa inclinado com barra
 Incline Bench Pull | Remada no banco inclinado
 Incline Cable Chest Press | Supino inclinado na polia
 Incline Cable Flye | Crucifixo inclinado na polia
-Incline Dumbbell Bench With Palms Facing In | Supino inclinado com halteres e palmas para dentro
+Incline Dumbbell Bench With Palms Facing In | Supino inclinado com palmas para dentro
 Incline Dumbbell Curl | Rosca inclinada com halteres
 Incline Dumbbell Flyes | Crucifixo inclinado com halteres
-Incline Dumbbell Flyes - With A Twist | Crucifixo inclinado com halteres e rotação
+Incline Dumbbell Flyes - With A Twist | Crucifixo inclinado com rotação
 Incline Dumbbell Press | Supino inclinado com halteres
 Incline Hammer Curls | Rosca martelo inclinada
-Incline Inner Biceps Curl | Rosca inclinada para bíceps (porção interna)
+Incline Inner Biceps Curl | Rosca inclinada interna
 Incline Push-Up | Flexão inclinada
 Incline Push-Up Close-Grip | Flexão inclinada fechada
-Incline Push-Up Depth Jump | Flexão inclinada com salto em profundidade
+Incline Push-Up Depth Jump | Flexão inclinada com salto
 Incline Push-Up Medium | Flexão inclinada média
 Incline Push-Up Reverse Grip | Flexão inclinada com pegada invertida
 Incline Push-Up Wide | Flexão inclinada aberta
 Intermediate Groin Stretch | Alongamento de virilha intermediário
-Intermediate Hip Flexor and Quad Stretch | Alongamento de flexores do quadril e quadríceps
+Intermediate Hip Flexor and Quad Stretch | Alongamento de quadril e quadríceps
 Internal Rotation with Band | Rotação interna com elástico
 Inverted Row | Remada invertida
 Inverted Row with Straps | Remada invertida com tiras
 Iron Cross | Cruz de ferro
 Iron Crosses (stretch) | Cruz de ferro (alongamento)
 Isometric Chest Squeezes | Compressão isométrica de peito
-Isometric Neck Exercise - Front And Back | Isometria de pescoço (frente e trás)
+Isometric Neck Exercise - Front And Back | Isometria de pescoço (frente e atrás)
 Isometric Neck Exercise - Sides | Isometria de pescoço (laterais)
 Isometric Wipers | Limpadores isométricos
 JM Press | JM press
@@ -155,19 +155,19 @@ Kettlebell Arnold Press | Desenvolvimento Arnold com kettlebell
 Kettlebell Dead Clean | Dead clean com kettlebell
 Kettlebell Figure 8 | Oito com kettlebell
 Kettlebell Halo | Halo com kettlebell
-Kettlebell Halo with Overhead Extension | Halo com kettlebell e extensão acima da cabeça
+Kettlebell Halo with Overhead Extension | Halo com kettlebell e extensão
 Kettlebell Hang Clean | Hang clean com kettlebell
-Kettlebell One-Legged Deadlift | Levantamento terra unilateral com kettlebell
+Kettlebell One-Legged Deadlift | Terra unilateral com kettlebell
 Kettlebell Overhead Triceps Extension | Tríceps francês com kettlebell
-Kettlebell Pass Between The Legs | Passada de kettlebell entre as pernas
+Kettlebell Pass Between The Legs | Passagem de kettlebell entre as pernas
 Kettlebell Pirate Ships | Navios piratas com kettlebell
 Kettlebell Pistol Squat | Agachamento pistol com kettlebell
 Kettlebell Seated Press | Desenvolvimento sentado com kettlebell
 Kettlebell Seesaw Press | Desenvolvimento gangorra com kettlebell
 Kettlebell Sumo High Pull | Remada alta sumô com kettlebell
 Kettlebell Thruster | Thruster com kettlebell
-Kettlebell Turkish Get-Up (Lunge style) | Levantamento turco com kettlebell (estilo afundo)
-Kettlebell Turkish Get-Up (Squat style) | Levantamento turco com kettlebell (estilo agachamento)
+Kettlebell Turkish Get-Up (Lunge style) | Levantamento turco (estilo afundo)
+Kettlebell Turkish Get-Up (Squat style) | Levantamento turco (estilo agachamento)
 Kettlebell Windmill | Moinho com kettlebell
 Kipping Muscle Up | Muscle-up com kipping
 Knee Across The Body | Joelho cruzado sobre o corpo
@@ -175,13 +175,13 @@ Knee Circles | Círculos com os joelhos
 Knee/Hip Raise On Parallel Bars | Elevação de joelhos nas paralelas
 Knee Tuck Jump | Salto com joelhos ao peito
 Kneeling Arm Drill | Exercício de braço ajoelhado
-Kneeling Cable Crunch With Alternating Oblique Twists | Abdominal ajoelhado na polia com rotação oblíqua
-Kneeling Cable Triceps Extension | Extensão de tríceps ajoelhado na polia
+Kneeling Cable Crunch With Alternating Oblique Twists | Abdominal na polia com rotação
+Kneeling Cable Triceps Extension | Tríceps ajoelhado na polia
 Kneeling Forearm Stretch | Alongamento de antebraço ajoelhado
-Kneeling High Pulley Row | Remada na polia alta ajoelhado
-Kneeling Hip Flexor | Alongamento de flexor do quadril ajoelhado
+Kneeling High Pulley Row | Remada na polia alta
+Kneeling Hip Flexor | Alongamento de quadril ajoelhado
 Kneeling Jump Squat | Agachamento com salto ajoelhado
-Kneeling Single-Arm High Pulley Row | Remada unilateral na polia alta ajoelhado
+Kneeling Single-Arm High Pulley Row | Remada unilateral na polia alta
 Kneeling Squat | Agachamento ajoelhado
 Landmine 180's | Landmine 180
 Landmine Linear Jammer | Landmine jammer linear
@@ -191,12 +191,12 @@ Lateral Cone Hops | Saltos laterais sobre cones
 Lateral Raise - With Bands | Elevação lateral com elástico
 Latissimus Dorsi-SMR | Liberação miofascial do latíssimo
 Leg-Over Floor Press | Supino no chão com perna cruzada
-Leg-Up Hamstring Stretch | Alongamento de posterior com perna elevada
+Leg-Up Hamstring Stretch | Alongamento de posterior com perna alta
 Leg Extensions | Cadeira extensora
 Leg Lift | Elevação de pernas
 Leg Press | Leg press
 Leg Pull-In | Flexão de quadril (leg pull-in)
 Leverage Chest Press | Supino na máquina articulada
-Leverage Deadlift | Levantamento terra na máquina articulada
+Leverage Deadlift | Terra na máquina articulada
 Leverage Decline Chest Press | Supino declinado na máquina articulada
 Leverage High Row | Remada alta na máquina articulada

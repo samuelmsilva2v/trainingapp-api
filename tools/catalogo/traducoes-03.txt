@@ -2,8 +2,8 @@ Leverage Incline Chest Press | Supino inclinado na máquina articulada
 Leverage Iso Row | Remada unilateral na máquina articulada
 Leverage Shoulder Press | Desenvolvimento na máquina articulada
 Leverage Shrug | Encolhimento na máquina articulada
-Linear 3-Part Start Technique | Técnica de largada linear em três partes
-Linear Acceleration Wall Drill | Exercício de aceleração linear na parede
+Linear 3-Part Start Technique | Largada linear em três partes
+Linear Acceleration Wall Drill | Aceleração linear na parede
 Linear Depth Jump | Salto em profundidade linear
 Log Lift | Levantamento de tora
 London Bridges | Pontes de Londres
@@ -15,16 +15,16 @@ Lower Back-SMR | Liberação miofascial da lombar
 Lower Back Curl | Flexão lombar
 Lunge Pass Through | Afundo com passagem de bola
 Lunge Sprint | Corrida com afundo
-Lying Bent Leg Groin | Alongamento de virilha deitado com perna dobrada
+Lying Bent Leg Groin | Alongamento de virilha, perna dobrada
 Lying Cable Curl | Rosca deitado na polia
-Lying Cambered Barbell Row | Remada deitado com barra curva
-Lying Close-Grip Bar Curl On High Pulley | Rosca fechada deitado na polia alta
-Lying Close-Grip Barbell Triceps Extension Behind The Head | Tríceps francês deitado com barra, pegada fechada
+Lying Cambered Barbell Row | Remada com barra curva
+Lying Close-Grip Bar Curl On High Pulley | Rosca fechada na polia alta
+Lying Close-Grip Barbell Triceps Extension Behind The Head | Tríceps francês deitado com barra
 Lying Close-Grip Barbell Triceps Press To Chin | Tríceps deitado com barra até o queixo
 Lying Crossover | Crossover deitado
 Lying Dumbbell Tricep Extension | Tríceps testa com halteres
-Lying Face Down Plate Neck Resistance | Resistência de pescoço de bruços com anilha
-Lying Face Up Plate Neck Resistance | Resistência de pescoço de costas com anilha
+Lying Face Down Plate Neck Resistance | Pescoço de bruços com anilha
+Lying Face Up Plate Neck Resistance | Pescoço de costas com anilha
 Lying Glute | Alongamento de glúteo deitado
 Lying Hamstring | Alongamento de posterior deitado
 Lying High Bench Barbell Curl | Rosca deitado no banco alto com barra
@@ -34,7 +34,7 @@ Lying One-Arm Lateral Raise | Elevação lateral unilateral deitado
 Lying Prone Quadriceps | Alongamento de quadríceps de bruços
 Lying Rear Delt Raise | Elevação posterior deitado
 Lying Supine Dumbbell Curl | Rosca com halteres deitado de costas
-Lying T-Bar Row | Remada cavalinho deitado
+Lying T-Bar Row | Remada cavalinho
 Lying Triceps Press | Tríceps testa
 Machine Bench Press | Supino na máquina
 Machine Bicep Curl | Rosca na máquina
@@ -48,7 +48,7 @@ Middle Back Shrug | Encolhimento de costas médias
 Middle Back Stretch | Alongamento de costas médias
 Mixed Grip Chin | Barra fixa com pegada mista
 Monster Walk | Caminhada monstro
-Mountain Climbers | Escalador (mountain climbers)
+Mountain Climbers | Mountain climbers
 Moving Claw Series | Série garra em movimento
 Muscle Snatch | Muscle snatch
 Muscle Up | Muscle-up
@@ -61,17 +61,17 @@ Neck Press | Supino até o pescoço
 Oblique Crunches | Abdominal oblíquo
 Oblique Crunches - On The Floor | Abdominal oblíquo no chão
 Olympic Squat | Agachamento olímpico
-On-Your-Back Quad Stretch | Alongamento de quadríceps deitado de costas
-On Your Side Quad Stretch | Alongamento de quadríceps deitado de lado
+On-Your-Back Quad Stretch | Alongamento de quadríceps de costas
+On Your Side Quad Stretch | Alongamento de quadríceps de lado
 One-Arm Dumbbell Row | Remada unilateral com halter
-One-Arm Flat Bench Dumbbell Flye | Crucifixo unilateral com halter no banco reto
+One-Arm Flat Bench Dumbbell Flye | Crucifixo unilateral com halter
 One-Arm High-Pulley Cable Side Bends | Flexão lateral unilateral na polia alta
-One-Arm Incline Lateral Raise | Elevação lateral unilateral no banco inclinado
+One-Arm Incline Lateral Raise | Elevação lateral unilateral inclinado
 One-Arm Kettlebell Clean | Clean unilateral com kettlebell
 One-Arm Kettlebell Clean and Jerk | Clean and jerk unilateral com kettlebell
 One-Arm Kettlebell Floor Press | Supino no chão unilateral com kettlebell
 One-Arm Kettlebell Jerk | Jerk unilateral com kettlebell
-One-Arm Kettlebell Military Press To The Side | Desenvolvimento militar unilateral com kettlebell para o lado
+One-Arm Kettlebell Military Press To The Side | Desenvolvimento lateral com kettlebell
 One-Arm Kettlebell Para Press | Para press unilateral com kettlebell
 One-Arm Kettlebell Push Press | Push press unilateral com kettlebell
 One-Arm Kettlebell Row | Remada unilateral com kettlebell
@@ -80,9 +80,9 @@ One-Arm Kettlebell Split Jerk | Split jerk unilateral com kettlebell
 One-Arm Kettlebell Split Snatch | Split snatch unilateral com kettlebell
 One-Arm Kettlebell Swings | Swing unilateral com kettlebell
 One-Arm Long Bar Row | Remada unilateral na barra longa
-One-Arm Medicine Ball Slam | Arremesso unilateral de medicine ball no chão
-One-Arm Open Palm Kettlebell Clean | Clean unilateral com kettlebell e palma aberta
-One-Arm Overhead Kettlebell Squats | Agachamento unilateral com kettlebell acima da cabeça
+One-Arm Medicine Ball Slam | Slam unilateral com medicine ball
+One-Arm Open Palm Kettlebell Clean | Clean unilateral com palma aberta
+One-Arm Overhead Kettlebell Squats | Agachamento overhead com kettlebell
 One-Arm Side Deadlift | Levantamento terra lateral unilateral
 One-Arm Side Laterals | Elevação lateral unilateral
 One-Legged Cable Kickback | Coice de glúteo na polia unilateral
@@ -92,13 +92,13 @@ One Arm Dumbbell Bench Press | Supino unilateral com halter
 One Arm Dumbbell Preacher Curl | Rosca Scott unilateral com halter
 One Arm Floor Press | Supino no chão unilateral
 One Arm Lat Pulldown | Puxada unilateral
-One Arm Pronated Dumbbell Triceps Extension | Extensão de tríceps unilateral com halter, pegada pronada
-One Arm Supinated Dumbbell Triceps Extension | Extensão de tríceps unilateral com halter, pegada supinada
+One Arm Pronated Dumbbell Triceps Extension | Tríceps unilateral pegada pronada
+One Arm Supinated Dumbbell Triceps Extension | Tríceps unilateral pegada supinada
 One Half Locust | Meio gafanhoto
 One Handed Hang | Suspensão com uma mão
 One Knee To Chest | Um joelho ao peito
 One Leg Barbell Squat | Agachamento unilateral com barra
-Open Palm Kettlebell Clean | Clean com kettlebell e palma aberta
+Open Palm Kettlebell Clean | Clean com kettlebell, palma aberta
 Otis-Up | Otis-up
 Overhead Cable Curl | Rosca na polia acima da cabeça
 Overhead Lat | Alongamento de dorsal acima da cabeça
@@ -108,10 +108,10 @@ Overhead Stretch | Alongamento acima da cabeça
 Overhead Triceps | Alongamento de tríceps acima da cabeça
 Pallof Press | Pallof press
 Pallof Press With Rotation | Pallof press com rotação
-Palms-Down Dumbbell Wrist Curl Over A Bench | Rosca de punho inversa com halter sobre o banco
-Palms-Down Wrist Curl Over A Bench | Rosca de punho inversa sobre o banco
-Palms-Up Barbell Wrist Curl Over A Bench | Rosca de punho com barra sobre o banco
-Palms-Up Dumbbell Wrist Curl Over A Bench | Rosca de punho com halter sobre o banco
+Palms-Down Dumbbell Wrist Curl Over A Bench | Rosca de punho inversa com halter
+Palms-Down Wrist Curl Over A Bench | Rosca de punho inversa com barra
+Palms-Up Barbell Wrist Curl Over A Bench | Rosca de punho com barra
+Palms-Up Dumbbell Wrist Curl Over A Bench | Rosca de punho com halter
 Parallel Bar Dip | Mergulho nas paralelas
 Pelvic Tilt Into Bridge | Inclinação pélvica para ponte
 Peroneals-SMR | Liberação miofascial dos fibulares
@@ -122,27 +122,27 @@ Piriformis-SMR | Liberação miofascial do piriforme
 Plank | Prancha
 Plate Pinch | Pinça com anilhas
 Plate Twist | Rotação com anilha
-Platform Hamstring Slides | Deslizamento de posterior na plataforma
+Platform Hamstring Slides | Deslizamento de posterior
 Plie Dumbbell Squat | Agachamento plié com halter
 Plyo Kettlebell Pushups | Flexão pliométrica sobre kettlebell
 Plyo Push-up | Flexão pliométrica
 Posterior Tibialis Stretch | Alongamento do tibial posterior
 Power Clean | Power clean
-Power Clean from Blocks | Power clean a partir de blocos
+Power Clean from Blocks | Power clean nos blocos
 Power Jerk | Power jerk
 Power Partials | Repetições parciais de potência
 Power Snatch | Power snatch
-Power Snatch from Blocks | Power snatch a partir de blocos
+Power Snatch from Blocks | Power snatch nos blocos
 Power Stairs | Escada de potência
 Preacher Curl | Rosca Scott
-Preacher Hammer Dumbbell Curl | Rosca martelo Scott com halteres
+Preacher Hammer Dumbbell Curl | Rosca martelo Scott
 Press Sit-Up | Abdominal com desenvolvimento
-Prone Manual Hamstring | Posterior manual de bruços
-Prowler Sprint | Corrida com trenó (prowler)
+Prone Manual Hamstring | Alongamento manual de posterior
+Prowler Sprint | Corrida com prowler
 Pull Through | Pull through
 Pullups | Barra fixa pronada
 Push-Up Wide | Flexão aberta
-Push-Ups - Close Triceps Position | Flexão fechada (foco em tríceps)
+Push-Ups - Close Triceps Position | Flexão fechada (tríceps)
 Push-Ups With Feet Elevated | Flexão com pés elevados
 Push-Ups With Feet On An Exercise Ball | Flexão com pés na bola
 Push Press | Push press
@@ -161,10 +161,10 @@ Rear Leg Raises | Elevação de perna para trás
 Recumbent Bike | Bicicleta reclinada
 Return Push from Stance | Empurrão de retorno
 Reverse Band Bench Press | Supino reto com elástico reverso
-Reverse Band Box Squat | Agachamento na caixa com elástico reverso
+Reverse Band Box Squat | Agachamento na caixa, elástico reverso
 Reverse Band Deadlift | Levantamento terra com elástico reverso
-Reverse Band Power Squat | Agachamento de potência com elástico reverso
-Reverse Band Sumo Deadlift | Levantamento terra sumô com elástico reverso
+Reverse Band Power Squat | Power squat com elástico reverso
+Reverse Band Sumo Deadlift | Terra sumô com elástico reverso
 Reverse Barbell Curl | Rosca inversa com barra
 Reverse Barbell Preacher Curls | Rosca Scott inversa com barra
 Reverse Cable Curl | Rosca inversa na polia
@@ -172,11 +172,11 @@ Reverse Crunch | Abdominal invertido
 Reverse Flyes | Crucifixo inverso
 Reverse Flyes With External Rotation | Crucifixo inverso com rotação externa
 Reverse Grip Bent-Over Rows | Remada curvada com pegada supinada
-Reverse Grip Triceps Pushdown | Tríceps na polia com pegada supinada
+Reverse Grip Triceps Pushdown | Tríceps pulley com pegada supinada
 Reverse Hyperextension | Extensão lombar reversa
 Reverse Machine Flyes | Crucifixo inverso na máquina
 Reverse Plate Curls | Rosca inversa com anilha
-Reverse Triceps Bench Press | Supino de tríceps com pegada invertida
+Reverse Triceps Bench Press | Supino fechado pegada invertida
 Rhomboids-SMR | Liberação miofascial dos romboides
 Rickshaw Carry | Carregamento com barra rickshaw
 Rickshaw Deadlift | Levantamento terra com barra rickshaw
@@ -189,7 +189,7 @@ Romanian Deadlift from Deficit | Levantamento terra romeno com déficit
 Rope Climb | Subida na corda
 Rope Crunch | Abdominal com corda
 Rope Jumping | Pular corda
-Rope Straight-Arm Pulldown | Pulldown com braços estendidos na corda
+Rope Straight-Arm Pulldown | Pulldown na corda (braços estendidos)
 Round The World Shoulder Stretch | Alongamento de ombro (volta ao mundo)
 Rowing, Stationary | Remo ergométrico
 Runner's Stretch | Alongamento do corredor
@@ -199,22 +199,22 @@ Sandbag Load | Carregamento de saco de areia
 Scapular Pull-Up | Barra fixa escapular
 Scissor Kick | Tesoura
 Scissors Jump | Salto em tesoura
-Seated Band Hamstring Curl | Flexão de posterior sentado com elástico
-Seated Barbell Military Press | Desenvolvimento militar sentado com barra
+Seated Band Hamstring Curl | Flexão de posterior com elástico
+Seated Barbell Military Press | Desenvolvimento militar sentado
 Seated Barbell Twist | Rotação sentado com barra
-Seated Bent-Over One-Arm Dumbbell Triceps Extension | Extensão de tríceps unilateral sentado e curvado com halter
+Seated Bent-Over One-Arm Dumbbell Triceps Extension | Tríceps unilateral curvado sentado
 Seated Bent-Over Rear Delt Raise | Elevação posterior sentado e curvado
-Seated Bent-Over Two-Arm Dumbbell Triceps Extension | Extensão de tríceps sentado e curvado com halteres
+Seated Bent-Over Two-Arm Dumbbell Triceps Extension | Tríceps curvado sentado com halteres
 Seated Biceps | Rosca de bíceps sentado
 Seated Cable Rows | Remada sentada na polia
 Seated Cable Shoulder Press | Desenvolvimento sentado na polia
 Seated Calf Raise | Panturrilha sentado
 Seated Calf Stretch | Alongamento de panturrilha sentado
-Seated Close-Grip Concentration Barbell Curl | Rosca concentrada fechada com barra sentado
+Seated Close-Grip Concentration Barbell Curl | Rosca concentrada com barra
 Seated Dumbbell Curl | Rosca com halteres sentado
 Seated Dumbbell Inner Biceps Curl | Rosca interna com halteres sentado
-Seated Dumbbell Palms-Down Wrist Curl | Rosca de punho inversa com halteres sentado
+Seated Dumbbell Palms-Down Wrist Curl | Rosca de punho inversa, halteres sentado
 Seated Dumbbell Palms-Up Wrist Curl | Rosca de punho com halteres sentado
 Seated Dumbbell Press | Desenvolvimento com halteres sentado
 Seated Flat Bench Leg Pull-In | Flexão de quadril sentado no banco reto
-Seated Floor Hamstring Stretch | Alongamento de posterior sentado no chão
+Seated Floor Hamstring Stretch | Alongamento de posterior no chão
