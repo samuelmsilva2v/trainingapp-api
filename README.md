@@ -8,11 +8,11 @@ Backend do **TrainingApp**, um app de treino para registrar séries, repetiçõe
 - Spring Boot 4.1.1
   - Spring Web (MVC)
   - Spring Data JPA
-  - Spring Security
   - Bean Validation
-  - Flyway (migrações de banco)
-- PostgreSQL
+- PostgreSQL (H2 nos testes)
 - Maven
+
+Planejado para a fase de autenticação e deploy: Spring Security (JWT) e Flyway (migrações). Hoje não há login e o schema é gerenciado pelo Hibernate.
 
 ## Rodando localmente
 
