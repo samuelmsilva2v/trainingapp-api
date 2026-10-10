@@ -1,5 +1,6 @@
 package com.trainingapp.api.controller;
 
+import com.trainingapp.api.dto.AnteriorResponse;
 import com.trainingapp.api.dto.HojeResponse;
 import com.trainingapp.api.dto.SessaoRequest;
 import com.trainingapp.api.dto.SessaoResponse;
@@ -8,6 +9,7 @@ import com.trainingapp.api.service.SessaoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,6 +50,11 @@ public class SessaoController {
 	public List<SessaoResumoResponse> historico(@RequestParam(defaultValue = "0") @Min(0) int pagina,
 			@RequestParam(defaultValue = "20") @Min(1) @Max(100) int tamanho) {
 		return service.historico(pagina, tamanho);
+	}
+
+	@GetMapping("/sessoes/anteriores")
+	public List<AnteriorResponse> anteriores(@RequestParam @Size(max = 30) List<UUID> exercicioIds) {
+		return service.anteriores(exercicioIds);
 	}
 
 	@GetMapping("/sessoes/{id}")

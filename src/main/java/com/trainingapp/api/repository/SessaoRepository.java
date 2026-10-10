@@ -1,6 +1,7 @@
 package com.trainingapp.api.repository;
 
 import com.trainingapp.api.model.EstadoSessao;
+import com.trainingapp.api.model.ExercicioSessao;
 import com.trainingapp.api.model.SerieSessao;
 import com.trainingapp.api.model.Sessao;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,16 @@ public interface SessaoRepository extends JpaRepository<Sessao, UUID> {
 
 	List<Sessao> findByUsuarioIdAndEstadoInOrderByIniciadaEmDesc(UUID usuarioId, Collection<EstadoSessao> estados,
 			Pageable pageable);
+
+	/** Ocorrencias do exercicio em treinos concluidos, da mais recente para a mais antiga. */
+	@Query("""
+			select e from ExercicioSessao e join fetch e.sessao s
+			where s.usuario.id = :usuarioId and s.estado = com.trainingapp.api.model.EstadoSessao.CONCLUIDA
+			  and e.exercicio.id = :exercicioId
+			order by s.iniciadaEm desc
+			""")
+	List<ExercicioSessao> ocorrenciasConcluidas(@Param("usuarioId") UUID usuarioId,
+			@Param("exercicioId") UUID exercicioId, Pageable pageable);
 
 	/** Maior carga ja levantada (com pelo menos 1 repeticao) no exercicio, em outras sessoes concluidas. */
 	@Query("""

@@ -69,6 +69,31 @@ class SessaoApiTest {
 	}
 
 	@Test
+	void anterioresDevolveASerieDoUltimoTreinoConcluidoDoExercicio() throws Exception {
+		Instant antigo = agora().minus(3, ChronoUnit.HOURS);
+		salvar(UUID.randomUUID(), "CONCLUIDA", antigo, antigo.plusSeconds(60), serie(UUID.randomUUID(), 10, "50", true))
+				.andExpect(status().isOk());
+		Instant recente = agora().minus(1, ChronoUnit.HOURS);
+		salvar(UUID.randomUUID(), "CONCLUIDA", recente, recente.plusSeconds(60), serie(UUID.randomUUID(), 8, "62.5", true),
+				serie(UUID.randomUUID(), 6, "62.5", false)).andExpect(status().isOk());
+		// Em andamento nao conta como anterior.
+		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), 5, "99", true))
+				.andExpect(status().isOk());
+
+		mvc.perform(get("/api/sessoes/anteriores").param("exercicioIds", exercicio))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].exercicioId").value(exercicio))
+				.andExpect(jsonPath("$[0].series.length()").value(1))
+				.andExpect(jsonPath("$[0].series[0].reps").value(8))
+				.andExpect(jsonPath("$[0].series[0].carga").value(62.5));
+
+		// Exercicio sem historico: lista vazia.
+		mvc.perform(get("/api/sessoes/anteriores").param("exercicioIds", UUID.randomUUID().toString()))
+				.andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
 	void historicoNaoFazUmaQueryPorTreino() throws Exception {
 		for (int i = 0; i < 10; i++) {
 			concluir(UUID.randomUUID(), 0, "Treino A");

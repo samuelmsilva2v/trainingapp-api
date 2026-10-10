@@ -3,6 +3,7 @@ package com.trainingapp.api.service;
 import com.trainingapp.api.config.RecursoNaoEncontradoException;
 import com.trainingapp.api.config.RegraDeNegocioException;
 import com.trainingapp.api.dto.ExercicioRequest;
+import com.trainingapp.api.dto.AnteriorResponse;
 import com.trainingapp.api.dto.HojeResponse;
 import com.trainingapp.api.dto.PlanoResponse;
 import com.trainingapp.api.dto.SessaoRequest;
@@ -104,6 +105,16 @@ public class SessaoService {
 	public SessaoResponse obter(UUID id) {
 		return resposta(sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id)));
+	}
+
+	/** Para cada exercicio, as series concluidas do ultimo treino concluido em que ele apareceu. */
+	@Transactional(readOnly = true)
+	public List<AnteriorResponse> anteriores(List<UUID> exercicioIds) {
+		UUID usuarioId = usuarioAtual.obter().getId();
+		return exercicioIds.stream().distinct()
+				.flatMap(id -> sessoes.ocorrenciasConcluidas(usuarioId, id, PageRequest.of(0, 1)).stream())
+				.map(AnteriorResponse::de)
+				.toList();
 	}
 
 	/** Apaga um treino encerrado e estorna o XP e os recordes dele; a rotacao nao volta atras. */
