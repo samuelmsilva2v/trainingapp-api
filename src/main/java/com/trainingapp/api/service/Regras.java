@@ -1,5 +1,6 @@
 package com.trainingapp.api.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
@@ -9,9 +10,10 @@ import java.util.TreeSet;
 /** Regras de gamificacao puras (sem banco): faceis de testar e de ajustar num lugar so. */
 public final class Regras {
 
-	public static final int XP_SESSAO = 50;
-	public static final int XP_POR_SERIE = 5;
-	public static final int SERIES_COM_XP = 20;
+	/** Volume (carga x reps) que vale 1 XP: 60 kg x 10 reps = 600 = 15 XP. */
+	public static final int VOLUME_POR_XP = 40;
+	public static final int XP_MINIMO_SERIE = 5;
+	public static final int XP_MAXIMO_SERIE = 100;
 	public static final int XP_RECORDE = 25;
 	public static final int SERIES_MINIMAS = 3;
 
@@ -21,12 +23,17 @@ public final class Regras {
 	private Regras() {
 	}
 
-	/** XP da sessao concluida (sem recordes): 50 + 5 por serie, ate 20 series. Zero se nao houver series suficientes. */
-	public static int xpDaSessao(int seriesConcluidas) {
-		if (seriesConcluidas < SERIES_MINIMAS) {
+	/**
+	 * XP de uma serie concluida: volume (carga x reps) / 40, entre 5 e 100. Quanto mais pesada e longa a
+	 * serie, mais XP; sem carga (peso corporal) vale o minimo. Zero se nao houve repeticao.
+	 */
+	public static int xpDaSerie(BigDecimal carga, Integer reps) {
+		if (reps == null || reps < 1) {
 			return 0;
 		}
-		return XP_SESSAO + XP_POR_SERIE * Math.min(seriesConcluidas, SERIES_COM_XP);
+		double volume = (carga == null ? 0 : carga.doubleValue()) * reps;
+		long xp = Math.round(volume / VOLUME_POR_XP);
+		return (int) Math.min(XP_MAXIMO_SERIE, Math.max(XP_MINIMO_SERIE, xp));
 	}
 
 	/** XP total necessario para alcancar o nivel n: 100 x n^1,5. */

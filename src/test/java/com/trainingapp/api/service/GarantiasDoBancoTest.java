@@ -55,7 +55,7 @@ class GarantiasDoBancoTest {
 		XpEvent e = new XpEvent();
 		e.setUsuario(usuario);
 		e.setSessaoId(UUID.randomUUID());
-		e.setTipo(TipoXp.SESSAO);
+		e.setTipo(TipoXp.SERIES);
 		e.setPontos(50);
 		e.setDia(LocalDate.of(2026, 1, 1));
 		e.setDiaUnico(LocalDate.of(2026, 1, 1));

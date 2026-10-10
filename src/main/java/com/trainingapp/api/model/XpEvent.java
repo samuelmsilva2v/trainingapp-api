@@ -20,8 +20,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Registro append-only de XP: nunca e apagado (apagar um treino grava eventos de estorno com pontos negativos; so o dia_unico do evento SESSAO e liberado). XP total, nivel e streak sao
- * calculados a partir dele (o evento SESSAO existe uma vez por dia de treino valido).
+ * Registro append-only de XP: nunca e apagado (apagar um treino grava eventos de estorno com pontos negativos;
+ * so o dia_unico do evento SERIES e liberado). XP total, nivel e streak sao calculados a partir dele (o evento
+ * SERIES, com o XP de todas as series do treino, existe uma vez por dia de treino valido).
  */
 @Entity
 @Table(name = "xp_event", uniqueConstraints = @UniqueConstraint(columnNames = { "usuario_id", "dia_unico" }))
@@ -55,7 +56,7 @@ public class XpEvent {
 	@Column(nullable = false)
 	private LocalDate dia;
 
-	// Preenchido so no evento SESSAO: a chave unica garante um treino valido por usuario por dia.
+	// Preenchido so no evento SERIES: a chave unica garante um treino valido por usuario por dia.
 	@Column(name = "dia_unico")
 	private LocalDate diaUnico;
 

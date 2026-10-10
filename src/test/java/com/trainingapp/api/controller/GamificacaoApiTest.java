@@ -50,14 +50,14 @@ class GamificacaoApiTest {
 	}
 
 	@Test
-	void sessaoValidaRende50MaisCincoPorSerieEApareceNoResumo() throws Exception {
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65)).andExpect(jsonPath("$.recordes.length()").value(0))
-				.andExpect(jsonPath("$.xpSessao").value(50)).andExpect(jsonPath("$.xpSeries").value(15))
+	void sessaoValidaRendeXpPorSerieEApareceNoResumo() throws Exception {
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.recordes.length()").value(0))
+				.andExpect(jsonPath("$.xpSeries").value(36))
 				.andExpect(jsonPath("$.xpRecordes").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.xpTotal").value(65))
+				.andExpect(jsonPath("$.xpTotal").value(36))
 				.andExpect(jsonPath("$.nivel").value(1))
 				.andExpect(jsonPath("$.xpInicioDoNivel").value(0))
 				.andExpect(jsonPath("$.xpProximoNivel").value(283))
@@ -88,11 +88,11 @@ class GamificacaoApiTest {
 
 	@Test
 	void soAPrimeiraSessaoDoDiaConta() throws Exception {
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36));
 		concluir(5, "80").andExpect(jsonPath("$.xpGanho").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.xpTotal").value(65))
+				.andExpect(jsonPath("$.xpTotal").value(36))
 				.andExpect(jsonPath("$.treinos").value(1))
 				.andExpect(jsonPath("$.recordes").value(0));
 	}
@@ -101,15 +101,15 @@ class GamificacaoApiTest {
 	void recordeExigeMarcaAnteriorEMaiorCarga() throws Exception {
 		definirFuso(FUSO_ADIANTADO);
 		// Primeira vez no exercicio: nao ha marca para superar.
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65)).andExpect(jsonPath("$.recordes.length()").value(0));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.recordes.length()").value(0));
 
 		definirFuso(FUSO_ATRASADO);
 		concluir(3, "70")
-				.andExpect(jsonPath("$.xpGanho").value(90))
+				.andExpect(jsonPath("$.xpGanho").value(67))
 				.andExpect(jsonPath("$.recordes[0]").value(supino));
 
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.xpTotal").value(155))
+				.andExpect(jsonPath("$.xpTotal").value(103))
 				.andExpect(jsonPath("$.recordes").value(1))
 				.andExpect(jsonPath("$.treinos").value(2))
 				.andExpect(jsonPath("$.melhorStreak").value(2))
@@ -136,10 +136,10 @@ class GamificacaoApiTest {
 						bloco.formatted(UUID.randomUUID(), supino,
 								series.formatted(UUID.randomUUID()) + "," + series.formatted(UUID.randomUUID())));
 
-		// 50 + 4 series x 5 + um unico recorde (25).
+		// 4 series de 70 kg x 8 reps (14 XP cada) + um unico recorde (25).
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content(corpo))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.xpGanho").value(95))
+				.andExpect(jsonPath("$.xpGanho").value(81))
 				.andExpect(jsonPath("$.recordes.length()").value(1));
 	}
 
@@ -149,7 +149,7 @@ class GamificacaoApiTest {
 		concluir(3, "60");
 		definirFuso(FUSO_ATRASADO);
 
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65)).andExpect(jsonPath("$.recordes.length()").value(0));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.recordes.length()").value(0));
 	}
 
 	@Test
@@ -161,9 +161,9 @@ class GamificacaoApiTest {
 
 		mvc.perform(get("/api/sessoes"))
 				.andExpect(jsonPath("$.length()").value(2))
-				.andExpect(jsonPath("$[0].xpGanho").value(95))
+				.andExpect(jsonPath("$[0].xpGanho").value(81))
 				.andExpect(jsonPath("$[0].recordes").value(1))
-				.andExpect(jsonPath("$[1].xpGanho").value(65))
+				.andExpect(jsonPath("$[1].xpGanho").value(36))
 				.andExpect(jsonPath("$[1].recordes").value(0));
 	}
 
@@ -177,7 +177,7 @@ class GamificacaoApiTest {
 		mvc.perform(delete("/api/sessoes/" + recorde)).andExpect(status().isNoContent());
 
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.xpTotal").value(65))
+				.andExpect(jsonPath("$.xpTotal").value(36))
 				.andExpect(jsonPath("$.treinos").value(1))
 				.andExpect(jsonPath("$.recordes").value(0))
 				.andExpect(jsonPath("$.melhorStreak").value(1));
@@ -192,8 +192,8 @@ class GamificacaoApiTest {
 		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(0))
 				.andExpect(jsonPath("$.treinouHoje").value(false));
 
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65));
-		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(65));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(36));
 	}
 
 	@Test

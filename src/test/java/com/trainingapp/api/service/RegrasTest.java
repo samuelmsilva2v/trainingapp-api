@@ -1,6 +1,7 @@
 package com.trainingapp.api.service;
 
 import org.junit.jupiter.api.Test;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,16 +11,29 @@ class RegrasTest {
 	private static final LocalDate D = LocalDate.of(2026, 10, 1);
 
 	@Test
-	void sessaoSemSeriesSuficientesNaoRendeXp() {
-		assertThat(Regras.xpDaSessao(0)).isZero();
-		assertThat(Regras.xpDaSessao(2)).isZero();
+	void serieRendeVolumeDivididoPor40() {
+		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 10)).isEqualTo(15);
+		assertThat(Regras.xpDaSerie(new BigDecimal("100"), 5)).isEqualTo(13); // 12,5 arredonda para cima
+		assertThat(Regras.xpDaSerie(new BigDecimal("32.5"), 12)).isEqualTo(10);
 	}
 
 	@Test
-	void sessaoRende50MaisCincoPorSerieAteVinte() {
-		assertThat(Regras.xpDaSessao(3)).isEqualTo(65);
-		assertThat(Regras.xpDaSessao(20)).isEqualTo(150);
-		assertThat(Regras.xpDaSessao(35)).isEqualTo(150);
+	void quantoMaisPesadaELongaMaisXp() {
+		assertThat(Regras.xpDaSerie(new BigDecimal("80"), 10)).isGreaterThan(Regras.xpDaSerie(new BigDecimal("60"), 10));
+		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 12)).isGreaterThan(Regras.xpDaSerie(new BigDecimal("60"), 8));
+	}
+
+	@Test
+	void serieLeveOuSemCargaRendeOMinimoENuncaPassaDoMaximo() {
+		assertThat(Regras.xpDaSerie(new BigDecimal("10"), 8)).isEqualTo(5);
+		assertThat(Regras.xpDaSerie(null, 20)).isEqualTo(5);
+		assertThat(Regras.xpDaSerie(new BigDecimal("300"), 30)).isEqualTo(100);
+	}
+
+	@Test
+	void serieSemRepeticaoNaoRendeXp() {
+		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 0)).isZero();
+		assertThat(Regras.xpDaSerie(new BigDecimal("60"), null)).isZero();
 	}
 
 	@Test
