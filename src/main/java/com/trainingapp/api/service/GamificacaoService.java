@@ -57,7 +57,9 @@ public class GamificacaoService {
 		}
 
 		List<XpEvent> novos = new ArrayList<>();
-		novos.add(evento(usuario, sessao, TipoXp.SESSAO, Regras.XP_SESSAO, null, dia));
+		XpEvent treino = evento(usuario, sessao, TipoXp.SESSAO, Regras.XP_SESSAO, null, dia);
+		treino.setDiaUnico(dia);
+		novos.add(treino);
 		novos.add(evento(usuario, sessao, TipoXp.SERIES,
 				Regras.xpDaSessao(series) - Regras.XP_SESSAO, null, dia));
 		for (ExercicioSessao exercicio : sessao.getExercicios()) {
@@ -66,7 +68,7 @@ public class GamificacaoService {
 						exercicio.getExercicio().getId(), dia));
 			}
 		}
-		eventos.saveAll(novos);
+		eventos.saveAllAndFlush(novos);
 	}
 
 	/**

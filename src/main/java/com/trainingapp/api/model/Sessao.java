@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +25,7 @@ import java.util.UUID;
  * snapshot: editar ou excluir o plano nao altera o historico.
  */
 @Entity
-@Table(name = "sessao")
+@Table(name = "sessao", uniqueConstraints = @UniqueConstraint(columnNames = "andamento_usuario_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -51,6 +52,10 @@ public class Sessao {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private EstadoSessao estado;
+
+	// Id do usuario so enquanto EM_ANDAMENTO; a chave unica garante uma sessao em andamento por usuario.
+	@Column(name = "andamento_usuario_id")
+	private UUID andamentoUsuarioId;
 
 	@Column(nullable = false)
 	private Instant iniciadaEm;

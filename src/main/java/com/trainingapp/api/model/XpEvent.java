@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,7 +24,7 @@ import java.util.UUID;
  * calculados a partir dele (o evento SESSAO existe uma vez por dia de treino valido).
  */
 @Entity
-@Table(name = "xp_event")
+@Table(name = "xp_event", uniqueConstraints = @UniqueConstraint(columnNames = { "usuario_id", "dia_unico" }))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -53,6 +54,10 @@ public class XpEvent {
 	// Dia do treino no fuso do perfil na hora da conclusao.
 	@Column(nullable = false)
 	private LocalDate dia;
+
+	// Preenchido so no evento SESSAO: a chave unica garante um treino valido por usuario por dia.
+	@Column(name = "dia_unico")
+	private LocalDate diaUnico;
 
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)

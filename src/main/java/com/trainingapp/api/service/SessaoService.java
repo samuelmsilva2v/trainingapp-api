@@ -134,6 +134,7 @@ public class SessaoService {
 		sessao.setDiaNome(request.diaNome().trim());
 		sessao.setDiaOrdem(request.diaOrdem());
 		sessao.setEstado(request.estado());
+		sessao.setAndamentoUsuarioId(request.estado() == EstadoSessao.EM_ANDAMENTO ? usuario.getId() : null);
 		sessao.setIniciadaEm(request.iniciadaEm());
 		sessao.setFinalizadaEm(request.finalizadaEm());
 		sessao.setAtualizadoEm(request.atualizadoEm());
@@ -143,7 +144,7 @@ public class SessaoService {
 			planos.findByIdAndUsuarioId(request.planoId(), usuario.getId())
 					.ifPresent(plano -> plano.avancarApos(request.diaOrdem()));
 		}
-		Sessao salva = sessoes.save(sessao);
+		Sessao salva = sessoes.saveAndFlush(sessao);
 		if (concluindo) {
 			gamificacao.registrarSessaoConcluida(salva);
 		}
