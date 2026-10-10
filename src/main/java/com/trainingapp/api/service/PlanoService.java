@@ -65,7 +65,12 @@ public class PlanoService {
 	}
 
 	public void excluir(UUID id) {
-		planos.delete(buscar(id));
+		Plano plano = buscar(id);
+		planos.delete(plano);
+		if (plano.isAtivo()) {
+			planos.findByUsuarioIdOrderByCriadoEmDesc(plano.getUsuario().getId()).stream()
+					.filter(p -> !p.getId().equals(id)).findFirst().ifPresent(p -> p.setAtivo(true));
+		}
 	}
 
 	public PlanoResponse ativar(UUID id) {

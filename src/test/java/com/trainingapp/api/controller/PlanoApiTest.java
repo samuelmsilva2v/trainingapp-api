@@ -123,6 +123,17 @@ class PlanoApiTest {
 		mvc.perform(get("/api/planos/" + id)).andExpect(status().isNotFound());
 	}
 
+	@Test
+	void excluirOPlanoAtivoAtivaOMaisRecenteDosRestantes() throws Exception {
+		String ex = criarExercicio("Remada");
+		String ativo = criarPlano("Plano 1", ex);
+		criarPlano("Plano 2", ex);
+		String maisRecente = criarPlano("Plano 3", ex);
+
+		mvc.perform(delete("/api/planos/" + ativo)).andExpect(status().isNoContent());
+		mvc.perform(get("/api/planos/" + maisRecente)).andExpect(jsonPath("$.ativo").value(true));
+	}
+
 	// --- helpers ---
 
 	private String criarExercicio(String nome) throws Exception {
