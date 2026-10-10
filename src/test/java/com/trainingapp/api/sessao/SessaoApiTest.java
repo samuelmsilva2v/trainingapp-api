@@ -171,6 +171,10 @@ class SessaoApiTest {
 		salvar(UUID.randomUUID(), "CONCLUIDA", ontem, ontem.plusSeconds(3600), serie(UUID.randomUUID(), 8, "60", true))
 				.andExpect(status().isUnprocessableContent());
 
+		// Fim no futuro (XP farmavel em dias futuros).
+		salvar(UUID.randomUUID(), "CONCLUIDA", agora(), agora().plus(2, ChronoUnit.DAYS), serie(UUID.randomUUID(), 8, "60", true))
+				.andExpect(status().isUnprocessableContent());
+
 		// Concluida sem finalizadaEm.
 		salvar(UUID.randomUUID(), "CONCLUIDA", agora(), null, serie(UUID.randomUUID(), 8, "60", true))
 				.andExpect(status().isUnprocessableContent());

@@ -167,6 +167,9 @@ public class SessaoService {
 		if (request.iniciadaEm().isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
 			throw new RegraDeNegocioException("iniciadaEm nao pode estar no futuro");
 		}
+		if (request.finalizadaEm() != null && request.finalizadaEm().isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
+			throw new RegraDeNegocioException("finalizadaEm nao pode estar no futuro");
+		}
 		if (criacao && request.iniciadaEm().isBefore(agora.minus(JANELA_INICIO))) {
 			throw new RegraDeNegocioException("Nao e possivel registrar treino retroativo");
 		}
