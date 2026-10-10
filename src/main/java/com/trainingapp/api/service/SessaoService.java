@@ -49,9 +49,11 @@ public class SessaoService {
 	private final ExercicioRepository exercicios;
 	private final GamificacaoService gamificacao;
 	private final UsuarioAtual usuarioAtual;
+	private final ImagensExercicio imagens;
 
 	public SessaoService(SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
-			GamificacaoService gamificacao, UsuarioAtual usuarioAtual) {
+			GamificacaoService gamificacao, UsuarioAtual usuarioAtual, ImagensExercicio imagens) {
+		this.imagens = imagens;
 		this.gamificacao = gamificacao;
 		this.sessoes = sessoes;
 		this.planos = planos;
@@ -72,7 +74,7 @@ public class SessaoService {
 		Plano plano = ativo.get();
 		PlanoResponse.DiaResponse proximo = plano.getDias().isEmpty()
 				? null
-				: PlanoResponse.de(plano).dias().get(plano.indiceProximoDia());
+				: PlanoResponse.de(plano, imagens).dias().get(plano.indiceProximoDia());
 		return new HojeResponse(plano.getId(), plano.getNome(), plano.getDias().size(), proximo, emAndamento);
 	}
 
@@ -107,7 +109,7 @@ public class SessaoService {
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id));
 		// Em andamento: o XP devolvido e a previa exata do que o treino renderia se fosse concluido agora.
 		return sessao.getEstado() == EstadoSessao.EM_ANDAMENTO
-				? SessaoResponse.de(sessao, gamificacao.previa(sessao))
+				? SessaoResponse.de(sessao, gamificacao.previa(sessao), imagens)
 				: resposta(sessao);
 	}
 
@@ -179,7 +181,8 @@ public class SessaoService {
 
 	private SessaoResponse resposta(Sessao sessao) {
 		return SessaoResponse.de(sessao,
-				gamificacao.ganhos(List.of(sessao.getId())).getOrDefault(sessao.getId(), GamificacaoService.Ganho.NENHUM));
+				gamificacao.ganhos(List.of(sessao.getId())).getOrDefault(sessao.getId(), GamificacaoService.Ganho.NENHUM),
+				imagens);
 	}
 
 	private Sessao nova(UUID id, Usuario usuario) {

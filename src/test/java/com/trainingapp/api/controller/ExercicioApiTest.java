@@ -39,7 +39,10 @@ class ExercicioApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
 				.andExpect(jsonPath("$[0].nome").value("Liberação miofascial do quadríceps"))
-				.andExpect(jsonPath("$[0].personalizado").value(false));
+				.andExpect(jsonPath("$[0].personalizado").value(false))
+				.andExpect(jsonPath("$[0].imagens.length()").value(2))
+				.andExpect(jsonPath("$[0].imagens[0]").value(
+						"https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Quadriceps-SMR/0.jpg"));
 	}
 
 	@Test
@@ -53,7 +56,8 @@ class ExercicioApiTest {
 		mvc.perform(post("/api/exercicios").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\"Sled push\",\"grupoMuscular\":\"CORPO_INTEIRO\",\"equipamento\":\"OUTRO\"}"))
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.personalizado").value(true));
+				.andExpect(jsonPath("$.personalizado").value(true))
+				.andExpect(jsonPath("$.imagens.length()").value(0));
 
 		mvc.perform(get("/api/exercicios").param("busca", "sled push"))
 				.andExpect(jsonPath("$.length()").value(1));

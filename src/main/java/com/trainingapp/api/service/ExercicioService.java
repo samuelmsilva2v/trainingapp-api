@@ -19,10 +19,12 @@ public class ExercicioService {
 
 	private final ExercicioRepository repository;
 	private final UsuarioAtual usuarioAtual;
+	private final ImagensExercicio imagens;
 
-	public ExercicioService(ExercicioRepository repository, UsuarioAtual usuarioAtual) {
+	public ExercicioService(ExercicioRepository repository, UsuarioAtual usuarioAtual, ImagensExercicio imagens) {
 		this.repository = repository;
 		this.usuarioAtual = usuarioAtual;
+		this.imagens = imagens;
 	}
 
 	@Transactional(readOnly = true)
@@ -31,7 +33,7 @@ public class ExercicioService {
 		return repository.findDisponiveis(usuarioAtual.obter().getId()).stream()
 				.filter(e -> grupo == null || e.getGrupoMuscular() == grupo)
 				.filter(e -> termo == null || normalizar(e.getNome()).contains(termo))
-				.map(ExercicioResponse::de)
+				.map(e -> ExercicioResponse.de(e, imagens))
 				.toList();
 	}
 
@@ -42,7 +44,7 @@ public class ExercicioService {
 		exercicio.setGrupoMuscular(request.grupoMuscular());
 		exercicio.setEquipamento(request.equipamento());
 		exercicio.setUsuario(usuario);
-		return ExercicioResponse.de(repository.save(exercicio));
+		return ExercicioResponse.de(repository.save(exercicio), imagens);
 	}
 
 	// Busca ignora acento e caixa: "agachamento" acha "Agachamento", "triceps" acha "Tríceps".

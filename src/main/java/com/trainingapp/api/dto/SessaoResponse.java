@@ -5,6 +5,7 @@ import com.trainingapp.api.model.EstadoSessao;
 import com.trainingapp.api.model.GrupoMuscular;
 import com.trainingapp.api.model.Sessao;
 import com.trainingapp.api.service.GamificacaoService;
+import com.trainingapp.api.service.ImagensExercicio;
 import com.trainingapp.api.service.Regras;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,6 +34,7 @@ public record SessaoResponse(
 			String nome,
 			GrupoMuscular grupoMuscular,
 			Equipamento equipamento,
+			List<String> imagens,
 			int ordem,
 			int metaSeries,
 			int metaRepsMin,
@@ -47,12 +49,12 @@ public record SessaoResponse(
 	public record SerieResponse(UUID id, int ordem, Integer reps, BigDecimal carga, boolean concluida) {
 	}
 
-	public static SessaoResponse de(Sessao s, GamificacaoService.Ganho ganho) {
+	public static SessaoResponse de(Sessao s, GamificacaoService.Ganho ganho, ImagensExercicio imagens) {
 		return new SessaoResponse(s.getId(), s.getPlanoId(), s.getPlanoNome(), s.getDiaNome(), s.getDiaOrdem(),
 				s.getEstado(), s.getIniciadaEm(), s.getFinalizadaEm(), s.getAtualizadoEm(),
 				s.getExercicios().stream()
 						.map(e -> new ExercicioResponse(e.getId(), e.getExercicio().getId(), e.getNome(),
-								e.getExercicio().getGrupoMuscular(), e.getExercicio().getEquipamento(), e.getOrdem(),
+								e.getExercicio().getGrupoMuscular(), e.getExercicio().getEquipamento(), imagens.de(e.getExercicio()), e.getOrdem(),
 								e.getMetaSeries(), e.getMetaRepsMin(), e.getMetaRepsMax(), e.getMetaCarga(),
 								e.getMetaDescansoSegundos(),
 								e.getSeries().stream()

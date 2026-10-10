@@ -28,11 +28,14 @@ public class PlanoService {
 	private final PlanoRepository planos;
 	private final ExercicioRepository exercicios;
 	private final UsuarioAtual usuarioAtual;
+	private final ImagensExercicio imagens;
 
-	public PlanoService(PlanoRepository planos, ExercicioRepository exercicios, UsuarioAtual usuarioAtual) {
+	public PlanoService(PlanoRepository planos, ExercicioRepository exercicios, UsuarioAtual usuarioAtual,
+			ImagensExercicio imagens) {
 		this.planos = planos;
 		this.exercicios = exercicios;
 		this.usuarioAtual = usuarioAtual;
+		this.imagens = imagens;
 	}
 
 	@Transactional(readOnly = true)
@@ -44,7 +47,7 @@ public class PlanoService {
 
 	@Transactional(readOnly = true)
 	public PlanoResponse obter(UUID id) {
-		return PlanoResponse.de(buscar(id));
+		return PlanoResponse.de(buscar(id), imagens);
 	}
 
 	public PlanoResponse criar(PlanoRequest request) {
@@ -54,14 +57,14 @@ public class PlanoService {
 		// O primeiro plano do usuario ja nasce ativo.
 		plano.setAtivo(!planos.existsByUsuarioIdAndAtivoTrue(usuario.getId()));
 		aplicar(plano, request, usuario);
-		return PlanoResponse.de(planos.save(plano));
+		return PlanoResponse.de(planos.save(plano), imagens);
 	}
 
 	public PlanoResponse atualizar(UUID id, PlanoRequest request) {
 		Plano plano = buscar(id);
 		plano.getDias().clear();
 		aplicar(plano, request, usuarioAtual.obter());
-		return PlanoResponse.de(plano);
+		return PlanoResponse.de(plano, imagens);
 	}
 
 	public void excluir(UUID id) {
@@ -77,7 +80,7 @@ public class PlanoService {
 		Plano alvo = buscar(id);
 		planos.findByUsuarioIdOrderByCriadoEmDesc(alvo.getUsuario().getId())
 				.forEach(p -> p.setAtivo(p.getId().equals(alvo.getId())));
-		return PlanoResponse.de(alvo);
+		return PlanoResponse.de(alvo, imagens);
 	}
 
 	private Plano buscar(UUID id) {

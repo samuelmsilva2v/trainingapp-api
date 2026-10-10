@@ -5,6 +5,7 @@ import com.trainingapp.api.model.Equipamento;
 import com.trainingapp.api.model.GrupoMuscular;
 import com.trainingapp.api.model.Objetivo;
 import com.trainingapp.api.model.Plano;
+import com.trainingapp.api.service.ImagensExercicio;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +26,7 @@ public record PlanoResponse(
 			String exercicioNome,
 			GrupoMuscular grupoMuscular,
 			Equipamento equipamento,
+			List<String> imagens,
 			int ordem,
 			int series,
 			int repsMin,
@@ -33,13 +35,13 @@ public record PlanoResponse(
 			Integer descansoSegundos) {
 	}
 
-	public static PlanoResponse de(Plano plano) {
+	public static PlanoResponse de(Plano plano, ImagensExercicio imagens) {
 		List<DiaResponse> dias = plano.getDias().stream()
 				.map(dia -> new DiaResponse(dia.getId(), dia.getNome(), dia.getOrdem(),
 						dia.getExercicios().stream()
 								.map(i -> new ItemResponse(i.getId(), i.getExercicio().getId(),
 										i.getExercicio().getNome(), i.getExercicio().getGrupoMuscular(),
-										i.getExercicio().getEquipamento(), i.getOrdem(), i.getSeries(),
+										i.getExercicio().getEquipamento(), imagens.de(i.getExercicio()), i.getOrdem(), i.getSeries(),
 										i.getRepsMin(), i.getRepsMax(), i.getCargaAlvo(), i.getDescansoSegundos()))
 								.toList()))
 				.toList();
