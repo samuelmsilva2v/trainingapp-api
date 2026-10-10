@@ -1,6 +1,8 @@
 package com.trainingapp.api.controller;
 
 import com.jayway.jsonpath.JsonPath;
+import jakarta.persistence.EntityManager;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,9 @@ class SessaoApiTest {
 	@Autowired
 	MockMvc mvc;
 
+	@Autowired
+	EntityManager em;
+
 	String exercicio;
 	String plano;
 
@@ -48,6 +53,23 @@ class SessaoApiTest {
 		plano = JsonPath.read(mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON).content(corpo))
 				.andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString(), "$.id");
+	}
+
+	@Test
+	void historicoNaoFazUmaQueryPorTreino() throws Exception {
+		for (int i = 0; i < 10; i++) {
+			concluir(UUID.randomUUID(), 0, "Treino A");
+		}
+		em.flush();
+		em.clear();
+		var stats = em.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
+		stats.clear();
+
+		mvc.perform(get("/api/sessoes")).andExpect(status().isOk());
+
+		// Sem batch fetch sao 1 + 10 (exercicios) + 10 (series) queries.
+		org.junit.jupiter.api.Assertions.assertTrue(stats.getPrepareStatementCount() < 10,
+				"queries: " + stats.getPrepareStatementCount());
 	}
 
 	@Test
