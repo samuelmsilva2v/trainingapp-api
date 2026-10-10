@@ -2,14 +2,13 @@ package com.trainingapp.api.config;
 
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.UsuarioRepository;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Component;
 
 import static com.trainingapp.api.service.UsuarioPadraoAtual.ID_USUARIO_PADRAO;
 
 @Component
-public class UsuarioPadraoInicializador implements ApplicationRunner {
+public class UsuarioPadraoInicializador implements SmartInitializingSingleton {
 
 	private final UsuarioRepository repository;
 
@@ -17,8 +16,9 @@ public class UsuarioPadraoInicializador implements ApplicationRunner {
 		this.repository = repository;
 	}
 
+	// Roda antes de o servidor abrir a porta; um ApplicationRunner deixaria uma janela de 500.
 	@Override
-	public void run(ApplicationArguments args) {
+	public void afterSingletonsInstantiated() {
 		if (repository.existsById(ID_USUARIO_PADRAO)) {
 			return;
 		}
