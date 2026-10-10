@@ -24,6 +24,29 @@ Pré-requisitos: JDK 21 e Docker (para o banco via `compose.yaml`).
 
 O `spring-boot-docker-compose` sobe automaticamente os serviços definidos em `compose.yaml` (ex.: PostgreSQL) ao iniciar a aplicação.
 
+## Usar no celular pela internet (túnel)
+
+Com o perfil `online` a própria API serve o front compilado: o app inteiro fica em `http://localhost:8080` (`/` = app, `/api` = API, sem CORS) e um túnel expõe essa única porta com HTTPS. A API continua ouvindo só em `127.0.0.1`. O PC precisa ficar ligado, com o Docker rodando.
+
+```bash
+# 1. compilar o front (a cada mudança no front)
+cd ../trainingapp-web && npm run build
+
+# 2. subir a API com o perfil online (PowerShell: mantenha as aspas)
+cd ../trainingapp-api && ./mvnw spring-boot:run "-Dspring-boot.run.profiles=dev,online"
+```
+
+Túnel (escolha um):
+
+- **Tailscale Funnel**, endereço fixo `https://<pc>.<rede>.ts.net`: `winget install Tailscale.Tailscale`, entre na sua conta, depois `tailscale funnel --bg 8080`. Na primeira vez o comando mostra um link para ativar o HTTPS e o Funnel na sua rede. `tailscale funnel status` mostra o endereço; `tailscale funnel reset` fecha.
+- **Cloudflare Tunnel**, sem conta, mas o endereço muda a cada execução: `winget install Cloudflare.cloudflared`, depois `cloudflared tunnel --url http://localhost:8080` (mostra um `https://….trycloudflare.com`).
+
+Cuidados:
+
+- Não há login: **quem tiver o endereço lê e apaga os seus treinos**. Não divulgue e feche o túnel quando não estiver usando.
+- Depois de um `npm run build` basta recarregar a página no celular (o `index.html` não fica em cache). Mudanças na API reiniciam sozinhas (devtools).
+- O fuso usado para contar os dias de treino é o do PC onde a API roda.
+
 ## Catálogo de exercícios
 
 O catálogo (876 exercícios) vem do [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense), com nomes traduzidos para português. O arquivo `src/main/resources/catalogo/exercicios.json` é gerado e importado na inicialização de forma idempotente, usando o `slug` (id do free-exercise-db) como chave.
