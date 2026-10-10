@@ -46,7 +46,9 @@ public class GamificacaoService {
 		}
 		Usuario usuario = sessao.getUsuario();
 		LocalDate dia = diaDoTreino(sessao.getFinalizadaEm(), usuario);
-		if (eventos.existsByUsuarioIdAndTipoAndDia(usuario.getId(), TipoXp.SESSAO, dia)) {
+		// Saldo > 0: o dia ja rendeu XP e nao foi estornado (apagar o treino libera o dia).
+		if (eventos.findByUsuarioIdAndTipoAndDia(usuario.getId(), TipoXp.SESSAO, dia).stream()
+				.mapToInt(XpEvent::getPontos).sum() > 0) {
 			return;
 		}
 		int series = (int) sessao.getExercicios().stream()
@@ -76,6 +78,24 @@ public class GamificacaoService {
 	}
 
 	/**
+	 * Estorna o XP de uma sessao apagada com eventos de pontos negativos (o registro e append-only).
+	 * O evento SESSAO original so perde o dia_unico, para que o dia possa render XP de novo.
+	 */
+	public void estornar(UUID sessaoId) {
+		List<XpEvent> estornos = new ArrayList<>();
+		for (XpEvent original : eventos.findBySessaoIdIn(List.of(sessaoId))) {
+			if (original.getPontos() <= 0) {
+				continue;
+			}
+			XpEvent estorno = evento(original.getUsuario(), original.getSessaoId(), original.getTipo(),
+					-original.getPontos(), original.getExercicioId(), original.getDia());
+			estornos.add(estorno);
+			original.setDiaUnico(null);
+		}
+		eventos.saveAll(estornos);
+	}
+
+	/**
 	 * Recorde = carga maior que a melhor ja registrada no exercicio. A primeira vez que o exercicio
 	 * aparece no historico nao e recorde: nao ha marca anterior para superar.
 	 */
@@ -94,9 +114,13 @@ public class GamificacaoService {
 	}
 
 	private XpEvent evento(Usuario usuario, Sessao sessao, TipoXp tipo, int pontos, UUID exercicioId, LocalDate dia) {
+		return evento(usuario, sessao.getId(), tipo, pontos, exercicioId, dia);
+	}
+
+	private XpEvent evento(Usuario usuario, UUID sessaoId, TipoXp tipo, int pontos, UUID exercicioId, LocalDate dia) {
 		XpEvent e = new XpEvent();
 		e.setUsuario(usuario);
-		e.setSessaoId(sessao.getId());
+		e.setSessaoId(sessaoId);
 		e.setTipo(tipo);
 		e.setPontos(pontos);
 		e.setExercicioId(exercicioId);
@@ -114,11 +138,13 @@ public class GamificacaoService {
 		List<XpEvent> todos = eventos.findByUsuarioId(usuario.getId());
 
 		long xp = todos.stream().mapToLong(XpEvent::getPontos).sum();
+		// Estornos tem pontos negativos: um dia so conta com saldo positivo, e cada recorde estornado desconta um.
 		Set<LocalDate> dias = todos.stream()
 				.filter(e -> e.getTipo() == TipoXp.SESSAO)
-				.map(XpEvent::getDia)
+				.collect(Collectors.groupingBy(XpEvent::getDia, Collectors.summingInt(XpEvent::getPontos)))
+				.entrySet().stream().filter(d -> d.getValue() > 0).map(java.util.Map.Entry::getKey)
 				.collect(Collectors.toSet());
-		int recordes = (int) todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).count();
+		int recordes = todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).mapToInt(e -> Integer.signum(e.getPontos())).sum();
 		LocalDate hoje = LocalDate.now(ZoneId.of(usuario.getFusoHorario()));
 		Regras.Streak streak = Regras.streak(dias, hoje);
 		int nivel = Regras.nivel(xp);

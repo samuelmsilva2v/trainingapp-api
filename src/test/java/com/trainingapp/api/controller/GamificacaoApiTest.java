@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -165,6 +166,46 @@ class GamificacaoApiTest {
 	}
 
 	@Test
+	void apagarTreinoEstornaXpTreinosStreakERecorde() throws Exception {
+		definirFuso(FUSO_ADIANTADO);
+		concluir(3, "60");
+		definirFuso(FUSO_ATRASADO);
+		String recorde = idDe(concluir(3, "70"));
+
+		mvc.perform(delete("/api/sessoes/" + recorde)).andExpect(status().isNoContent());
+
+		mvc.perform(get("/api/gamificacao"))
+				.andExpect(jsonPath("$.xpTotal").value(65))
+				.andExpect(jsonPath("$.treinos").value(1))
+				.andExpect(jsonPath("$.recordes").value(0))
+				.andExpect(jsonPath("$.melhorStreak").value(1));
+		mvc.perform(get("/api/sessoes")).andExpect(jsonPath("$.length()").value(1));
+		mvc.perform(delete("/api/sessoes/" + recorde)).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void apagarOTreinoDoDiaLiberaOUsoDoDiaParaRenderXpDeNovo() throws Exception {
+		String id = idDe(concluir(3, "60"));
+		mvc.perform(delete("/api/sessoes/" + id)).andExpect(status().isNoContent());
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(0))
+				.andExpect(jsonPath("$.treinouHoje").value(false));
+
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(65));
+	}
+
+	@Test
+	void naoApagaTreinoEmAndamento() throws Exception {
+		Instant inicio = agora();
+		UUID id = UUID.randomUUID();
+		mvc.perform(put("/api/sessoes/" + id).contentType(MediaType.APPLICATION_JSON)
+				.content(corpo("EM_ANDAMENTO", inicio, null, 1, "60").replace("\"finalizadaEm\":\"null\"", "\"finalizadaEm\":null")
+				.replace("\"atualizadoEm\":\"null\"", "\"atualizadoEm\":\"" + inicio + "\""))).andExpect(status().isOk());
+
+		mvc.perform(delete("/api/sessoes/" + id)).andExpect(status().isUnprocessableContent());
+	}
+
+	@Test
 	void sessaoAbandonadaNaoRendeXp() throws Exception {
 		Instant inicio = agora();
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
@@ -176,6 +217,10 @@ class GamificacaoApiTest {
 	}
 
 	// --- helpers ---
+
+	private static String idDe(org.springframework.test.web.servlet.ResultActions r) throws Exception {
+		return com.jayway.jsonpath.JsonPath.read(r.andReturn().getResponse().getContentAsString(), "$.id");
+	}
 
 	private org.springframework.test.web.servlet.ResultActions concluir(int series, String carga) throws Exception {
 		Instant inicio = agora().plusSeconds(++deslocamento * 10L);

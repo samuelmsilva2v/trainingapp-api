@@ -106,6 +106,17 @@ public class SessaoService {
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id)));
 	}
 
+	/** Apaga um treino encerrado e estorna o XP e os recordes dele; a rotacao nao volta atras. */
+	public void excluir(UUID id) {
+		Sessao sessao = sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id));
+		if (sessao.getEstado() == EstadoSessao.EM_ANDAMENTO) {
+			throw new RegraDeNegocioException("Abandone o treino em andamento antes de apagar");
+		}
+		gamificacao.estornar(id);
+		sessoes.delete(sessao);
+	}
+
 	/**
 	 * Upsert idempotente. Sessao encerrada nao muda mais (reenvios devolvem o que ja esta salvo) e,
 	 * em andamento, uma escrita mais antiga que a salva e ignorada: o ultimo a escrever vence.

@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Registro append-only de XP: nunca e alterado nem apagado. XP total, nivel e streak sao
+ * Registro append-only de XP: nunca e apagado (apagar um treino grava eventos de estorno com pontos negativos; so o dia_unico do evento SESSAO e liberado). XP total, nivel e streak sao
  * calculados a partir dele (o evento SESSAO existe uma vez por dia de treino valido).
  */
 @Entity
