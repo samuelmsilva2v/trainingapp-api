@@ -5,6 +5,7 @@ import com.trainingapp.api.model.EstadoSessao;
 import com.trainingapp.api.model.GrupoMuscular;
 import com.trainingapp.api.model.Sessao;
 import com.trainingapp.api.service.GamificacaoService;
+import com.trainingapp.api.service.Regras;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -38,7 +39,9 @@ public record SessaoResponse(
 			int metaRepsMax,
 			BigDecimal metaCarga,
 			Integer metaDescansoSegundos,
-			List<SerieResponse> series) {
+			List<SerieResponse> series,
+			/** XP das series concluidas deste exercicio (0 se o treino nao rendeu XP). */
+			int xp) {
 	}
 
 	public record SerieResponse(UUID id, int ordem, Integer reps, BigDecimal carga, boolean concluida) {
@@ -55,7 +58,9 @@ public record SessaoResponse(
 								e.getSeries().stream()
 										.map(r -> new SerieResponse(r.getId(), r.getOrdem(), r.getReps(), r.getCarga(),
 												r.isConcluida()))
-										.toList()))
+										.toList(),
+								ganho.xpSeries() > 0 ? e.getSeries().stream().filter(r -> r.isConcluida())
+										.mapToInt(r -> Regras.xpDaSerie(r.getCarga(), r.getReps())).sum() : 0))
 						.toList(),
 				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.recordes());
 	}

@@ -53,6 +53,7 @@ class GamificacaoApiTest {
 	void sessaoValidaRendeXpPorSerieEApareceNoResumo() throws Exception {
 		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.recordes.length()").value(0))
 				.andExpect(jsonPath("$.xpSeries").value(36))
+				.andExpect(jsonPath("$.exercicios[0].xp").value(36))
 				.andExpect(jsonPath("$.xpRecordes").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
@@ -79,7 +80,8 @@ class GamificacaoApiTest {
 
 	@Test
 	void menosDeTresSeriesNaoRendeXp() throws Exception {
-		concluir(2, "60").andExpect(jsonPath("$.xpGanho").value(0));
+		concluir(2, "60").andExpect(jsonPath("$.xpGanho").value(0))
+				.andExpect(jsonPath("$.exercicios[0].xp").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
 				.andExpect(jsonPath("$.xpTotal").value(0))
