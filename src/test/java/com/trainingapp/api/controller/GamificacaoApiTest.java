@@ -114,6 +114,33 @@ class GamificacaoApiTest {
 	}
 
 	@Test
+	void mesmoExercicioDuasVezesNoDiaPagaUmRecordeSo() throws Exception {
+		definirFuso(FUSO_ADIANTADO);
+		concluir(3, "60");
+		definirFuso(FUSO_ATRASADO);
+
+		Instant inicio = agora().plusSeconds(100);
+		String bloco = """
+				{\"id\":\"%s\",\"exercicioId\":\"%s\",\"metaSeries\":3,\"metaRepsMin\":8,\"metaRepsMax\":12,
+				 \"metaCarga\":null,\"metaDescansoSegundos\":null,\"series\":[%s]}""";
+		String series = "{\"id\":\"%s\",\"reps\":8,\"carga\":70,\"concluida\":true}";
+		String corpo = """
+				{\"planoId\":null,\"planoNome\":\"Plano\",\"diaNome\":\"Treino A\",\"diaOrdem\":0,\"estado\":\"CONCLUIDA\",
+				 \"iniciadaEm\":\"%s\",\"finalizadaEm\":\"%s\",\"atualizadoEm\":\"%s\",\"exercicios\":[%s,%s]}"""
+				.formatted(inicio, inicio.plusSeconds(60), inicio.plusSeconds(60),
+						bloco.formatted(UUID.randomUUID(), supino,
+								series.formatted(UUID.randomUUID()) + "," + series.formatted(UUID.randomUUID())),
+						bloco.formatted(UUID.randomUUID(), supino,
+								series.formatted(UUID.randomUUID()) + "," + series.formatted(UUID.randomUUID())));
+
+		// 50 + 4 series x 5 + um unico recorde (25).
+		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content(corpo))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.xpGanho").value(95))
+				.andExpect(jsonPath("$.recordes.length()").value(1));
+	}
+
+	@Test
 	void cargaIgualOuMenorQueAMarcaNaoEhRecorde() throws Exception {
 		definirFuso(FUSO_ADIANTADO);
 		concluir(3, "60");

@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -62,8 +63,11 @@ public class GamificacaoService {
 		novos.add(treino);
 		novos.add(evento(usuario, sessao, TipoXp.SERIES,
 				Regras.xpDaSessao(series) - Regras.XP_SESSAO, null, dia));
+		Set<UUID> premiados = new HashSet<>();
 		for (ExercicioSessao exercicio : sessao.getExercicios()) {
-			if (bateuRecorde(usuario, sessao, exercicio)) {
+			// Um plano pode repetir o exercicio no dia; o recorde vale uma vez por exercicio.
+			if (!premiados.contains(exercicio.getExercicio().getId()) && bateuRecorde(usuario, sessao, exercicio)) {
+				premiados.add(exercicio.getExercicio().getId());
 				novos.add(evento(usuario, sessao, TipoXp.RECORDE, Regras.XP_RECORDE,
 						exercicio.getExercicio().getId(), dia));
 			}
