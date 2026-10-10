@@ -19,11 +19,11 @@ import java.util.UUID;
 public record PlanoRequest(
 		@NotBlank @Size(max = 100) String nome,
 		@NotNull Objetivo objetivo,
-		@NotEmpty @Valid List<DiaRequest> dias) {
+		@NotEmpty @Size(max = 14) @Valid List<DiaRequest> dias) {
 
 	public record DiaRequest(
 			@NotBlank @Size(max = 100) String nome,
-			@NotNull @Valid List<ItemRequest> exercicios) {
+			@NotNull @Size(max = 30) @Valid List<ItemRequest> exercicios) {
 	}
 
 	public record ItemRequest(

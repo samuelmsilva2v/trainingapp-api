@@ -27,7 +27,7 @@ public record SessaoRequest(
 		@NotNull Instant iniciadaEm,
 		Instant finalizadaEm,
 		@NotNull Instant atualizadoEm,
-		@NotNull @Valid List<ExercicioRequest> exercicios) {
+		@NotNull @Size(max = 30) @Valid List<ExercicioRequest> exercicios) {
 
 	public record ExercicioRequest(
 			@NotNull UUID id,
@@ -37,7 +37,7 @@ public record SessaoRequest(
 			@Min(1) @Max(100) int metaRepsMax,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal metaCarga,
 			@Min(0) @Max(1800) Integer metaDescansoSegundos,
-			@NotNull @Valid List<SerieRequest> series) {
+			@NotNull @Size(max = 50) @Valid List<SerieRequest> series) {
 	}
 
 	public record SerieRequest(

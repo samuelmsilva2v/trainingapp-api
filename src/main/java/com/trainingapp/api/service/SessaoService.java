@@ -26,9 +26,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -184,11 +186,18 @@ public class SessaoService {
 		if (criacao && request.iniciadaEm().isBefore(agora.minus(JANELA_INICIO))) {
 			throw new RegraDeNegocioException("Nao e possivel registrar treino retroativo");
 		}
+		Set<UUID> ids = new HashSet<>();
 		for (SessaoRequest.ExercicioRequest e : request.exercicios()) {
+			if (!ids.add(e.id())) {
+				throw new RegraDeNegocioException("Id repetido na sessao: " + e.id());
+			}
 			if (e.metaRepsMin() > e.metaRepsMax()) {
 				throw new RegraDeNegocioException("metaRepsMin nao pode ser maior que metaRepsMax");
 			}
 			for (SessaoRequest.SerieRequest s : e.series()) {
+				if (!ids.add(s.id())) {
+					throw new RegraDeNegocioException("Id repetido na sessao: " + s.id());
+				}
 				if (s.concluida() && (s.reps() == null || s.reps() < 1)) {
 					throw new RegraDeNegocioException("Serie concluida precisa de pelo menos 1 repeticao");
 				}

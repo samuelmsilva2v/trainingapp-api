@@ -56,6 +56,19 @@ class SessaoApiTest {
 	}
 
 	@Test
+	void rejeitaIdRepetidoEListaGigante() throws Exception {
+		UUID repetido = UUID.randomUUID();
+		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, serie(repetido, 8, "60", true), serie(repetido, 8, "60", true))
+				.andExpect(status().isUnprocessableContent());
+
+		String[] muitas = new String[51];
+		for (int i = 0; i < muitas.length; i++) {
+			muitas[i] = serie(UUID.randomUUID(), 8, "60", true);
+		}
+		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, muitas).andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void historicoNaoFazUmaQueryPorTreino() throws Exception {
 		for (int i = 0; i < 10; i++) {
 			concluir(UUID.randomUUID(), 0, "Treino A");
