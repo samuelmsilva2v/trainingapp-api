@@ -6,12 +6,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,15 +34,52 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import(GamificacaoApiTest.RelogioDeTeste.class)
 class GamificacaoApiTest {
 
 	// Com 25h de diferenca, estes fusos nunca estao no mesmo dia: simulam treinos em dias distintos
-	// sem precisar de registro retroativo.
+	// sem precisar de registro retroativo. O fuso do sistema vem do Clock da API; aqui o teste o troca.
 	private static final String FUSO_ADIANTADO = "Pacific/Kiritimati";
 	private static final String FUSO_ATRASADO = "Pacific/Pago_Pago";
 
+	/** Relogio da API com o fuso trocavel, no lugar do fuso do sistema. */
+	static class RelogioMutavel extends Clock {
+		private volatile ZoneId zona = ZoneId.systemDefault();
+
+		void definirZona(ZoneId nova) {
+			zona = nova;
+		}
+
+		@Override
+		public ZoneId getZone() {
+			return zona;
+		}
+
+		@Override
+		public Clock withZone(ZoneId nova) {
+			return Clock.system(nova);
+		}
+
+		@Override
+		public Instant instant() {
+			return Instant.now();
+		}
+	}
+
+	@TestConfiguration(proxyBeanMethods = false)
+	static class RelogioDeTeste {
+		@Bean
+		@Primary
+		RelogioMutavel relogioDeTeste() {
+			return new RelogioMutavel();
+		}
+	}
+
 	@Autowired
 	MockMvc mvc;
+
+	@Autowired
+	RelogioMutavel relogio;
 
 	String supino;
 	// Cada sessao comeca alguns segundos depois da anterior, para a ordem do historico ser estavel.
@@ -44,6 +87,7 @@ class GamificacaoApiTest {
 
 	@BeforeEach
 	void criarExercicio() throws Exception {
+		relogio.definirZona(ZoneId.systemDefault()); // o relogio e compartilhado entre os testes
 		supino = JsonPath.read(mvc.perform(post("/api/exercicios").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\"Supino\",\"grupoMuscular\":\"PEITO\",\"equipamento\":\"BARRA\"}"))
 				.andReturn().getResponse().getContentAsString(), "$.id");
@@ -275,10 +319,8 @@ class GamificacaoApiTest {
 				.andExpect(status().isOk());
 	}
 
-	private void definirFuso(String fuso) throws Exception {
-		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"nome\":\"Teste\",\"fusoHorario\":\"%s\"}".formatted(fuso)))
-				.andExpect(status().isOk());
+	private void definirFuso(String fuso) {
+		relogio.definirZona(ZoneId.of(fuso));
 	}
 
 	private String corpo(String estado, Instant inicio, Instant fim, int series, String carga) {

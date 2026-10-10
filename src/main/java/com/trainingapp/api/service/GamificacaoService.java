@@ -12,9 +12,9 @@ import com.trainingapp.api.repository.XpEventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,16 +29,18 @@ public class GamificacaoService {
 	private final XpEventRepository eventos;
 	private final SessaoRepository sessoes;
 	private final UsuarioAtual usuarioAtual;
+	private final Clock relogio;
 
-	public GamificacaoService(XpEventRepository eventos, SessaoRepository sessoes, UsuarioAtual usuarioAtual) {
+	public GamificacaoService(XpEventRepository eventos, SessaoRepository sessoes, UsuarioAtual usuarioAtual, Clock relogio) {
 		this.eventos = eventos;
 		this.sessoes = sessoes;
 		this.usuarioAtual = usuarioAtual;
+		this.relogio = relogio;
 	}
 
 	/**
 	 * Credita o XP de uma sessao recem-concluida. So conta a primeira sessao valida do dia (no fuso do
-	 * perfil) e com pelo menos 3 series concluidas; o chamador garante que isto roda uma vez por sessao.
+	 * sistema) e com pelo menos 3 series concluidas; o chamador garante que isto roda uma vez por sessao.
 	 */
 	public void registrarSessaoConcluida(Sessao sessao) {
 		if (eventos.existsBySessaoId(sessao.getId())) {
@@ -53,13 +55,13 @@ public class GamificacaoService {
 	 */
 	@Transactional(readOnly = true)
 	public Ganho previa(Sessao sessao) {
-		return Ganho.de(calcularEventos(sessao, Instant.now()));
+		return Ganho.de(calcularEventos(sessao, relogio.instant()));
 	}
 
 	/** Eventos de XP que a sessao rende se terminar em `fim`; vazio quando nao rende nada. */
 	private List<XpEvent> calcularEventos(Sessao sessao, Instant fim) {
 		Usuario usuario = sessao.getUsuario();
-		LocalDate dia = diaDoTreino(fim, usuario);
+		LocalDate dia = diaDoTreino(fim);
 		// Saldo > 0: o dia ja rendeu XP e nao foi estornado (apagar o treino libera o dia).
 		if (eventos.findByUsuarioIdAndTipoAndDia(usuario.getId(), TipoXp.SERIES, dia).stream()
 				.mapToInt(XpEvent::getPontos).sum() > 0) {
@@ -142,8 +144,8 @@ public class GamificacaoService {
 		return e;
 	}
 
-	private static LocalDate diaDoTreino(Instant instante, Usuario usuario) {
-		return instante.atZone(ZoneId.of(usuario.getFusoHorario())).toLocalDate();
+	private LocalDate diaDoTreino(Instant instante) {
+		return instante.atZone(relogio.getZone()).toLocalDate();
 	}
 
 	@Transactional(readOnly = true)
@@ -159,7 +161,7 @@ public class GamificacaoService {
 				.entrySet().stream().filter(d -> d.getValue() > 0).map(java.util.Map.Entry::getKey)
 				.collect(Collectors.toSet());
 		int recordes = todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).mapToInt(e -> Integer.signum(e.getPontos())).sum();
-		LocalDate hoje = LocalDate.now(ZoneId.of(usuario.getFusoHorario()));
+		LocalDate hoje = LocalDate.now(relogio);
 		Regras.Streak streak = Regras.streak(dias, hoje);
 		int nivel = Regras.nivel(xp);
 

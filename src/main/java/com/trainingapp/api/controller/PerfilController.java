@@ -35,7 +35,6 @@ public class PerfilController {
 	public PerfilResponse atualizar(@Valid @RequestBody PerfilRequest request) {
 		Usuario usuario = usuarioAtual.obter();
 		usuario.setNome(request.nome());
-		usuario.setFusoHorario(request.fusoHorario());
 		return PerfilResponse.de(repository.save(usuario));
 	}
 }

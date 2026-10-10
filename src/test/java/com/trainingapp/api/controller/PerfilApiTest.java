@@ -24,25 +24,33 @@ class PerfilApiTest {
 	MockMvc mvc;
 
 	@Test
-	void usuarioPadraoExisteComFusoDeSaoPaulo() throws Exception {
+	void usuarioPadraoExisteSemFusoHorario() throws Exception {
 		mvc.perform(get("/api/perfil"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.fusoHorario").value("America/Sao_Paulo"));
+				.andExpect(jsonPath("$.nome").value("Atleta"))
+				.andExpect(jsonPath("$.fusoHorario").doesNotExist());
 	}
 
 	@Test
-	void atualizaNomeEFuso() throws Exception {
+	void atualizaNome() throws Exception {
+		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"nome\":\"Samuel\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.nome").value("Samuel"));
+	}
+
+	@Test
+	void clienteAntigoQueAindaEnviaFusoNaoQuebra() throws Exception {
 		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\"Samuel\",\"fusoHorario\":\"America/Manaus\"}"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.nome").value("Samuel"))
-				.andExpect(jsonPath("$.fusoHorario").value("America/Manaus"));
+				.andExpect(jsonPath("$.fusoHorario").doesNotExist());
 	}
 
 	@Test
-	void fusoInvalidoRetorna400() throws Exception {
+	void nomeEmBrancoRetorna400() throws Exception {
 		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"nome\":\"Samuel\",\"fusoHorario\":\"Marte/Olympus\"}"))
+				.content("{\"nome\":\" \"}"))
 				.andExpect(status().isBadRequest());
 	}
 }

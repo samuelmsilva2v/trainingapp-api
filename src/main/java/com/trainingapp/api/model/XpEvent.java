@@ -52,7 +52,7 @@ public class XpEvent {
 	// So nos eventos RECORDE.
 	private UUID exercicioId;
 
-	// Dia do treino no fuso do perfil na hora da conclusao.
+	// Dia do treino no fuso do sistema na hora da conclusao.
 	@Column(nullable = false)
 	private LocalDate dia;
 

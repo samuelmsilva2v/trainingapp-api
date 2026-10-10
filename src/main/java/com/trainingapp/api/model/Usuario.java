@@ -25,9 +25,6 @@ public class Usuario {
 	@Column(nullable = false, length = 100)
 	private String nome;
 
-	@Column(nullable = false, length = 64)
-	private String fusoHorario;
-
 	// Nulo enquanto nao ha login; vira obrigatorio na fase de autenticacao.
 	@Column(unique = true)
 	private String email;

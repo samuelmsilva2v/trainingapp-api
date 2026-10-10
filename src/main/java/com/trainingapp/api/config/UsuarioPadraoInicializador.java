@@ -25,7 +25,6 @@ public class UsuarioPadraoInicializador implements SmartInitializingSingleton {
 		Usuario usuario = new Usuario();
 		usuario.setId(ID_USUARIO_PADRAO);
 		usuario.setNome("Atleta");
-		usuario.setFusoHorario("America/Sao_Paulo");
 		repository.save(usuario);
 	}
 }
