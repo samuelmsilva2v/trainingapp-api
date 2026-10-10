@@ -51,7 +51,9 @@ class GamificacaoApiTest {
 
 	@Test
 	void sessaoValidaRende50MaisCincoPorSerieEApareceNoResumo() throws Exception {
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65)).andExpect(jsonPath("$.recordes.length()").value(0));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(65)).andExpect(jsonPath("$.recordes.length()").value(0))
+				.andExpect(jsonPath("$.xpSessao").value(50)).andExpect(jsonPath("$.xpSeries").value(15))
+				.andExpect(jsonPath("$.xpRecordes").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
 				.andExpect(status().isOk())

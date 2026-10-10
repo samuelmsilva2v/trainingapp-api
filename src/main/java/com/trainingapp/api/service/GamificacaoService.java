@@ -165,14 +165,21 @@ public class GamificacaoService {
 						Collectors.collectingAndThen(Collectors.toList(), Ganho::de)));
 	}
 
-	public record Ganho(int xp, List<UUID> recordes) {
+	/** XP total da sessao, o detalhe por tipo e os exercicios com recorde. */
+	public record Ganho(int xp, int xpSessao, int xpSeries, int xpRecordes, List<UUID> recordes) {
 
-		public static final Ganho NENHUM = new Ganho(0, List.of());
+		public static final Ganho NENHUM = new Ganho(0, 0, 0, 0, List.of());
 
 		static Ganho de(List<XpEvent> eventos) {
-			return new Ganho(
-					eventos.stream().mapToInt(XpEvent::getPontos).sum(),
+			int sessao = pontos(eventos, TipoXp.SESSAO);
+			int series = pontos(eventos, TipoXp.SERIES);
+			int recordes = pontos(eventos, TipoXp.RECORDE);
+			return new Ganho(sessao + series + recordes, sessao, series, recordes,
 					eventos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).map(XpEvent::getExercicioId).toList());
+		}
+
+		private static int pontos(List<XpEvent> eventos, TipoXp tipo) {
+			return eventos.stream().filter(e -> e.getTipo() == tipo).mapToInt(XpEvent::getPontos).sum();
 		}
 	}
 }

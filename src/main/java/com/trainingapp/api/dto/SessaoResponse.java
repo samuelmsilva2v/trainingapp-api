@@ -22,6 +22,9 @@ public record SessaoResponse(
 		Instant atualizadoEm,
 		List<ExercicioResponse> exercicios,
 		int xpGanho,
+		int xpSessao,
+		int xpSeries,
+		int xpRecordes,
 		List<UUID> recordes) {
 
 	public record ExercicioResponse(
@@ -55,6 +58,6 @@ public record SessaoResponse(
 												r.isConcluida()))
 										.toList()))
 						.toList(),
-				ganho.xp(), ganho.recordes());
+				ganho.xp(), ganho.xpSessao(), ganho.xpSeries(), ganho.xpRecordes(), ganho.recordes());
 	}
 }
