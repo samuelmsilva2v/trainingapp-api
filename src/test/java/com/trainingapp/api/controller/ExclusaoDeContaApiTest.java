@@ -54,7 +54,7 @@ import static org.hamcrest.Matchers.containsString;
 @Transactional
 class ExclusaoDeContaApiTest {
 
-	static final String SENHA = "senha-forte-123";
+	static final String SENHA = "Senha-Forte-123!";
 	static final String EMAIL = "maria@teste.com"; // esta na lista de permitidos (application-test.properties)
 	static final Pattern TOKEN = Pattern.compile("token=([A-Za-z0-9_-]+)");
 	// O freio de tentativas por IP vive entre os testes: cada requisicao usa um IP novo.

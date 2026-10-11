@@ -47,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class AuthApiTest {
 
-	static final String SENHA = "senha-forte-123";
+	static final String SENHA = "Senha-Forte-123!";
 	static final String EMAIL = "maria@teste.com"; // esta na lista de permitidos (application-test.properties)
 	static final Pattern TOKEN = Pattern.compile("token=([A-Za-z0-9_-]+)");
 	// O freio de tentativas e por IP e vive entre os testes: cada requisicao usa um IP novo, salvo quando o teste quer bater no freio.
@@ -116,7 +116,11 @@ class AuthApiTest {
 	@Test
 	void cadastroRespeitaListaDeEmailsESenha() throws Exception {
 		post("/api/auth/cadastro", cadastro("Intruso", "intruso@fora.com")).andExpect(status().isForbidden());
-		post("/api/auth/cadastro", cadastro("Maria", EMAIL).replace(SENHA, "curta")).andExpect(status().isBadRequest());
+		// Senha fraca: 422 com a mensagem da regra (falta de tamanho, maiuscula, minuscula, numero ou simbolo).
+		for (String fraca : new String[] { "Curt@1", "sem-maiuscula-1!", "SEM-MINUSCULA-1!", "Sem-Numero-Aqui!", "SemSimbolo123" }) {
+			post("/api/auth/cadastro", cadastro("Maria", EMAIL).replace(SENHA, fraca)).andExpect(status().isUnprocessableContent())
+					.andExpect(jsonPath("$.detail").value(containsString("8 ou mais caracteres")));
+		}
 
 		post("/api/auth/cadastro", cadastro("Maria", EMAIL)).andExpect(status().isCreated());
 		post("/api/auth/cadastro", cadastro("Outra Maria", EMAIL)).andExpect(status().isConflict());
@@ -212,13 +216,13 @@ class AuthApiTest {
 		EmailPendente email = ultimoEmailPara(EMAIL);
 		assertThat(email.getCorpo()).contains("http://localhost:4200/redefinir-senha?token=");
 
-		String corpo = "{\"token\":\"%s\",\"senha\":\"outra-senha-456\"}".formatted(token(email));
+		String corpo = "{\"token\":\"%s\",\"senha\":\"Outra-Senha-456!\"}".formatted(token(email));
 		post("/api/auth/redefinir-senha", corpo).andExpect(status().isNoContent());
 		post("/api/auth/redefinir-senha", corpo).andExpect(status().isBadRequest());
 
 		renovar(refresh).andExpect(status().isUnauthorized());
 		login(EMAIL, SENHA).andExpect(status().isUnauthorized());
-		login(EMAIL, "outra-senha-456").andExpect(status().isOk());
+		login(EMAIL, "Outra-Senha-456!").andExpect(status().isOk());
 	}
 
 	@Test
@@ -228,9 +232,23 @@ class AuthApiTest {
 		EmailPendente email = ultimoEmailPara(EMAIL);
 		assertThat(email.getAssunto()).contains("Redefinir");
 
-		post("/api/auth/redefinir-senha", "{\"token\":\"%s\",\"senha\":\"outra-senha-456\"}".formatted(token(email)))
+		post("/api/auth/redefinir-senha", "{\"token\":\"%s\",\"senha\":\"Outra-Senha-456!\"}".formatted(token(email)))
 				.andExpect(status().isNoContent());
-		login(EMAIL, "outra-senha-456").andExpect(status().isOk());
+		login(EMAIL, "Outra-Senha-456!").andExpect(status().isOk());
+	}
+
+	@Test
+	void senhaFracaTambemERecusadaNaTrocaENaRedefinicaoSemGastarOLink() throws Exception {
+		criarContaConfirmada(EMAIL);
+		MvcResult a = login(EMAIL, SENHA).andReturn();
+		trocarSenha(a, SENHA, "fraca123").andExpect(status().isUnprocessableContent());
+		login(EMAIL, SENHA).andExpect(status().isOk()); // a senha antiga continua valendo
+
+		post("/api/auth/esqueci-senha", "{\"email\":\"%s\"}".formatted(EMAIL)).andExpect(status().isAccepted());
+		String token = token(ultimoEmailPara(EMAIL));
+		post("/api/auth/redefinir-senha", "{\"token\":\"%s\",\"senha\":\"fraca123\"}".formatted(token)).andExpect(status().isUnprocessableContent());
+		// O link nao foi gasto: com uma senha forte ele ainda vale.
+		post("/api/auth/redefinir-senha", "{\"token\":\"%s\",\"senha\":\"Outra-Senha-456!\"}".formatted(token)).andExpect(status().isNoContent());
 	}
 
 	@Test
@@ -239,13 +257,13 @@ class AuthApiTest {
 		MvcResult a = login(EMAIL, SENHA).andReturn();
 		MvcResult b = login(EMAIL, SENHA).andReturn();
 
-		trocarSenha(a, "errada-errada", "nova-senha-789").andExpect(status().isUnprocessableContent());
-		trocarSenha(a, SENHA, "nova-senha-789").andExpect(status().isNoContent());
+		trocarSenha(a, "errada-errada", "Nova-Senha-789!").andExpect(status().isUnprocessableContent());
+		trocarSenha(a, SENHA, "Nova-Senha-789!").andExpect(status().isNoContent());
 
 		renovar(refresh(a)).andExpect(status().isOk());
 		renovar(refresh(b)).andExpect(status().isUnauthorized());
 		login(EMAIL, SENHA).andExpect(status().isUnauthorized());
-		login(EMAIL, "nova-senha-789").andExpect(status().isOk());
+		login(EMAIL, "Nova-Senha-789!").andExpect(status().isOk());
 	}
 
 	// --- Google ---

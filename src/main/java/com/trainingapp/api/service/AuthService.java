@@ -46,9 +46,6 @@ public class AuthService {
 	static final Duration CONFIRMACAO_VALIDADE = Duration.ofHours(24);
 	static final Duration REDEFINICAO_VALIDADE = Duration.ofHours(1);
 
-	// O bcrypt so le os 72 primeiros bytes da senha.
-	private static final int MAX_BYTES_SENHA = 72;
-
 	public record Login(AcessoResponse acesso, String refresh) {
 	}
 
@@ -338,14 +335,16 @@ public class AuthService {
 		}
 	}
 
+	/** Senha forte, so ao definir uma (cadastro, redefinir, trocar); o login nao exige, para contas antigas continuarem entrando. */
 	private void validarSenha(String senha) {
-		if (senha.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES_SENHA) {
-			throw new RegraDeNegocioException("A senha pode ter no máximo 72 bytes (menos caracteres se tiver acentos)");
+		String problema = RegrasDeSenha.problema(senha);
+		if (problema != null) {
+			throw new RegraDeNegocioException(problema);
 		}
 	}
 
 	private boolean senhaConfere(String senha, String hash) {
-		return senha.getBytes(StandardCharsets.UTF_8).length <= MAX_BYTES_SENHA && encoder.matches(senha, hash);
+		return senha.getBytes(StandardCharsets.UTF_8).length <= RegrasDeSenha.MAXIMO_BYTES && encoder.matches(senha, hash);
 	}
 
 	private static String normalizar(String email) {
