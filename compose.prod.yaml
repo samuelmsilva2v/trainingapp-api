@@ -16,6 +16,7 @@ services:
       retries: 10
 
   app:
+    image: trainingapp-app:latest
     build:
       context: ..
       dockerfile: trainingapp-api/Dockerfile

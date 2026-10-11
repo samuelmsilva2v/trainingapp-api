@@ -37,7 +37,7 @@ Sem esse arquivo ninguém consegue se cadastrar (lista vazia = ninguém entra) e
 
 ## Login
 
-Cadastro com e-mail e senha (com confirmação por e-mail), login com Google, "esqueci a senha", troca de senha e sair (deste aparelho ou de todos). Só e-mails da lista `trainingapp.auth.emails-permitidos` entram; para abrir o cadastro a qualquer pessoa, remova a checagem em `AuthService.exigirPermitido`.
+Cadastro com e-mail e senha (com confirmação por e-mail), login com Google, "esqueci a senha", troca de senha e sair (deste aparelho ou de todos). Só e-mails da lista `trainingapp.auth.emails-permitidos` entram; para abrir o cadastro a qualquer pessoa, defina `trainingapp.auth.cadastro-aberto=true` (`TRAININGAPP_AUTH_CADASTRO_ABERTO=true`); para fechar de novo, volte a `false`.
 
 - **Sessão:** `POST /api/auth/login` (ou `/google`) devolve um access token (JWT, 15 min) no corpo e grava o refresh token num cookie HttpOnly (`SameSite=Strict`, path `/api/auth`). O refresh é opaco, fica no banco só como hash, não rotaciona e vence após 1 ano **sem uso** (cada renovação recomeça a contagem), então no celular o login não cai sozinho. `POST /api/auth/refresh` troca por um access novo. Sair apaga a linha; o access em uso vale até vencer (15 min).
 - **Google:** fluxo de código em popup. O botão do app (próprio, no estilo do Stitch) abre o popup do Google Identity Services, que entrega ao front um código de uso único; o front manda o código a `POST /api/auth/google` e a API o troca por tokens no endpoint do Google (com o client id e o **client secret**, `redirect_uri=postmessage`) e valida o ID token recebido: assinatura, emissor, validade e se o `aud` é o nosso client id. Sem o client secret o login com Google fica desligado e o botão nem aparece. Se a troca falhar, o motivo devolvido pelo Google (`invalid_grant`, `redirect_uri_mismatch`, `invalid_client`...) vai para o log da API. O mesmo e-mail com senha e com Google é uma conta só; se a conta de senha nunca confirmou o e-mail, a senha é descartada ao vincular o Google.
@@ -62,6 +62,7 @@ Sem o perfil `dev`, valem os padrões de produção de `application.properties`:
 | `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` | Banco Postgres |
 | `TRAININGAPP_AUTH_JWT_SEGREDO` | Chave do access token (32+ caracteres, secreta); a API não sobe sem ela |
 | `TRAININGAPP_AUTH_EMAILS_PERMITIDOS` | E-mails que podem entrar, separados por vírgula |
+| `TRAININGAPP_AUTH_CADASTRO_ABERTO` | `true` deixa qualquer e-mail se cadastrar e entrar (a lista é ignorada); padrão `false` |
 | `TRAININGAPP_AUTH_GOOGLE_CLIENT_ID`, `TRAININGAPP_AUTH_GOOGLE_CLIENT_SECRET` | Client id e segredo do Google (qualquer um vazio = sem botão do Google) |
 | `TRAININGAPP_WEB_URL_BASE` | Endereço do app, usado nos links dos e-mails (ex.: `https://app.exemplo.com`) |
 | `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` | SMTP (Gmail com senha de app, Brevo, Resend...) |
@@ -104,6 +105,18 @@ Uma VM Linux só, com três contêineres (`compose.prod.yaml`): **Caddy** (HTTPS
 4. **Configuração:** `cd trainingapp-api && cp .env.example .env` e preencha o `.env` (domínio, senha do Postgres, chave JWT, e-mails permitidos, Google e SMTP; veja as variáveis acima). Cadastre `https://<domínio>` nas origens JavaScript do client id do Google.
 5. **Subir:** `docker compose -f compose.prod.yaml up -d --build`. O Flyway cria o schema na primeira subida e o catálogo é importado em seguida. `docker compose -f compose.prod.yaml logs -f app` mostra o log.
 6. **Atualizar:** `git pull` nos dois repositórios e repetir o comando do passo 5.
+
+**VM pequena (ex.: Oracle AMD Micro, 1 GB):** não compile na VM. Crie 2 GB de swap, copie para ela só `compose.prod.yaml`, `Caddyfile` e `.env`, e envie a imagem montada no seu PC (mesma arquitetura, x86_64):
+
+```bash
+# na pasta pai dos dois repos, no PC
+docker build -f trainingapp-api/Dockerfile -t trainingapp-app:latest .
+docker save trainingapp-app:latest | gzip | ssh <usuario>@<ip> "gunzip | docker load"
+# na VM, em ~/trainingapp
+docker compose -f compose.prod.yaml up -d --no-build
+```
+
+No `.env` dessa VM, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50 -XX:+UseSerialGC` reduz o uso de memória da JVM.
 
 O fuso do contêiner é `America/Sao_Paulo` (define o "dia" do treino e do streak). Backup do banco (rode também por cron, ex.: diário):
 
