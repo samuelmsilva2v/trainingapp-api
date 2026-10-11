@@ -252,7 +252,7 @@ class AuthApiTest {
 
 	@Test
 	void googleCriaContaNovaEReaproveitaNoSegundoLogin() throws Exception {
-		when(google.verificar("cred")).thenReturn(new Identidade("sub-1", "Maria@Teste.com", true, "Maria Silva"));
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", "Maria@Teste.com", true, "Maria Silva"));
 
 		MvcResult primeiro = google("cred").andExpect(status().isOk()).andReturn();
 		google("cred").andExpect(status().isOk());
@@ -270,8 +270,8 @@ class AuthApiTest {
 
 	@Test
 	void googleRespeitaListaEEmailVerificado() throws Exception {
-		when(google.verificar("fora")).thenReturn(new Identidade("sub-2", "intruso@fora.com", true, "Intruso"));
-		when(google.verificar("naoverificado")).thenReturn(new Identidade("sub-3", EMAIL, false, "Maria"));
+		when(google.verificarCodigo("fora")).thenReturn(new Identidade("sub-2", "intruso@fora.com", true, "Intruso"));
+		when(google.verificarCodigo("naoverificado")).thenReturn(new Identidade("sub-3", EMAIL, false, "Maria"));
 
 		google("fora").andExpect(status().isForbidden());
 		google("naoverificado").andExpect(status().isForbidden());
@@ -282,7 +282,7 @@ class AuthApiTest {
 	@Test
 	void googleVinculaContaDeSenhaJaConfirmadaEMantemASenha() throws Exception {
 		criarContaConfirmada(EMAIL);
-		when(google.verificar("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
 
 		google("cred").andExpect(status().isOk());
 
@@ -294,7 +294,7 @@ class AuthApiTest {
 	void googleDescartaASenhaDeContaQueNuncaConfirmouOEmail() throws Exception {
 		// Alguem se cadastrou com o e-mail da Maria sem provar que e dela; quando a Maria entra pelo Google, a senha dele some.
 		post("/api/auth/cadastro", cadastro("Impostor", EMAIL)).andExpect(status().isCreated());
-		when(google.verificar("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
 
 		google("cred").andExpect(status().isOk());
 
@@ -323,8 +323,8 @@ class AuthApiTest {
 		return mvc.perform(requisicao("/api/auth/login", "{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, senha), ip));
 	}
 
-	ResultActions google(String credencial) throws Exception {
-		return post("/api/auth/google", "{\"credencial\":\"%s\"}".formatted(credencial));
+	ResultActions google(String codigo) throws Exception {
+		return post("/api/auth/google", "{\"codigo\":\"%s\"}".formatted(codigo));
 	}
 
 	ResultActions renovar(String refresh) throws Exception {

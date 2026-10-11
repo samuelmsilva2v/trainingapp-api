@@ -1,10 +1,11 @@
 package com.trainingapp.api.service;
 
-/** Valida o ID token que o front recebeu do Google e devolve quem e o dono. Lanca 401 se o token nao vale. */
+/** Descobre quem e o dono de um login com Google. Lanca 401 se o login nao vale e 503 se o Google nao esta configurado ou fora do ar. */
 public interface VerificadorGoogle {
 
 	record Identidade(String sub, String email, boolean emailVerificado, String nome) {
 	}
 
-	Identidade verificar(String credencial);
+	/** Troca o codigo de autorizacao que o popup do Google entregou ao front pelos tokens e valida o ID token. */
+	Identidade verificarCodigo(String codigo);
 }

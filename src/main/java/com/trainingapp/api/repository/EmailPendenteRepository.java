@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface EmailPendenteRepository extends JpaRepository<EmailPendente, UUID> {
 
+	void deleteByDestinatario(String destinatario);
+
 	List<EmailPendente> findTop20ByEnviadoEmIsNullAndTentativasLessThanAndProximaTentativaEmLessThanEqualOrderByCriadoEmAsc(
 			int maxTentativas, Instant agora);
 }

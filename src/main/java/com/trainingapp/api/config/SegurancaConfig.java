@@ -31,7 +31,7 @@ public class SegurancaConfig {
 		http.csrf(csrf -> csrf.disable())
 				.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(a -> a
-						.requestMatchers("/api/auth/sair-todos", "/api/auth/trocar-senha").authenticated()
+						.requestMatchers("/api/auth/sair-todos", "/api/auth/trocar-senha", "/api/auth/excluir-conta").authenticated()
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/**").authenticated()
 						// Front estatico (perfil online), health e o resto.

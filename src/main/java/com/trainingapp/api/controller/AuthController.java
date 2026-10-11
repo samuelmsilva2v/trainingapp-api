@@ -5,6 +5,7 @@ import com.trainingapp.api.dto.AcessoResponse;
 import com.trainingapp.api.dto.AuthConfigResponse;
 import com.trainingapp.api.dto.CadastroRequest;
 import com.trainingapp.api.dto.EmailRequest;
+import com.trainingapp.api.dto.ExcluirContaRequest;
 import com.trainingapp.api.dto.GoogleRequest;
 import com.trainingapp.api.dto.LoginRequest;
 import com.trainingapp.api.dto.RedefinirSenhaRequest;
@@ -44,7 +45,8 @@ public class AuthController {
 
 	@GetMapping("/config")
 	public AuthConfigResponse config() {
-		return new AuthConfigResponse(props.googleClientId() == null ? "" : props.googleClientId());
+		// Sem o segredo o login com Google nao funciona, entao o front nem mostra o botao.
+		return new AuthConfigResponse(props.googleConfigurado() ? props.googleClientId() : "");
 	}
 
 	@PostMapping("/cadastro")
@@ -66,7 +68,7 @@ public class AuthController {
 
 	@PostMapping("/google")
 	public ResponseEntity<AcessoResponse> entrarComGoogle(@Valid @RequestBody GoogleRequest request) {
-		return comCookie(auth.entrarComGoogle(request.credencial()));
+		return comCookie(auth.entrarComGoogle(request.codigo()));
 	}
 
 	@PostMapping("/refresh")
@@ -105,6 +107,12 @@ public class AuthController {
 	public void trocarSenha(@Valid @RequestBody TrocarSenhaRequest request,
 			@CookieValue(name = COOKIE, required = false) String refresh) {
 		auth.trocarSenha(request.senhaAtual(), request.novaSenha(), refresh);
+	}
+
+	@PostMapping("/excluir-conta")
+	public ResponseEntity<Void> excluirConta(@Valid @RequestBody ExcluirContaRequest request) {
+		auth.excluirConta(request.senha(), request.codigo());
+		return semCookie();
 	}
 
 	private ResponseEntity<AcessoResponse> comCookie(AuthService.Login login) {

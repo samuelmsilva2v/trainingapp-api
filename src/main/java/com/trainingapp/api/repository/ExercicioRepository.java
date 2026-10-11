@@ -12,6 +12,9 @@ public interface ExercicioRepository extends JpaRepository<Exercicio, UUID> {
 
 	Optional<Exercicio> findBySlug(String slug);
 
+	/** So os exercicios criados pelo usuario (o catalogo global tem usuario nulo). */
+	List<Exercicio> findByUsuarioId(UUID usuarioId);
+
 	// Catalogo global + exercicios do usuario. O filtro por grupo/busca e feito em memoria
 	// (o catalogo e pequeno) para evitar parametros nulos no JPQL, que o Postgres rejeita.
 	@Query("select e from Exercicio e where e.usuario is null or e.usuario.id = :usuarioId order by e.nome")

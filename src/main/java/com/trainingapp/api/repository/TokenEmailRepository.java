@@ -12,4 +12,6 @@ public interface TokenEmailRepository extends JpaRepository<TokenEmail, UUID> {
 	Optional<TokenEmail> findByTokenHashAndTipo(String tokenHash, TipoTokenEmail tipo);
 
 	void deleteByUsuarioIdAndTipo(UUID usuarioId, TipoTokenEmail tipo);
+
+	void deleteByUsuarioId(UUID usuarioId);
 }

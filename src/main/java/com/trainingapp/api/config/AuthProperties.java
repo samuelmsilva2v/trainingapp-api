@@ -11,15 +11,21 @@ import java.util.Locale;
  * @param jwtSegredo      chave HS256 do access token; pelo menos 32 caracteres
  * @param emailsPermitidos quem pode se cadastrar e entrar; vazia = ninguem
  * @param googleClientId  client id web do Google Cloud; vazio desliga o "Entrar com Google"
+ * @param googleClientSecret segredo desse client id (a API troca o codigo do popup do Google por tokens); vazio tambem desliga
  * @param cookieSeguro    marca o cookie do refresh como Secure (exige HTTPS; localhost e excecao nos navegadores)
  */
 @ConfigurationProperties("trainingapp.auth")
 public record AuthProperties(String jwtSegredo, List<String> emailsPermitidos, String googleClientId,
-		boolean cookieSeguro) {
+		String googleClientSecret, boolean cookieSeguro) {
 
 	public AuthProperties {
 		emailsPermitidos = emailsPermitidos == null ? List.of()
 				: emailsPermitidos.stream().map(e -> e.trim().toLowerCase(Locale.ROOT)).filter(e -> !e.isEmpty()).toList();
+	}
+
+	/** O login com Google so funciona com o client id e o segredo juntos. */
+	public boolean googleConfigurado() {
+		return googleClientId != null && !googleClientId.isBlank() && googleClientSecret != null && !googleClientSecret.isBlank();
 	}
 
 	public boolean permitido(String email) {

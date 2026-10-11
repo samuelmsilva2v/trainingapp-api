@@ -60,6 +60,7 @@ public class AuthService {
 	private final LimiteDeTentativas limite;
 	private final VerificadorGoogle google;
 	private final UsuarioAtual usuarioAtual;
+	private final ExclusaoDeConta exclusao;
 	private final PasswordEncoder encoder;
 	private final AuthProperties props;
 	private final Clock relogio;
@@ -68,8 +69,9 @@ public class AuthService {
 
 	public AuthService(UsuarioRepository usuarios, RefreshTokenRepository refreshTokens, TokenEmailRepository tokensEmail,
 			TokenAcessoService tokenAcesso, FilaDeEmail fila, LimiteDeTentativas limite, VerificadorGoogle google,
-			UsuarioAtual usuarioAtual, PasswordEncoder encoder, AuthProperties props, Clock relogio,
+			UsuarioAtual usuarioAtual, ExclusaoDeConta exclusao, PasswordEncoder encoder, AuthProperties props, Clock relogio,
 			@Value("${trainingapp.web.url-base}") String urlBase) {
+		this.exclusao = exclusao;
 		this.usuarios = usuarios;
 		this.refreshTokens = refreshTokens;
 		this.tokensEmail = tokensEmail;
@@ -134,8 +136,8 @@ public class AuthService {
 		return iniciarSessao(u);
 	}
 
-	public Login entrarComGoogle(String credencial) {
-		VerificadorGoogle.Identidade g = google.verificar(credencial);
+	public Login entrarComGoogle(String codigo) {
+		VerificadorGoogle.Identidade g = google.verificarCodigo(codigo);
 		if (!g.emailVerificado()) {
 			throw new ErroDeAutenticacaoException(FORBIDDEN, "O e-mail desta conta Google não está verificado");
 		}
@@ -251,6 +253,37 @@ public class AuthService {
 		else {
 			refreshTokens.deleteByUsuarioIdAndIdNot(u.getId(), atual.getId());
 		}
+	}
+
+	// --- exclusao da conta ---
+
+	/**
+	 * Apaga a conta e todos os dados dela, sem volta. Exige provar quem esta pedindo, porque um access token roubado nao
+	 * pode bastar para destruir uma conta: a senha (conta com senha) ou um login novo no Google (conta so do Google, o
+	 * codigo do popup tem de ser da mesma conta Google ligada a esta).
+	 */
+	public void excluirConta(String senha, String codigo) {
+		Usuario u = usuarioAtual.obter();
+		String chave = "excluir:" + u.getId();
+		limite.exigirLivre(chave);
+		if (senha != null && !senha.isBlank()) {
+			if (u.getSenhaHash() == null || !senhaConfere(senha, u.getSenhaHash())) {
+				limite.registrar(chave);
+				throw new RegraDeNegocioException("Senha incorreta");
+			}
+		}
+		else if (codigo != null && !codigo.isBlank()) {
+			VerificadorGoogle.Identidade g = google.verificarCodigo(codigo);
+			if (u.getGoogleSub() == null || !u.getGoogleSub().equals(g.sub())) {
+				limite.registrar(chave);
+				throw new ErroDeAutenticacaoException(FORBIDDEN, "Esta não é a conta Google ligada à sua conta");
+			}
+		}
+		else {
+			throw new RegraDeNegocioException("Confirme com a sua senha ou com a sua conta Google");
+		}
+		limite.limpar(chave);
+		exclusao.apagar(u);
 	}
 
 	// --- apoio ---
