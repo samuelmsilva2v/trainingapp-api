@@ -1,0 +1,52 @@
+# Producao numa VM so: Caddy (HTTPS automatico) -> API (serve tambem o front) -> Postgres.
+# Segredos e enderecos vem do .env ao lado (modelo em .env.example). Subir: docker compose -f compose.prod.yaml up -d --build
+services:
+  postgres:
+    image: 'postgres:17'
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: trainingapp
+      POSTGRES_USER: trainingapp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - dados:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U trainingapp -d trainingapp']
+      interval: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ..
+      dockerfile: trainingapp-api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/trainingapp
+      SPRING_DATASOURCE_USERNAME: trainingapp
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      TRAININGAPP_WEB_URL_BASE: https://${DOMINIO:?defina DOMINIO no .env}
+      # Define o "dia" do treino e do streak (a API usa o fuso do sistema). shortcut: fuso fixo do Brasil, trocar por fuso enviado pelo cliente se houver usuario fora dele.
+      TZ: America/Sao_Paulo
+
+  caddy:
+    image: 'caddy:2'
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_dados:/data
+
+volumes:
+  dados:
+  caddy_dados:

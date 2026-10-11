@@ -90,6 +90,27 @@ Cuidados:
 - Depois de um `npm run build` basta recarregar a página no celular (o `index.html` não fica em cache). Mudanças na API reiniciam sozinhas (devtools).
 - O fuso usado para contar os dias de treino é o do PC onde a API roda.
 
+## Deploy (VM com Docker)
+
+Uma VM Linux só, com três contêineres (`compose.prod.yaml`): **Caddy** (HTTPS automático com Let's Encrypt), a **API** (que serve também o front, mesma origem) e o **Postgres** (volume `dados`). Só o Caddy expõe portas (80 e 443).
+
+1. **VM:** qualquer Linux com Docker (`curl -fsSL https://get.docker.com | sh`) e 2 GB de RAM ou mais (o build do Angular + Maven pede memória). Abra as portas 80 e 443 no firewall do provedor (na Oracle Cloud também na *Security List* da VCN e no `iptables` da imagem).
+2. **Domínio:** crie um subdomínio gratuito em [duckdns.org](https://www.duckdns.org) (ex.: `treino.duckdns.org`) apontando para o IP público da VM, ou use um domínio seu com um registro A.
+3. **Código:** clone os dois repositórios lado a lado (o build da imagem usa os dois):
+   ```bash
+   git clone https://github.com/samuelmsilva2v/trainingapp-api.git
+   git clone https://github.com/samuelmsilva2v/trainingapp-web.git
+   ```
+4. **Configuração:** `cd trainingapp-api && cp .env.example .env` e preencha o `.env` (domínio, senha do Postgres, chave JWT, e-mails permitidos, Google e SMTP; veja as variáveis acima). Cadastre `https://<domínio>` nas origens JavaScript do client id do Google.
+5. **Subir:** `docker compose -f compose.prod.yaml up -d --build`. O Flyway cria o schema na primeira subida e o catálogo é importado em seguida. `docker compose -f compose.prod.yaml logs -f app` mostra o log.
+6. **Atualizar:** `git pull` nos dois repositórios e repetir o comando do passo 5.
+
+O fuso do contêiner é `America/Sao_Paulo` (define o "dia" do treino e do streak). Backup do banco (rode também por cron, ex.: diário):
+
+```bash
+docker compose -f compose.prod.yaml exec -T postgres pg_dump -U trainingapp trainingapp | gzip > ~/backup-$(date +%F).sql.gz
+```
+
 ## Catálogo de exercícios
 
 O catálogo (876 exercícios) vem do [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense), com nomes traduzidos para português. O arquivo `src/main/resources/catalogo/exercicios.json` é gerado e importado na inicialização de forma idempotente, usando o `slug` (id do free-exercise-db) como chave.

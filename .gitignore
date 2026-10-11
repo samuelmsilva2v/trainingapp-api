@@ -34,3 +34,6 @@ build/
 
 ### Dev local (e-mails permitidos, client id do Google)
 dev.local.properties
+
+### Segredos do deploy
+.env
