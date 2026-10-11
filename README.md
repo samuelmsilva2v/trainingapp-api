@@ -9,10 +9,9 @@ Backend do **TrainingApp**, um app de treino para registrar séries, repetiçõe
   - Spring Web (MVC)
   - Spring Data JPA
   - Bean Validation
-- PostgreSQL (H2 nos testes)
+  - Spring Security (resource server JWT) e Spring Mail
+- PostgreSQL com Flyway (migrações em `src/main/resources/db/migration`); H2 nos testes
 - Maven
-
-Planejado para a fase de autenticação e deploy: Spring Security (JWT) e Flyway (migrações). Hoje não há login e o schema é gerenciado pelo Hibernate.
 
 ## Rodando localmente
 
@@ -22,7 +21,47 @@ Pré-requisitos: JDK 21 e Docker (para o banco via `compose.yaml`).
 ./mvnw spring-boot:run
 ```
 
-O `spring-boot-docker-compose` sobe automaticamente os serviços definidos em `compose.yaml` (ex.: PostgreSQL) ao iniciar a aplicação.
+O `spring-boot-docker-compose` sobe automaticamente os serviços do `compose.yaml` ao iniciar a aplicação: o PostgreSQL e o **Mailpit**, uma caixa de entrada falsa em http://localhost:8025 onde caem os e-mails de dev (confirmar cadastro, redefinir senha).
+
+O schema é criado pelo Flyway e o Hibernate só confere (`ddl-auto=validate`). Um banco criado pelo Hibernate numa versão anterior não serve: recrie-o (`docker compose down` nesta pasta apaga o container e os dados de dev).
+
+Quem pode entrar e o Google ficam num arquivo local, fora do git, `dev.local.properties` (nesta pasta):
+
+```properties
+trainingapp.auth.emails-permitidos=voce@gmail.com
+trainingapp.auth.google-client-id=1234-abc.apps.googleusercontent.com
+```
+
+Sem esse arquivo ninguém consegue se cadastrar (lista vazia = ninguém entra) e o botão do Google não aparece.
+
+## Login
+
+Cadastro com e-mail e senha (com confirmação por e-mail), login com Google, "esqueci a senha", troca de senha e sair (deste aparelho ou de todos). Só e-mails da lista `trainingapp.auth.emails-permitidos` entram; para abrir o cadastro a qualquer pessoa, remova a checagem em `AuthService.exigirPermitido`.
+
+- **Sessão:** `POST /api/auth/login` (ou `/google`) devolve um access token (JWT, 15 min) no corpo e grava o refresh token num cookie HttpOnly (`SameSite=Strict`, path `/api/auth`). O refresh é opaco, fica no banco só como hash, não rotaciona e vence após 1 ano **sem uso** (cada renovação recomeça a contagem), então no celular o login não cai sozinho. `POST /api/auth/refresh` troca por um access novo. Sair apaga a linha; o access em uso vale até vencer (15 min).
+- **Google:** o front obtém um ID token pelo Google Identity Services e manda a `POST /api/auth/google`; a API valida assinatura, emissor, validade e se o `aud` é o nosso client id. O mesmo e-mail com senha e com Google é uma conta só; se a conta de senha nunca confirmou o e-mail, a senha é descartada ao vincular o Google.
+- **E-mails:** gravados na tabela `email_pendente` na mesma transação da operação e enviados por um worker agendado, com nova tentativa se o SMTP falhar (1, 2, 4 e 8 min; 5 tentativas). Só liga com `SPRING_MAIL_HOST` definido.
+- **Limite de tentativas:** 5 por 15 min (login por e-mail e IP; cadastro e "esqueci a senha" por IP), em memória, para uma instância só.
+
+### Criar o client id do Google
+
+1. No [Google Cloud Console](https://console.cloud.google.com/) crie um projeto e, em *APIs e serviços > Tela de permissão OAuth*, configure o app (tipo Externo; escopos básicos `openid`, `email` e `profile`, que dispensam verificação do Google).
+2. Em *Credenciais > Criar credenciais > ID do cliente OAuth*, escolha **Aplicativo da Web** e, em *Origens JavaScript autorizadas*, adicione cada endereço do app: `http://localhost:4200`, `http://localhost:8080` (perfil `online`) e o endereço do túnel ou do deploy. Não precisa de URI de redirecionamento.
+3. Copie o ID do cliente para `trainingapp.auth.google-client-id`. Com a tela de permissão em modo *Teste*, só as contas cadastradas como usuários de teste conseguem entrar; publique o app para liberar as demais.
+
+### Variáveis de ambiente (hm e prod)
+
+Sem o perfil `dev`, valem os padrões de produção de `application.properties`: o Flyway cria o schema, o Hibernate valida, o cookie é `Secure` e o proxy reverso é respeitado (`X-Forwarded-*`). Ative o ambiente com `SPRING_PROFILES_ACTIVE=hm` ou `prod` (hoje só dão nome ao ambiente).
+
+| Variável | Para quê |
+| --- | --- |
+| `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` | Banco Postgres |
+| `TRAININGAPP_AUTH_JWT_SEGREDO` | Chave do access token (32+ caracteres, secreta); a API não sobe sem ela |
+| `TRAININGAPP_AUTH_EMAILS_PERMITIDOS` | E-mails que podem entrar, separados por vírgula |
+| `TRAININGAPP_AUTH_GOOGLE_CLIENT_ID` | Client id do Google (vazio = sem botão do Google) |
+| `TRAININGAPP_WEB_URL_BASE` | Endereço do app, usado nos links dos e-mails (ex.: `https://app.exemplo.com`) |
+| `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` | SMTP (Gmail com senha de app, Brevo, Resend...) |
+| `TRAININGAPP_EMAIL_REMETENTE` | Remetente, ex.: `TrainingApp <voce@gmail.com>` (obrigatório com SMTP) |
 
 ## Usar no celular pela internet (túnel)
 
@@ -43,7 +82,7 @@ Túnel (escolha um):
 
 Cuidados:
 
-- Não há login: **quem tiver o endereço lê e apaga os seus treinos**. Não divulgue e feche o túnel quando não estiver usando.
+- Só entra quem está em `trainingapp.auth.emails-permitidos`. Defina `TRAININGAPP_WEB_URL_BASE` com o endereço do túnel (os links dos e-mails apontam para ele) e cadastre esse endereço nas origens do client id do Google.
 - Depois de um `npm run build` basta recarregar a página no celular (o `index.html` não fica em cache). Mudanças na API reiniciam sozinhas (devtools).
 - O fuso usado para contar os dias de treino é o do PC onde a API roda.
 

@@ -22,6 +22,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 				"Conflito com outra requisicao simultanea; tente novamente");
 	}
 
+	@ExceptionHandler(ErroDeAutenticacaoException.class)
+	ProblemDetail autenticacao(ErroDeAutenticacaoException e) {
+		return ProblemDetail.forStatusAndDetail(e.status(), e.getMessage());
+	}
+
 	@ExceptionHandler(RegraDeNegocioException.class)
 	ProblemDetail regraDeNegocio(RegraDeNegocioException e) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());

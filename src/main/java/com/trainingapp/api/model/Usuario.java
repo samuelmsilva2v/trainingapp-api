@@ -25,9 +25,20 @@ public class Usuario {
 	@Column(nullable = false, length = 100)
 	private String nome;
 
-	// Nulo enquanto nao ha login; vira obrigatorio na fase de autenticacao.
-	@Column(unique = true)
+	// Sempre em minusculas: e a chave unica de login e da lista de e-mails permitidos.
+	@Column(nullable = false, unique = true)
 	private String email;
+
+	// Nulo em conta criada so pelo Google; "esqueci a senha" define uma.
+	private String senhaHash;
+
+	// Id estavel da conta Google (claim "sub"); nulo se nunca entrou pelo Google.
+	@Column(unique = true)
+	private String googleSub;
+
+	// Verdadeiro depois de clicar no link do e-mail, de redefinir a senha ou de entrar pelo Google.
+	@Column(nullable = false)
+	private boolean emailVerificado;
 
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)

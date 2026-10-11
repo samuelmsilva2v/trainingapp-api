@@ -7,6 +7,8 @@ import com.trainingapp.api.repository.ExercicioRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import com.trainingapp.api.UsuarioDeTeste;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@WithMockUser(username = UsuarioDeTeste.ID)
 @Transactional
 class CatalogoImportadorTest {
 

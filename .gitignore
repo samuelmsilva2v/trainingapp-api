@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Dev local (e-mails permitidos, client id do Google)
+dev.local.properties
