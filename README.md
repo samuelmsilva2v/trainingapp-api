@@ -45,9 +45,10 @@ Cadastro com e-mail e senha (com confirmação por e-mail), login com Google, "e
 
 ### Criar o client id do Google
 
-1. No [Google Cloud Console](https://console.cloud.google.com/) crie um projeto e, em *APIs e serviços > Tela de permissão OAuth*, configure o app (tipo Externo; escopos básicos `openid`, `email` e `profile`, que dispensam verificação do Google).
-2. Em *Credenciais > Criar credenciais > ID do cliente OAuth*, escolha **Aplicativo da Web** e, em *Origens JavaScript autorizadas*, adicione cada endereço do app: `http://localhost:4200`, `http://localhost:8080` (perfil `online`) e o endereço do túnel ou do deploy. Não precisa de URI de redirecionamento.
-3. Copie o ID do cliente para `trainingapp.auth.google-client-id`. Com a tela de permissão em modo *Teste*, só as contas cadastradas como usuários de teste conseguem entrar; publique o app para liberar as demais.
+1. No [Google Cloud Console](https://console.cloud.google.com/) crie um projeto e abra *Google Auth Platform* (antes chamado "Tela de permissão OAuth"). Em *Identidade visual* (Branding) preencha o nome do app e o e-mail de suporte; em *Público* (Audience) escolha **Externo**; em *Acesso a dados* (Data Access) fique com os escopos padrão `openid`, `email` e `profile`, que dispensam verificação do Google.
+2. Em *Clientes* (Clients) > *Criar cliente*, escolha **Aplicativo da Web** e, em *Origens JavaScript autorizadas*, adicione cada endereço do app, só com esquema e host, sem caminho: `http://localhost` **e** `http://localhost:4200` (o Google pede as duas para testes locais), `http://localhost:8080` (perfil `online`) e o endereço do túnel ou do deploy. Não precisa de URI de redirecionamento.
+3. Copie o ID do cliente (`...apps.googleusercontent.com`, é um valor público) para `trainingapp.auth.google-client-id` e reinicie a API. Enquanto o app estiver em modo *Teste* (em *Público*), só as contas listadas como usuários de teste conseguem entrar; adicione a sua ou publique o app.
+4. Se o botão mostrar erro de origem, o endereço aberto no navegador não está na lista do passo 2. As mudanças no Google podem levar alguns minutos para valer.
 
 ### Variáveis de ambiente (hm e prod)
 

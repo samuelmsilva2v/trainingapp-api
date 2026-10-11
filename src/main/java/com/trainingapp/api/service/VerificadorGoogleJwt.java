@@ -2,6 +2,7 @@ package com.trainingapp.api.service;
 
 import com.trainingapp.api.config.AuthProperties;
 import com.trainingapp.api.config.ErroDeAutenticacaoException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -25,9 +26,16 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 	private final String clientId;
 	private final NimbusJwtDecoder decoder;
 
+	@Autowired
 	public VerificadorGoogleJwt(AuthProperties props) {
-		this.clientId = props.googleClientId();
-		this.decoder = NimbusJwtDecoder.withJwkSetUri(CHAVES).build(); // so busca as chaves no primeiro uso
+		// O decoder so busca as chaves publicas do Google no primeiro uso.
+		this(props.googleClientId(), NimbusJwtDecoder.withJwkSetUri(CHAVES).build());
+	}
+
+	// Os testes passam um decoder com uma chave local, no lugar das chaves do Google.
+	VerificadorGoogleJwt(String clientId, NimbusJwtDecoder decoder) {
+		this.clientId = clientId;
+		this.decoder = decoder;
 		OAuth2TokenValidator<Jwt> emissor = jwt -> EMISSORES.contains(jwt.getClaimAsString("iss"))
 				? OAuth2TokenValidatorResult.success()
 				: OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Emissor invalido", null));
