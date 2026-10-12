@@ -104,19 +104,29 @@ Uma VM Linux só, com três contêineres (`compose.prod.yaml`): **Caddy** (HTTPS
    ```
 4. **Configuração:** `cd trainingapp-api && cp .env.example .env` e preencha o `.env` (domínio, senha do Postgres, chave JWT, e-mails permitidos, Google e SMTP; veja as variáveis acima). Cadastre `https://<domínio>` nas origens JavaScript do client id do Google.
 5. **Subir:** `docker compose -f compose.prod.yaml up -d --build`. O Flyway cria o schema na primeira subida e o catálogo é importado em seguida. `docker compose -f compose.prod.yaml logs -f app` mostra o log.
-6. **Atualizar:** `git pull` nos dois repositórios e repetir o comando do passo 5.
+6. **Atualizar:** a esteira abaixo faz isso a cada push na `master`. À mão, numa VM que compila: `git pull` nos dois repositórios e repetir o comando do passo 5.
 
-**VM pequena (ex.: Oracle AMD Micro, 1 GB):** não compile na VM. Crie 2 GB de swap, copie para ela só `compose.prod.yaml`, `Caddyfile` e `.env`, e envie a imagem montada no seu PC (mesma arquitetura, x86_64):
+**VM pequena (ex.: Oracle AMD Micro, 1 GB):** não compile na VM. Crie 2 GB de swap e copie para ela só `compose.prod.yaml`, `Caddyfile` e `.env`; a imagem vem pronta do GHCR (veja a esteira). No `.env` dessa VM, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50 -XX:+UseSerialGC` reduz o uso de memória da JVM.
 
-```bash
-# na pasta pai dos dois repos, no PC
-docker build -f trainingapp-api/Dockerfile -t trainingapp-app:latest .
-docker save trainingapp-app:latest | gzip | ssh <usuario>@<ip> "gunzip | docker load"
-# na VM, em ~/trainingapp
-docker compose -f compose.prod.yaml up -d --no-build
+### Esteira (GitHub Actions)
+
+`.github/workflows/deploy.yml`, a cada push na `master` (menos mudança só em `.md`):
+
+1. **testes:** os testes da API (inclusive os de Postgres, o Docker do runner está ligado) e os do front, com os dois repositórios lado a lado.
+2. **publicar:** monta a imagem (`linux/amd64`) e a envia para `ghcr.io/samuelmsilva2v/trainingapp-app`, com as tags `latest` e o SHA do commit. O pacote tem de estar **público** (Package settings → Change visibility), senão a VM não consegue baixar.
+3. **implantar:** entra na VM por SSH, que roda `~/trainingapp/deploy.sh` (`docker compose pull app` e `up -d --no-build app`), e confere `GET /api/auth/config` por até 3 min.
+
+O repositório do front tem o próprio `ci.yml` (testes e build). Um push no front **não** implanta: rode `gh workflow run deploy.yml -R samuelmsilva2v/trainingapp-api`.
+
+**Secrets do repositório da API:** `VM_SSH_KEY` (chave privada só do deploy), `VM_HOST`, `VM_USER` e `VM_KNOWN_HOSTS` (a linha do host em `known_hosts`, para o runner não aceitar qualquer servidor). Na VM, a chave pública entra em `~/.ssh/authorized_keys` presa ao script, então um vazamento do secret não dá shell:
+
+```
+restrict,command="/home/ubuntu/trainingapp/deploy.sh" ssh-ed25519 AAAA... github-actions-deploy
 ```
 
-No `.env` dessa VM, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50 -XX:+UseSerialGC` reduz o uso de memória da JVM.
+**Voltar a uma versão:** na VM, edite a tag do `image:` do `app` em `compose.prod.yaml` para o SHA desejado e rode `docker compose -f compose.prod.yaml up -d --no-build app`. Enquanto o `image:` estiver fixo num SHA, os deploys seguintes não mudam nada: volte para `:latest` depois da correção. Mudanças em `compose.prod.yaml` ou no `Caddyfile` não vão sozinhas: copie para a VM à mão.
+
+**Trocar de VM:** só os secrets `VM_HOST`, `VM_KNOWN_HOSTS` (e a chave, se gerar outra) e o `URL` do teste de fumaça no `deploy.yml`. Se a nova for ARM, troque `platforms` no job `publicar`.
 
 O fuso do contêiner é `America/Sao_Paulo` (define o "dia" do treino e do streak). Backup do banco (rode também por cron, ex.: diário):
 
