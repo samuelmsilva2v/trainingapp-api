@@ -3,6 +3,8 @@ name: CI/CD
 on:
   push:
     branches: [master]
+    # Mexer só em documentação não reinicia o app em produção.
+    paths-ignore: ['**.md']
   # Também dispara a mão, para publicar quando só o front (outro repositório) mudou: gh workflow run deploy.yml
   workflow_dispatch:
 
@@ -19,7 +21,7 @@ env:
 
 jobs:
   testes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       # Os dois repositórios lado a lado, como o Dockerfile espera.
@@ -53,7 +55,7 @@ jobs:
 
   publicar:
     needs: testes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -85,3 +87,31 @@ jobs:
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  implantar:
+    needs: publicar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+      VM_KNOWN_HOSTS: ${{ secrets.VM_KNOWN_HOSTS }}
+      VM_DESTINO: ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}
+      URL: https://apptraining.duckdns.org
+    steps:
+      # A chave só deixa a VM rodar o ~/trainingapp/deploy.sh (pull da imagem e recriar o app), seja qual for o comando.
+      - name: Implantar na VM
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$VM_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy "$VM_DESTINO" deploy
+      # O app leva cerca de 1 min para subir (VM pequena); o Caddy responde 502 até lá.
+      - name: Teste de fumaça
+        run: |
+          for i in $(seq 1 36); do
+            curl -fsS --max-time 5 "$URL/api/auth/config" && exit 0
+            sleep 5
+          done
+          echo "O app não respondeu em 3 minutos" >&2
+          exit 1
