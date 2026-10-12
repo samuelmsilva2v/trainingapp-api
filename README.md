@@ -13,6 +13,23 @@ Backend do **TrainingApp**, um app de treino para registrar séries, repetiçõe
 - PostgreSQL com Flyway (migrações em `src/main/resources/db/migration`); H2 nos testes
 - Maven
 
+## API
+
+Tudo em `/api/**` exige `Authorization: Bearer <access token>`, menos `/api/auth/**` (veja "Login"). Erros: `400` validação, `404` não encontrado, `422` regra de negócio, `429` limite de tentativas.
+
+| Rota | O que faz |
+| --- | --- |
+| `GET/PUT /api/perfil` | Nome do usuário (a resposta traz também `email` e `temSenha`) |
+| `GET /api/exercicios?grupo=&busca=`, `POST /api/exercicios` | Catálogo (a busca ignora acento e caixa) e exercício próprio |
+| `GET/POST /api/planos`, `GET/PUT/DELETE /api/planos/{id}`, `POST /api/planos/{id}/ativar` | Planos: dias de treino (rotação A/B/C) com exercícios, séries, reps e carga. Criar e atualizar enviam o plano inteiro; um ativo por vez |
+| `GET /api/hoje`, `POST /api/hoje/pular` | Plano ativo, próximo dia da rotação e treino em andamento; pular o dia |
+| `PUT /api/sessoes/{id}` | Salva o treino (upsert idempotente, com os ids gerados no cliente). Treino encerrado não muda mais; só um em andamento; sem registro além de 24 h atrás; concluir avança a rotação e credita o XP |
+| `GET /api/sessoes?pagina=&tamanho=`, `GET /api/sessoes/{id}`, `DELETE /api/sessoes/{id}` | Histórico, detalhe e apagar um treino encerrado (estorna o XP e os recordes; a rotação não volta) |
+| `GET /api/sessoes/anteriores?exercicioIds=` | Séries do último treino concluído de cada exercício (até 30 ids) |
+| `GET /api/gamificacao` | XP total, nível, streak, recordes e conquistas |
+
+**Gamificação** (regras em `service/Regras`, calculadas só no servidor): cada série concluída vale `carga × reps ÷ 40` de XP (mínimo 5, máximo 100; sem carga vale o mínimo), mais 25 por recorde de carga no exercício. Só o primeiro treino do dia conta e precisa de 3 ou mais séries. O nível `n` começa em `100 × n^1,5` de XP. O streak aguenta até 2 dias sem treinar.
+
 ## Rodando localmente
 
 Pré-requisitos: JDK 21 e Docker (para o banco via `compose.yaml`).
@@ -44,7 +61,10 @@ Cadastro com e-mail e senha (com confirmação por e-mail), login com Google, "e
 - **E-mails:** gravados na tabela `email_pendente` na mesma transação da operação e enviados por um worker agendado, com nova tentativa se o SMTP falhar (1, 2, 4 e 8 min; 5 tentativas). Só liga com `SPRING_MAIL_HOST` definido.
 - **Senha forte:** ao definir uma senha (cadastro, redefinir e trocar) a API exige 8 ou mais caracteres, com letra maiúscula, letra minúscula, número e símbolo (qualquer caractere que não seja letra nem número), no máximo 72 bytes (limite do bcrypt). Falhou: `422` com a mensagem da regra (`service/RegrasDeSenha`, espelhada no front em `core/senha.ts`). O login não aplica a regra, então contas criadas antes dela continuam entrando até trocarem a senha.
 - **Excluir conta:** `POST /api/auth/excluir-conta` (autenticado) apaga a conta e tudo dela de uma vez, sem volta: planos, treinos e séries, histórico de XP (exceção à regra "XP nunca é apagado"), exercícios próprios, logins, links de e-mail e e-mails na fila. O catálogo global e os dados de outros usuários não são tocados. Exige provar quem pede, para um access token roubado não bastar: o corpo leva `{"senha": ...}` (conta com senha) ou `{"codigo": ...}` (conta só do Google: o código de um novo popup do Google, que tem de ser da mesma conta Google ligada à conta). Senha errada vale como tentativa do limite abaixo. O front mostra o botão "Excluir conta e apagar dados" no Perfil, acima do "Sair".
-- **Limite de tentativas:** 5 por 15 min (login por e-mail e IP; cadastro e "esqueci a senha" por IP), em memória, para uma instância só.
+- **Limite de tentativas:** em memória, para uma instância só. A tentativa é contada **antes** de conferir a senha e zerada se ela estiver certa (assim uma rajada em paralelo não passa toda). Estourou: `429` por 15 min.
+  - 5 por 15 min: login (por e-mail e IP), cadastro e "esqueci a senha" (por IP), trocar senha e excluir conta (por usuário).
+  - 30 por 15 min por IP, somando todos os e-mails, no login e no login com Google.
+- **Tamanho:** e-mail com até 254 caracteres, tokens e código do Google com teto, senha com até 72 bytes. Em produção o Caddy também recusa corpo de requisição acima de 1 MB (a maior real, um treino com todas as séries, tem ~200 KB).
 
 ### Criar o client id do Google
 
@@ -134,6 +154,8 @@ O fuso do contêiner é `America/Sao_Paulo` (define o "dia" do treino e do strea
 docker compose -f compose.prod.yaml exec -T postgres pg_dump -U trainingapp trainingapp | gzip > ~/backup-$(date +%F).sql.gz
 ```
 
+O backup fica no mesmo disco da VM: não protege contra perder a VM. Copie os arquivos para outro lugar.
+
 ## Catálogo de exercícios
 
 O catálogo (876 exercícios) vem do [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense), com nomes traduzidos para português. O arquivo `src/main/resources/catalogo/exercicios.json` é gerado e importado na inicialização de forma idempotente, usando o `slug` (id do free-exercise-db) como chave.
@@ -146,11 +168,15 @@ node tools/catalogo/gerar-catalogo.mjs
 
 O script falha, sem gravar nada, se faltar tradução, sobrar tradução, houver nome repetido ou um músculo/equipamento sem mapeamento.
 
-## Build
+**Fotos:** o free-exercise-db tem 2 fotos por exercício (posição inicial e final), em `<slug>/0.jpg` e `<slug>/1.jpg`. Não há coluna no banco: as URLs são montadas a partir do `slug` e de `trainingapp.catalogo.imagens-url` (jsDelivr fixado num commit do dataset) e vêm na lista `imagens` dos exercícios, dos itens do plano e da sessão. Exercício próprio devolve `imagens: []`, e 3 exercícios do dataset não têm foto (a URL dá 404 e o front esconde a imagem). Para hospedar as fotos por conta própria, troque só essa URL base.
+
+## Build e testes
 
 ```bash
 ./mvnw clean verify
 ```
+
+Os testes rodam no H2 (`MODE=PostgreSQL`). Os `*PostgresTest` repetem os de sessão e gamificação num Postgres 17 via Testcontainers, com Flyway e `ddl-auto=validate` (provam que a migração bate com as entidades); sem Docker ligado eles são ignorados.
 
 ## Projeto irmão
 
