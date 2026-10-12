@@ -1,12 +1,14 @@
 package com.trainingapp.api.controller;
 
 import com.jayway.jsonpath.JsonPath;
+import com.trainingapp.api.config.ErroDeAutenticacaoException;
 import com.trainingapp.api.model.EmailPendente;
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
 import com.trainingapp.api.repository.TokenEmailRepository;
 import com.trainingapp.api.repository.UsuarioRepository;
+import com.trainingapp.api.service.AuthService;
 import com.trainingapp.api.service.VerificadorGoogle;
 import com.trainingapp.api.service.VerificadorGoogle.Identidade;
 import jakarta.servlet.http.Cookie;
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -151,6 +154,31 @@ class AuthApiTest {
 		login(EMAIL, SENHA, ip).andExpect(status().isTooManyRequests());
 		// Outro IP nao e afetado.
 		login(EMAIL, SENHA).andExpect(status().isOk());
+	}
+
+	@Test
+	void umIpNaoTentaEmailsSemFimNemGoogleSemFim() throws Exception {
+		// O freio por e-mail+IP nao basta: trocando de e-mail o mesmo IP nunca o atingiria, e cada tentativa custa um bcrypt.
+		String ip = ipNovo();
+		for (int i = 0; i < AuthService.LIMITE_POR_IP; i++) {
+			login("ninguem" + i + "@teste.com", "errada-errada", ip).andExpect(status().isUnauthorized());
+		}
+		login("ninguem-a-mais@teste.com", "errada-errada", ip).andExpect(status().isTooManyRequests());
+
+		String ipGoogle = ipNovo();
+		when(google.verificarCodigo("ruim")).thenThrow(new ErroDeAutenticacaoException(HttpStatus.UNAUTHORIZED, "recusado"));
+		for (int i = 0; i < AuthService.LIMITE_POR_IP; i++) {
+			mvc.perform(requisicao("/api/auth/google", "{\"codigo\":\"ruim\"}", ipGoogle)).andExpect(status().isUnauthorized());
+		}
+		mvc.perform(requisicao("/api/auth/google", "{\"codigo\":\"ruim\"}", ipGoogle)).andExpect(status().isTooManyRequests());
+	}
+
+	@Test
+	void emailEnormeNoLoginOuNoEsqueciSenhaDa400() throws Exception {
+		// O e-mail do login vira chave do freio de tentativas, que fica na memoria: tem de ter teto.
+		String enorme = "a".repeat(255) + "@teste.com";
+		login(enorme, "qualquer").andExpect(status().isBadRequest());
+		post("/api/auth/esqueci-senha", "{\"email\":\"%s\"}".formatted(enorme)).andExpect(status().isBadRequest());
 	}
 
 	// --- sessao longa ---

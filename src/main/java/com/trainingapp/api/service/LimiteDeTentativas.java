@@ -29,27 +29,30 @@ public class LimiteDeTentativas {
 		this.relogio = relogio;
 	}
 
-	/** 429 se a chave esta bloqueada. */
-	public void exigirLivre(String chave) {
-		Contagem c = contagens.get(chave);
-		if (c != null && c.bloqueadoAte() != null && c.bloqueadoAte().isAfter(Instant.now(relogio))) {
-			throw new ErroDeAutenticacaoException(HttpStatus.TOO_MANY_REQUESTS,
-					"Muitas tentativas. Aguarde alguns minutos e tente de novo.");
-		}
+	public void tentar(String chave) {
+		tentar(chave, MAXIMO);
 	}
 
-	/** Conta uma tentativa; na quinta, bloqueia. */
-	public void registrar(String chave) {
+	/**
+	 * Conta uma tentativa e responde 429 se a chave ja esta bloqueada; na {@code maximo}-esima, bloqueia as seguintes.
+	 * Quem chama conta ANTES de conferir a senha e chama {@link #limpar} se acertar: checar primeiro e contar so depois
+	 * (o bcrypt demora) deixaria uma rajada de requisicoes paralelas passar toda pela checagem.
+	 */
+	public void tentar(String chave, int maximo) {
 		Instant agora = Instant.now(relogio);
 		if (contagens.size() > 10_000) {
 			contagens.values().removeIf(c -> c.desde().plus(JANELA).isBefore(agora));
 		}
 		contagens.compute(chave, (k, atual) -> {
+			if (atual != null && atual.bloqueadoAte() != null && atual.bloqueadoAte().isAfter(agora)) {
+				throw new ErroDeAutenticacaoException(HttpStatus.TOO_MANY_REQUESTS,
+						"Muitas tentativas. Aguarde alguns minutos e tente de novo.");
+			}
 			if (atual == null || atual.desde().plus(JANELA).isBefore(agora)) {
 				atual = new Contagem(0, agora, null);
 			}
 			int n = atual.tentativas() + 1;
-			return new Contagem(n, atual.desde(), n >= MAXIMO ? agora.plus(JANELA) : atual.bloqueadoAte());
+			return new Contagem(n, atual.desde(), n >= maximo ? agora.plus(JANELA) : atual.bloqueadoAte());
 		});
 	}
 

@@ -1,4 +1,8 @@
 {$DOMINIO} {
 	encode zstd gzip
+	# A maior requisicao real (um treino com todas as series) tem ~200 KB; sem teto, o corpo inteiro vai para a memoria da API.
+	request_body {
+		max_size 1MB
+	}
 	reverse_proxy app:8080
 }

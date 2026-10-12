@@ -67,8 +67,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/google")
-	public ResponseEntity<AcessoResponse> entrarComGoogle(@Valid @RequestBody GoogleRequest request) {
-		return comCookie(auth.entrarComGoogle(request.codigo()));
+	public ResponseEntity<AcessoResponse> entrarComGoogle(@Valid @RequestBody GoogleRequest request, HttpServletRequest http) {
+		return comCookie(auth.entrarComGoogle(request.codigo(), http.getRemoteAddr()));
 	}
 
 	@PostMapping("/refresh")

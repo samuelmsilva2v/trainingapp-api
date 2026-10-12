@@ -45,6 +45,8 @@ public class AuthService {
 
 	static final Duration CONFIRMACAO_VALIDADE = Duration.ofHours(24);
 	static final Duration REDEFINICAO_VALIDADE = Duration.ofHours(1);
+	// Teto por IP, somando todos os e-mails: sem ele um IP tenta quantos e-mails quiser, e cada tentativa custa um bcrypt.
+	public static final int LIMITE_POR_IP = 30;
 
 	public record Login(AcessoResponse acesso, String refresh) {
 	}
@@ -88,9 +90,7 @@ public class AuthService {
 	// --- cadastro e confirmacao ---
 
 	public void cadastrar(CadastroRequest r, String ip) {
-		String chave = "cadastro:" + ip;
-		limite.exigirLivre(chave);
-		limite.registrar(chave);
+		limite.tentar("cadastro:" + ip);
 		String email = normalizar(r.email());
 		exigirPermitido(email);
 		validarSenha(r.senha());
@@ -116,24 +116,25 @@ public class AuthService {
 	public Login entrar(LoginRequest r, String ip) {
 		String email = normalizar(r.email());
 		String chave = "login:" + email + "|" + ip;
-		limite.exigirLivre(chave);
+		limite.tentar("login-ip:" + ip, LIMITE_POR_IP);
+		limite.tentar(chave);
 		Usuario u = usuarios.findByEmail(email).orElse(null);
 		boolean temSenha = u != null && u.getSenhaHash() != null;
 		boolean confere = senhaConfere(r.senha(), temSenha ? u.getSenhaHash() : hashFalso) && temSenha;
 		if (!confere) {
-			limite.registrar(chave);
 			throw new ErroDeAutenticacaoException(UNAUTHORIZED, "E-mail ou senha incorretos");
 		}
+		limite.limpar(chave); // acertou a senha: quem so falta confirmar o e-mail nao gasta tentativas
 		if (!u.isEmailVerificado()) {
 			throw new ErroDeAutenticacaoException(FORBIDDEN,
 					"Confirme seu e-mail pelo link que enviamos. Perdeu o link? Use \"Esqueci a senha\".");
 		}
 		exigirPermitido(u.getEmail());
-		limite.limpar(chave);
 		return iniciarSessao(u);
 	}
 
-	public Login entrarComGoogle(String codigo) {
+	public Login entrarComGoogle(String codigo, String ip) {
+		limite.tentar("google:" + ip, LIMITE_POR_IP);
 		VerificadorGoogle.Identidade g = google.verificarCodigo(codigo);
 		if (!g.emailVerificado()) {
 			throw new ErroDeAutenticacaoException(FORBIDDEN, "O e-mail desta conta Google não está verificado");
@@ -210,9 +211,7 @@ public class AuthService {
 
 	/** Responde igual exista a conta ou nao, para nao revelar quem tem cadastro. */
 	public void esqueciSenha(String emailInformado, String ip) {
-		String chave = "esqueci:" + ip;
-		limite.exigirLivre(chave);
-		limite.registrar(chave);
+		limite.tentar("esqueci:" + ip);
 		usuarios.findByEmail(normalizar(emailInformado))
 				.filter(u -> props.permitido(u.getEmail()))
 				.ifPresent(u -> enviarLink(u, TipoTokenEmail.REDEFINICAO));
@@ -230,16 +229,15 @@ public class AuthService {
 	public void trocarSenha(String senhaAtual, String novaSenha, String refreshAtual) {
 		Usuario u = usuarioAtual.obter();
 		String chave = "trocar:" + u.getId();
-		limite.exigirLivre(chave);
+		limite.tentar(chave);
 		if (u.getSenhaHash() == null) {
 			throw new RegraDeNegocioException("Esta conta ainda não tem senha. Use \"Esqueci a senha\" para criar uma.");
 		}
 		if (!senhaConfere(senhaAtual, u.getSenhaHash())) {
-			limite.registrar(chave);
 			throw new RegraDeNegocioException("Senha atual incorreta");
 		}
+		limite.limpar(chave); // a senha atual estava certa: uma senha nova fraca nao gasta tentativas
 		validarSenha(novaSenha);
-		limite.limpar(chave);
 		u.setSenhaHash(encoder.encode(novaSenha));
 		// Os outros aparelhos saem; este, que fez a troca, continua logado.
 		RefreshToken atual = refreshAtual == null ? null
@@ -262,17 +260,15 @@ public class AuthService {
 	public void excluirConta(String senha, String codigo) {
 		Usuario u = usuarioAtual.obter();
 		String chave = "excluir:" + u.getId();
-		limite.exigirLivre(chave);
+		limite.tentar(chave);
 		if (senha != null && !senha.isBlank()) {
 			if (u.getSenhaHash() == null || !senhaConfere(senha, u.getSenhaHash())) {
-				limite.registrar(chave);
 				throw new RegraDeNegocioException("Senha incorreta");
 			}
 		}
 		else if (codigo != null && !codigo.isBlank()) {
 			VerificadorGoogle.Identidade g = google.verificarCodigo(codigo);
 			if (u.getGoogleSub() == null || !u.getGoogleSub().equals(g.sub())) {
-				limite.registrar(chave);
 				throw new ErroDeAutenticacaoException(FORBIDDEN, "Esta não é a conta Google ligada à sua conta");
 			}
 		}
