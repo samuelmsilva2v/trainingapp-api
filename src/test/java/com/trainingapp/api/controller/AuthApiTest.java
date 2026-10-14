@@ -126,7 +126,20 @@ class AuthApiTest {
 		}
 
 		post("/api/auth/cadastro", cadastro("Maria", EMAIL)).andExpect(status().isCreated());
-		post("/api/auth/cadastro", cadastro("Outra Maria", EMAIL)).andExpect(status().isConflict());
+	}
+
+	@Test
+	void cadastroComEmailQueJaTemContaRespondeIgualEAvisaODono() throws Exception {
+		post("/api/auth/cadastro", cadastro("Maria", EMAIL)).andExpect(status().isCreated());
+		String senhaHash = usuarios.findByEmail(EMAIL).orElseThrow().getSenhaHash();
+
+		// Mesma resposta de um cadastro novo: quem testa e-mails nao descobre quem tem conta.
+		post("/api/auth/cadastro", cadastro("Outra Maria", EMAIL).replace(SENHA, "Outra-Senha-9")).andExpect(status().isCreated());
+
+		assertThat(usuarios.findAll().stream().filter(u -> u.getEmail().equals(EMAIL))).hasSize(1);
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow().getSenhaHash()).isEqualTo(senhaHash);
+		assertThat(emails.findAll().stream().filter(e -> e.getDestinatario().equals(EMAIL)).map(EmailPendente::getAssunto))
+				.containsExactlyInAnyOrder("Confirme seu e-mail no TrainingApp", "Você já tem conta no TrainingApp");
 	}
 
 	@Test

@@ -27,7 +27,6 @@ import java.util.Locale;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -94,15 +93,22 @@ public class AuthService {
 		String email = normalizar(r.email());
 		exigirPermitido(email);
 		validarSenha(r.senha());
-		if (usuarios.findByEmail(email).isPresent()) {
-			throw new ErroDeAutenticacaoException(CONFLICT,
-					"Já existe uma conta com este e-mail. Entre, ou use \"Esqueci a senha\".");
+		// O hash vem antes da busca para o tempo de resposta ser o mesmo exista a conta ou nao.
+		String senhaHash = encoder.encode(r.senha());
+		// Responde igual exista a conta ou nao (nada de 409), para nao revelar quem tem cadastro; o dono e avisado por e-mail.
+		Usuario existente = usuarios.findByEmail(email).orElse(null);
+		if (existente != null) {
+			fila.enfileirar(email, "Você já tem conta no TrainingApp", ("Olá, %s!%n%nAlguém tentou criar uma conta no TrainingApp "
+					+ "com este e-mail, mas você já tem uma. Entre com seu e-mail e senha ou com o Google; se não lembra a senha, "
+					+ "use \"Esqueci a senha\" na tela de entrada:%n%n%s/entrar%n%n"
+					+ "Se não foi você, ignore este e-mail.").formatted(existente.getNome(), urlBase));
+			return;
 		}
 		Usuario u = new Usuario();
 		u.setId(UUID.randomUUID());
 		u.setNome(r.nome().trim());
 		u.setEmail(email);
-		u.setSenhaHash(encoder.encode(r.senha()));
+		u.setSenhaHash(senhaHash);
 		// O id e atribuido aqui, entao o save faz merge e devolve a copia gerenciada; so ela pode ser referenciada.
 		enviarLink(usuarios.save(u), TipoTokenEmail.CONFIRMACAO);
 	}
