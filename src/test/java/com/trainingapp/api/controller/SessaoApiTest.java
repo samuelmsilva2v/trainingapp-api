@@ -193,7 +193,7 @@ class SessaoApiTest {
 	}
 
 	@Test
-	void escritaMaisAntigaQueASalvaEhIgnorada() throws Exception {
+	void escritaMaisAntigaQueASalvaDa409ComASessaoAtual() throws Exception {
 		UUID sessao = UUID.randomUUID();
 		UUID exSessao = UUID.randomUUID();
 		UUID s = UUID.randomUUID();
@@ -202,8 +202,12 @@ class SessaoApiTest {
 		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio.plusSeconds(120), null, serie(s, 12, "70", true))
 				.andExpect(status().isOk());
 		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio.plusSeconds(30), null, serie(s, 5, "20", true))
-				.andExpect(status().isOk())
+				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.exercicios[0].series[0].reps").value(12));
+		// Concluir com o relogio atrasado tambem nao passa em silencio.
+		salvar(sessao, exSessao, "CONCLUIDA", inicio, inicio.plusSeconds(60), inicio.plusSeconds(60), serie(s, 5, "20", true))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.estado").value("EM_ANDAMENTO"));
 	}
 
 	@Test

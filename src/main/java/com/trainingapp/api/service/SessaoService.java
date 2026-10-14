@@ -2,6 +2,7 @@ package com.trainingapp.api.service;
 
 import com.trainingapp.api.config.RecursoNaoEncontradoException;
 import com.trainingapp.api.config.RegraDeNegocioException;
+import com.trainingapp.api.config.SessaoDesatualizadaException;
 import com.trainingapp.api.dto.ExercicioRequest;
 import com.trainingapp.api.dto.AnteriorResponse;
 import com.trainingapp.api.dto.HojeResponse;
@@ -139,8 +140,8 @@ public class SessaoService {
 	}
 
 	/**
-	 * Upsert idempotente. Sessao encerrada nao muda mais (reenvios devolvem o que ja esta salvo) e,
-	 * em andamento, uma escrita mais antiga que a salva e ignorada: o ultimo a escrever vence.
+	 * Upsert idempotente. Sessao encerrada nao muda mais (reenvios devolvem o que ja esta salvo) e, em andamento, uma
+	 * escrita mais antiga que a salva da 409 com a sessao atual: o ultimo a escrever vence, e quem perdeu fica sabendo.
 	 */
 	public SessaoResponse salvar(UUID id, SessaoRequest request) {
 		Usuario usuario = usuarioAtual.obter();
@@ -149,9 +150,11 @@ public class SessaoService {
 			throw new RegraDeNegocioException("Id de sessao ja utilizado: " + id);
 		}
 		if (existente != null) {
-			boolean encerrada = existente.getEstado() != EstadoSessao.EM_ANDAMENTO;
-			if (encerrada || request.atualizadoEm().isBefore(existente.getAtualizadoEm())) {
+			if (existente.getEstado() != EstadoSessao.EM_ANDAMENTO) {
 				return resposta(existente);
+			}
+			if (request.atualizadoEm().isBefore(existente.getAtualizadoEm())) {
+				throw new SessaoDesatualizadaException(resposta(existente));
 			}
 		}
 

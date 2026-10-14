@@ -1,8 +1,10 @@
 package com.trainingapp.api.config;
 
+import com.trainingapp.api.dto.SessaoResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -25,6 +27,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(ErroDeAutenticacaoException.class)
 	ProblemDetail autenticacao(ErroDeAutenticacaoException e) {
 		return ProblemDetail.forStatusAndDetail(e.status(), e.getMessage());
+	}
+
+	@ExceptionHandler(SessaoDesatualizadaException.class)
+	ResponseEntity<SessaoResponse> sessaoDesatualizada(SessaoDesatualizadaException e) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(e.atual());
 	}
 
 	@ExceptionHandler(RegraDeNegocioException.class)
