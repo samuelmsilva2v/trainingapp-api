@@ -20,8 +20,8 @@ Tudo em `/api/**` exige `Authorization: Bearer <access token>`, menos `/api/auth
 | Rota | O que faz |
 | --- | --- |
 | `GET/PUT /api/perfil` | Nome do usuário (a resposta traz também `email` e `temSenha`) |
-| `GET /api/exercicios?grupo=&busca=`, `POST /api/exercicios` | Catálogo (a busca ignora acento e caixa) e exercício próprio |
-| `GET/POST /api/planos`, `GET/PUT/DELETE /api/planos/{id}`, `POST /api/planos/{id}/ativar` | Planos: dias de treino (rotação A/B/C) com exercícios, séries, reps e carga. Criar e atualizar enviam o plano inteiro; um ativo por vez |
+| `GET /api/exercicios?grupo=&busca=`, `POST /api/exercicios` | Catálogo (a busca ignora acento e caixa) e exercício próprio (até 200 por conta; acima disso `422`) |
+| `GET/POST /api/planos`, `GET/PUT/DELETE /api/planos/{id}`, `POST /api/planos/{id}/ativar` | Planos: dias de treino (rotação A/B/C) com exercícios, séries, reps e carga. Criar e atualizar enviam o plano inteiro; um ativo por vez; até 50 planos por conta (`422`) |
 | `GET /api/hoje`, `POST /api/hoje/pular` | Plano ativo, próximo dia da rotação e treino em andamento; pular o dia |
 | `PUT /api/sessoes/{id}` | Salva o treino (upsert idempotente, com os ids gerados no cliente). Treino encerrado não muda mais; só um em andamento; sem registro além de 24 h atrás; concluir avança a rotação e credita o XP |
 | `GET /api/sessoes?pagina=&tamanho=`, `GET /api/sessoes/{id}`, `DELETE /api/sessoes/{id}` | Histórico, detalhe e apagar um treino encerrado (estorna o XP e os recordes; a rotação não volta) |

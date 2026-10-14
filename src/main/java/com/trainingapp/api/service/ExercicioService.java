@@ -1,5 +1,6 @@
 package com.trainingapp.api.service;
 
+import com.trainingapp.api.config.RegraDeNegocioException;
 import com.trainingapp.api.dto.ExercicioRequest;
 import com.trainingapp.api.dto.ExercicioResponse;
 import com.trainingapp.api.model.Exercicio;
@@ -16,6 +17,9 @@ import java.util.Locale;
 @Service
 @Transactional
 public class ExercicioService {
+
+	/** Teto de exercicios proprios por conta: com o cadastro aberto, um POST em laco nao incha o banco. */
+	public static final int LIMITE_POR_USUARIO = 200;
 
 	private final ExercicioRepository repository;
 	private final UsuarioAtual usuarioAtual;
@@ -39,6 +43,9 @@ public class ExercicioService {
 
 	public ExercicioResponse criar(ExercicioRequest request) {
 		Usuario usuario = usuarioAtual.obter();
+		if (repository.countByUsuarioId(usuario.getId()) >= LIMITE_POR_USUARIO) {
+			throw new RegraDeNegocioException("Limite de " + LIMITE_POR_USUARIO + " exercícios próprios atingido");
+		}
 		Exercicio exercicio = new Exercicio();
 		exercicio.setNome(request.nome().trim());
 		exercicio.setGrupoMuscular(request.grupoMuscular());

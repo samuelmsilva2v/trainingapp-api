@@ -16,4 +16,6 @@ public interface PlanoRepository extends JpaRepository<Plano, UUID> {
 	Optional<Plano> findFirstByUsuarioIdAndAtivoTrue(UUID usuarioId);
 
 	boolean existsByUsuarioIdAndAtivoTrue(UUID usuarioId);
+
+	long countByUsuarioId(UUID usuarioId);
 }

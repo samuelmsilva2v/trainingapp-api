@@ -1,6 +1,10 @@
 package com.trainingapp.api.controller;
 
+import com.trainingapp.api.model.Objetivo;
 import com.trainingapp.api.model.Plano;
+import com.trainingapp.api.repository.PlanoRepository;
+import com.trainingapp.api.repository.UsuarioRepository;
+import com.trainingapp.api.service.PlanoService;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +17,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+import java.util.stream.IntStream;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -29,6 +37,12 @@ class PlanoApiTest {
 
 	@Autowired
 	MockMvc mvc;
+
+	@Autowired
+	PlanoRepository planos;
+
+	@Autowired
+	UsuarioRepository usuarios;
 
 	@Test
 	void primeiroPlanoNasceAtivoEPreservaOrdemDeDiasEExercicios() throws Exception {
@@ -95,6 +109,22 @@ class PlanoApiTest {
 
 		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON).content(corpo))
 				.andExpect(status().isUnprocessableContent());
+	}
+
+	@Test
+	void planoAlemDoLimiteRetorna422() throws Exception {
+		var usuario = usuarios.findById(UUID.fromString(UsuarioDeTeste.ID)).orElseThrow();
+		planos.saveAll(IntStream.range(0, PlanoService.LIMITE_POR_USUARIO).mapToObj(i -> {
+			Plano p = new Plano();
+			p.setUsuario(usuario);
+			p.setNome("Plano " + i);
+			p.setObjetivo(Objetivo.HIPERTROFIA);
+			return p;
+		}).toList());
+
+		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON).content(plano("Mais um", "{\"nome\":\"A\",\"exercicios\":[]}")))
+				.andExpect(status().isUnprocessableContent())
+				.andExpect(jsonPath("$.detail").value(startsWith("Limite de ")));
 	}
 
 	@Test

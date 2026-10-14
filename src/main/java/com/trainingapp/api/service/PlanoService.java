@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 @Transactional
 public class PlanoService {
 
+	/** Teto de planos por conta: com o cadastro aberto, um POST em laco nao incha o banco. */
+	public static final int LIMITE_POR_USUARIO = 50;
+
 	private final PlanoRepository planos;
 	private final ExercicioRepository exercicios;
 	private final UsuarioAtual usuarioAtual;
@@ -52,6 +55,9 @@ public class PlanoService {
 
 	public PlanoResponse criar(PlanoRequest request) {
 		Usuario usuario = usuarioAtual.obter();
+		if (planos.countByUsuarioId(usuario.getId()) >= LIMITE_POR_USUARIO) {
+			throw new RegraDeNegocioException("Limite de " + LIMITE_POR_USUARIO + " planos atingido. Exclua um plano antigo para criar outro.");
+		}
 		Plano plano = new Plano();
 		plano.setUsuario(usuario);
 		// O primeiro plano do usuario ja nasce ativo.
