@@ -1,6 +1,8 @@
 package com.trainingapp.api.dto;
 
 import com.trainingapp.api.model.EstadoSessao;
+import com.trainingapp.api.model.TipoSerie;
+import com.trainingapp.api.service.Blocos;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -37,6 +39,8 @@ public record SessaoRequest(
 			@Min(1) @Max(100) int metaRepsMax,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal metaCarga,
 			@Min(0) @Max(1800) Integer metaDescansoSegundos,
+			/** Snapshot dos drops planejados na ultima serie; ausente vale 0. */
+			@Min(0) @Max(Blocos.MAX_DROPS) Integer metaDrops,
 			@NotNull @Size(max = 50) @Valid List<SerieRequest> series) {
 	}
 
@@ -44,6 +48,12 @@ public record SessaoRequest(
 			@NotNull UUID id,
 			@Min(0) @Max(1000) Integer reps,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal carga,
-			boolean concluida) {
+			boolean concluida,
+			/** Ausente vale NORMAL. O concluida de um drop e ignorado: vale o da serie normal do bloco. */
+			TipoSerie tipo) {
+
+		public TipoSerie tipoOuNormal() {
+			return tipo == null ? TipoSerie.NORMAL : tipo;
+		}
 	}
 }

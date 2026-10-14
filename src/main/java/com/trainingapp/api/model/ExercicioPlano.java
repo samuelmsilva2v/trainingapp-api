@@ -49,4 +49,8 @@ public class ExercicioPlano {
 	private BigDecimal cargaAlvo;
 
 	private Integer descansoSegundos;
+
+	/** Drops (0 a 3) depois da ultima serie. */
+	@Column(nullable = false)
+	private int drops;
 }

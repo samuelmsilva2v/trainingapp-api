@@ -4,6 +4,7 @@ import com.trainingapp.api.model.EstadoSessao;
 import com.trainingapp.api.model.ExercicioSessao;
 import com.trainingapp.api.model.SerieSessao;
 import com.trainingapp.api.model.Sessao;
+import com.trainingapp.api.model.TipoSerie;
 import com.trainingapp.api.service.GamificacaoService;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,7 +32,9 @@ public record SessaoResumoResponse(
 				if (!r.isConcluida()) {
 					continue;
 				}
-				series++;
+				if (r.getTipo() != TipoSerie.DROP) {
+					series++; // o drop-set conta como uma serie so; o volume inclui as etapas
+				}
 				if (r.getCarga() != null && r.getReps() != null) {
 					volume = volume.add(r.getCarga().multiply(BigDecimal.valueOf(r.getReps())));
 				}

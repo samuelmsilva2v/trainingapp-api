@@ -67,17 +67,15 @@ public class GamificacaoService {
 				.mapToInt(XpEvent::getPontos).sum() > 0) {
 			return List.of();
 		}
-		List<SerieSessao> concluidas = sessao.getExercicios().stream()
-				.flatMap(e -> e.getSeries().stream())
-				.filter(SerieSessao::isConcluida)
-				.toList();
-		if (concluidas.size() < Regras.SERIES_MINIMAS) {
+		// O drop-set conta como uma serie so (um bloco), nas series minimas e no XP.
+		int concluidas = sessao.getExercicios().stream().mapToInt(e -> Blocos.concluidos(e.getSeries())).sum();
+		if (concluidas < Regras.SERIES_MINIMAS) {
 			return List.of();
 		}
 
 		List<XpEvent> novos = new ArrayList<>();
 		// Um unico evento com o XP de todas as series; ele tambem marca o dia de treino (dia_unico).
-		int xpSeries = concluidas.stream().mapToInt(s -> Regras.xpDaSerie(s.getCarga(), s.getReps())).sum();
+		int xpSeries = sessao.getExercicios().stream().mapToInt(e -> Blocos.xp(e.getSeries())).sum();
 		XpEvent series = evento(usuario, sessao, TipoXp.SERIES, xpSeries, null, dia);
 		series.setDiaUnico(dia);
 		novos.add(series);

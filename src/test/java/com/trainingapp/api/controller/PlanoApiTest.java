@@ -112,6 +112,24 @@ class PlanoApiTest {
 	}
 
 	@Test
+	void guardaOsDropsDaUltimaSerieEValidaOMaximo() throws Exception {
+		String supino = criarExercicio("Supino");
+		String comDrops = item(supino, 3, 8, 12, "60").replace("}", ",\"drops\":2}");
+		String id = JsonPath.read(mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON)
+				.content(plano("Drop", "{\"nome\":\"A\",\"exercicios\":[%s,%s]}".formatted(comDrops, item(supino, 3, 8, 12, null)))))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.dias[0].exercicios[0].drops").value(2))
+				.andExpect(jsonPath("$.dias[0].exercicios[1].drops").value(0)) // ausente vale 0
+				.andReturn().getResponse().getContentAsString(), "$.id");
+		mvc.perform(get("/api/planos/" + id)).andExpect(jsonPath("$.dias[0].exercicios[0].drops").value(2));
+
+		String demais = item(supino, 3, 8, 12, "60").replace("}", ",\"drops\":4}");
+		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON)
+				.content(plano("Drop", "{\"nome\":\"A\",\"exercicios\":[%s]}".formatted(demais))))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void planoAlemDoLimiteRetorna422() throws Exception {
 		var usuario = usuarios.findById(UUID.fromString(UsuarioDeTeste.ID)).orElseThrow();
 		planos.saveAll(IntStream.range(0, PlanoService.LIMITE_POR_USUARIO).mapToObj(i -> {

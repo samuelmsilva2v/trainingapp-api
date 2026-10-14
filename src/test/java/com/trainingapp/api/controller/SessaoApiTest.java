@@ -291,6 +291,74 @@ class SessaoApiTest {
 		mvc.perform(get("/api/sessoes/" + UUID.randomUUID())).andExpect(status().isNotFound());
 	}
 
+	// --- drop-set ---
+
+	@Test
+	void dropSetEhUmaSerieSoEODropSegueOCheckDaSerieNormal() throws Exception {
+		UUID sessao = UUID.randomUUID();
+		// O cliente manda o drop como nao concluido; vale o check da serie normal. Drop sem repeticao nao conta.
+		salvar(sessao, "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), 10, "60", true),
+				drop(UUID.randomUUID(), 8, "45", false), drop(UUID.randomUUID(), null, "35", true))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.exercicios[0].series[0].tipo").value("NORMAL"))
+				.andExpect(jsonPath("$.exercicios[0].series[1].tipo").value("DROP"))
+				.andExpect(jsonPath("$.exercicios[0].series[1].concluida").value(true))
+				.andExpect(jsonPath("$.exercicios[0].series[2].concluida").value(false));
+
+		// Desmarcar a serie normal desmarca o bloco inteiro.
+		salvar(sessao, UUID.randomUUID(), "EM_ANDAMENTO", agora(), agora().plusSeconds(1), null,
+				serie(UUID.randomUUID(), 10, "60", false), drop(UUID.randomUUID(), 8, "45", true))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.exercicios[0].series[1].concluida").value(false));
+	}
+
+	@Test
+	void dropSetRendeXpComoUmaSerieSoPeloVolumeSomado() throws Exception {
+		Instant inicio = agora();
+		// 2 series de 60 x 10 (15 XP cada) e uma terceira com 2 drops: (600 + 50 x 8 + 40 x 6) / 40 = 31 XP.
+		salvar(UUID.randomUUID(), "CONCLUIDA", inicio, inicio.plusSeconds(60), serie(UUID.randomUUID(), 10, "60", true),
+				serie(UUID.randomUUID(), 10, "60", true), serie(UUID.randomUUID(), 10, "60", true),
+				drop(UUID.randomUUID(), 8, "50", true), drop(UUID.randomUUID(), 6, "40", true))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.xpSeries").value(61))
+				.andExpect(jsonPath("$.exercicios[0].xp").value(61));
+
+		mvc.perform(get("/api/sessoes"))
+				.andExpect(jsonPath("$[0].seriesConcluidas").value(3))
+				.andExpect(jsonPath("$[0].volumeKg").value(2440));
+	}
+
+	@Test
+	void doisDropsNaoValemPorDuasSeriesNoMinimoDoTreino() throws Exception {
+		Instant inicio = agora();
+		salvar(UUID.randomUUID(), "CONCLUIDA", inicio, inicio.plusSeconds(60), serie(UUID.randomUUID(), 10, "60", true),
+				drop(UUID.randomUUID(), 8, "50", true), drop(UUID.randomUUID(), 6, "40", true))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.xpGanho").value(0));
+	}
+
+	@Test
+	void rejeitaDropSemSerieAntesEMaisDeTresDrops() throws Exception {
+		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, drop(UUID.randomUUID(), 8, "50", false))
+				.andExpect(status().isUnprocessableContent());
+		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), 10, "60", false),
+				drop(UUID.randomUUID(), 8, "50", false), drop(UUID.randomUUID(), 8, "40", false),
+				drop(UUID.randomUUID(), 8, "30", false), drop(UUID.randomUUID(), 8, "20", false))
+				.andExpect(status().isUnprocessableContent());
+	}
+
+	@Test
+	void anterioresTrazemOTipoDaSerie() throws Exception {
+		Instant antigo = agora().minus(1, ChronoUnit.HOURS);
+		salvar(UUID.randomUUID(), "CONCLUIDA", antigo, antigo.plusSeconds(60), serie(UUID.randomUUID(), 10, "60", true),
+				drop(UUID.randomUUID(), 8, "45", true)).andExpect(status().isOk());
+
+		mvc.perform(get("/api/sessoes/anteriores").param("exercicioIds", exercicio))
+				.andExpect(jsonPath("$[0].series[0].tipo").value("NORMAL"))
+				.andExpect(jsonPath("$[0].series[1].tipo").value("DROP"))
+				.andExpect(jsonPath("$[0].series[1].carga").value(45));
+	}
+
 	// --- helpers ---
 
 	private void concluir(UUID sessao, int diaOrdem, String diaNome) throws Exception {
@@ -324,13 +392,18 @@ class SessaoApiTest {
 				{"planoId":"%s","planoNome":"ABC","diaNome":"%s","diaOrdem":%d,"estado":"%s",
 				 "iniciadaEm":"%s","finalizadaEm":%s,"atualizadoEm":"%s",
 				 "exercicios":[{"id":"%s","exercicioId":"%s","metaSeries":3,"metaRepsMin":8,"metaRepsMax":12,
-				   "metaCarga":60,"metaDescansoSegundos":90,"series":[%s]}]}
+				   "metaCarga":60,"metaDescansoSegundos":90,"metaDrops":2,"series":[%s]}]}
 				""".formatted(plano, diaNome, diaOrdem, estado, inicio, fim == null ? "null" : "\"" + fim + "\"",
 				atualizado, exSessao, exercicioId, String.join(",", series));
 	}
 
 	private static String serie(UUID id, Integer reps, String carga, boolean concluida) {
 		return "{\"id\":\"%s\",\"reps\":%s,\"carga\":%s,\"concluida\":%s}".formatted(id, reps, carga, concluida);
+	}
+
+	private static String drop(UUID id, Integer reps, String carga, boolean concluida) {
+		return "{\"id\":\"%s\",\"reps\":%s,\"carga\":%s,\"concluida\":%s,\"tipo\":\"DROP\"}"
+				.formatted(id, reps, carga, concluida);
 	}
 
 	private static Instant agora() {

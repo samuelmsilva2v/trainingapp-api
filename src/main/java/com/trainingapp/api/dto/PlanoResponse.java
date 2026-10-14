@@ -32,7 +32,8 @@ public record PlanoResponse(
 			int repsMin,
 			int repsMax,
 			BigDecimal cargaAlvo,
-			Integer descansoSegundos) {
+			Integer descansoSegundos,
+			int drops) {
 	}
 
 	public static PlanoResponse de(Plano plano, ImagensExercicio imagens) {
@@ -42,7 +43,7 @@ public record PlanoResponse(
 								.map(i -> new ItemResponse(i.getId(), i.getExercicio().getId(),
 										i.getExercicio().getNome(), i.getExercicio().getGrupoMuscular(),
 										i.getExercicio().getEquipamento(), imagens.de(i.getExercicio()), i.getOrdem(), i.getSeries(),
-										i.getRepsMin(), i.getRepsMax(), i.getCargaAlvo(), i.getDescansoSegundos()))
+										i.getRepsMin(), i.getRepsMax(), i.getCargaAlvo(), i.getDescansoSegundos(), i.getDrops()))
 								.toList()))
 				.toList();
 		return new PlanoResponse(plano.getId(), plano.getNome(), plano.getObjetivo(), plano.isAtivo(), dias);

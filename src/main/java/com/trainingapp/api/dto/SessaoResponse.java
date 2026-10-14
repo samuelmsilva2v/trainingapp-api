@@ -6,7 +6,8 @@ import com.trainingapp.api.model.GrupoMuscular;
 import com.trainingapp.api.model.Sessao;
 import com.trainingapp.api.service.GamificacaoService;
 import com.trainingapp.api.service.ImagensExercicio;
-import com.trainingapp.api.service.Regras;
+import com.trainingapp.api.model.TipoSerie;
+import com.trainingapp.api.service.Blocos;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -41,12 +42,13 @@ public record SessaoResponse(
 			int metaRepsMax,
 			BigDecimal metaCarga,
 			Integer metaDescansoSegundos,
+			int metaDrops,
 			List<SerieResponse> series,
 			/** XP das series concluidas deste exercicio (0 se o treino nao rendeu XP). */
 			int xp) {
 	}
 
-	public record SerieResponse(UUID id, int ordem, Integer reps, BigDecimal carga, boolean concluida) {
+	public record SerieResponse(UUID id, int ordem, Integer reps, BigDecimal carga, boolean concluida, TipoSerie tipo) {
 	}
 
 	public static SessaoResponse de(Sessao s, GamificacaoService.Ganho ganho, ImagensExercicio imagens) {
@@ -56,13 +58,12 @@ public record SessaoResponse(
 						.map(e -> new ExercicioResponse(e.getId(), e.getExercicio().getId(), e.getNome(),
 								e.getExercicio().getGrupoMuscular(), e.getExercicio().getEquipamento(), imagens.de(e.getExercicio()), e.getOrdem(),
 								e.getMetaSeries(), e.getMetaRepsMin(), e.getMetaRepsMax(), e.getMetaCarga(),
-								e.getMetaDescansoSegundos(),
+								e.getMetaDescansoSegundos(), e.getMetaDrops(),
 								e.getSeries().stream()
 										.map(r -> new SerieResponse(r.getId(), r.getOrdem(), r.getReps(), r.getCarga(),
-												r.isConcluida()))
+												r.isConcluida(), r.getTipo()))
 										.toList(),
-								ganho.xpSeries() > 0 ? e.getSeries().stream().filter(r -> r.isConcluida())
-										.mapToInt(r -> Regras.xpDaSerie(r.getCarga(), r.getReps())).sum() : 0))
+								ganho.xpSeries() > 0 ? Blocos.xp(e.getSeries()) : 0))
 						.toList(),
 				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.recordes());
 	}

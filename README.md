@@ -30,6 +30,8 @@ Tudo em `/api/**` exige `Authorization: Bearer <access token>`, menos `/api/auth
 
 **Gamificação** (regras em `service/Regras`, calculadas só no servidor): cada série concluída vale `carga × reps ÷ 40` de XP (mínimo 5, máximo 100; sem carga vale o mínimo), mais 25 por recorde de carga no exercício. Só o primeiro treino do dia conta e precisa de 3 ou mais séries. O nível `n` começa em `100 × n^1,5` de XP. O streak aguenta até 2 dias sem treinar.
 
+**Drop-set:** cada etapa é uma série com `tipo: "DROP"` logo depois da série normal a que pertence (até 3; o plano guarda `drops` da última série e a sessão o snapshot `metaDrops`). O bloco (série + drops) é **uma série só**: tem um check, o da série normal (o servidor grava nos drops o mesmo `concluida`, e drop sem repetição não conta), vale 1 nas 3 séries mínimas e no histórico, e rende XP uma vez, pelo volume somado das etapas (mínimo 5, máximo 100). O recorde olha a carga de cada etapa. Drop sem série normal antes ou mais de 3 seguidos: `422`.
+
 ## Rodando localmente
 
 Pré-requisitos: JDK 21 e Docker (para o banco via `compose.yaml`).

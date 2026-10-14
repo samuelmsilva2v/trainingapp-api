@@ -18,6 +18,15 @@ class RegrasTest {
 	}
 
 	@Test
+	void dropSetValeOVolumeSomadoComoUmaSerieSo() {
+		// (600 + 50 x 8 + 40 x 6) / 40 = 31; sem drop, igual a serie; o teto de 100 vale para o bloco inteiro.
+		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("60"), new BigDecimal("50"), new BigDecimal("40")), List.of(10, 8, 6)))
+				.isEqualTo(31);
+		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("60")), List.of(10))).isEqualTo(Regras.xpDaSerie(new BigDecimal("60"), 10));
+		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("200"), new BigDecimal("160")), List.of(15, 12))).isEqualTo(100);
+	}
+
+	@Test
 	void quantoMaisPesadaELongaMaisXp() {
 		assertThat(Regras.xpDaSerie(new BigDecimal("80"), 10)).isGreaterThan(Regras.xpDaSerie(new BigDecimal("60"), 10));
 		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 12)).isGreaterThan(Regras.xpDaSerie(new BigDecimal("60"), 8));

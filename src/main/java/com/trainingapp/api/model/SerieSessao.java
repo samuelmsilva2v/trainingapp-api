@@ -2,6 +2,8 @@ package com.trainingapp.api.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -36,4 +38,8 @@ public class SerieSessao {
 
 	@Column(nullable = false)
 	private boolean concluida;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private TipoSerie tipo = TipoSerie.NORMAL;
 }

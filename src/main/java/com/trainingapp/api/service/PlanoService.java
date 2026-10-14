@@ -122,6 +122,7 @@ public class PlanoService {
 				item.setRepsMax(itemReq.repsMax());
 				item.setCargaAlvo(itemReq.cargaAlvo());
 				item.setDescansoSegundos(itemReq.descansoSegundos());
+				item.setDrops(itemReq.drops() == null ? 0 : itemReq.drops());
 				dia.getExercicios().add(item);
 			}
 			plano.getDias().add(dia);

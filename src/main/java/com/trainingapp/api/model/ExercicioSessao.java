@@ -54,6 +54,9 @@ public class ExercicioSessao {
 
 	private Integer metaDescansoSegundos;
 
+	@Column(nullable = false)
+	private int metaDrops;
+
 	@OneToMany(mappedBy = "exercicioSessao", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("ordem")
 	private List<SerieSessao> series = new ArrayList<>();

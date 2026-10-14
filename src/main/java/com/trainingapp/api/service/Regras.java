@@ -31,7 +31,28 @@ public final class Regras {
 		if (reps == null || reps < 1) {
 			return 0;
 		}
-		double volume = (carga == null ? 0 : carga.doubleValue()) * reps;
+		return xpDoVolume((carga == null ? 0 : carga.doubleValue()) * reps, reps);
+	}
+
+	/**
+	 * XP de um bloco (serie normal + drops): e uma serie so, entao vale o volume somado das etapas / 40, entre 5 e
+	 * 100. Sem drop, da o mesmo que {@link #xpDaSerie}. As listas tem a carga e as reps de cada etapa concluida.
+	 */
+	public static int xpDoBloco(List<BigDecimal> cargas, List<Integer> reps) {
+		double volume = 0;
+		int totalReps = 0;
+		for (int i = 0; i < reps.size(); i++) {
+			int r = reps.get(i) == null ? 0 : reps.get(i);
+			volume += (cargas.get(i) == null ? 0 : cargas.get(i).doubleValue()) * r;
+			totalReps += r;
+		}
+		return xpDoVolume(volume, totalReps);
+	}
+
+	private static int xpDoVolume(double volume, int reps) {
+		if (reps < 1) {
+			return 0;
+		}
 		long xp = Math.round(volume / VOLUME_POR_XP);
 		return (int) Math.min(XP_MAXIMO_SERIE, Math.max(XP_MINIMO_SERIE, xp));
 	}

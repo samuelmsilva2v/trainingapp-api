@@ -14,6 +14,7 @@ import com.trainingapp.api.model.Exercicio;
 import com.trainingapp.api.model.ExercicioSessao;
 import com.trainingapp.api.model.Plano;
 import com.trainingapp.api.model.SerieSessao;
+import com.trainingapp.api.model.TipoSerie;
 import com.trainingapp.api.model.Sessao;
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.ExercicioRepository;
@@ -224,10 +225,21 @@ public class SessaoService {
 			if (e.metaRepsMin() > e.metaRepsMax()) {
 				throw new RegraDeNegocioException("metaRepsMin nao pode ser maior que metaRepsMax");
 			}
+			int dropsSeguidos = -1; // -1: ainda nao houve serie normal para o drop pertencer
 			for (SessaoRequest.SerieRequest s : e.series()) {
 				if (!ids.add(s.id())) {
 					throw new RegraDeNegocioException("Id repetido na sessao: " + s.id());
 				}
+				if (s.tipoOuNormal() == TipoSerie.DROP) {
+					if (dropsSeguidos < 0) {
+						throw new RegraDeNegocioException("Drop precisa vir logo depois de uma serie");
+					}
+					if (++dropsSeguidos > Blocos.MAX_DROPS) {
+						throw new RegraDeNegocioException("No maximo " + Blocos.MAX_DROPS + " drops por serie");
+					}
+					continue; // o concluida do drop vem da serie normal do bloco
+				}
+				dropsSeguidos = 0;
 				if (s.concluida() && (s.reps() == null || s.reps() < 1)) {
 					throw new RegraDeNegocioException("Serie concluida precisa de pelo menos 1 repeticao");
 				}
@@ -273,6 +285,7 @@ public class SessaoService {
 			ex.setMetaRepsMax(req.metaRepsMax());
 			ex.setMetaCarga(req.metaCarga());
 			ex.setMetaDescansoSegundos(req.metaDescansoSegundos());
+			ex.setMetaDrops(req.metaDrops() == null ? 0 : req.metaDrops());
 			reconciliarSeries(ex, req);
 			resultado.add(ex);
 		}
@@ -284,6 +297,7 @@ public class SessaoService {
 		Map<UUID, SerieSessao> atuais = ex.getSeries().stream()
 				.collect(Collectors.toMap(SerieSessao::getId, Function.identity(), (a, b) -> a, HashMap::new));
 		List<SerieSessao> resultado = new ArrayList<>();
+		boolean blocoConcluido = false;
 		for (int i = 0; i < req.series().size(); i++) {
 			SessaoRequest.SerieRequest s = req.series().get(i);
 			SerieSessao serie = atuais.get(s.id());
@@ -295,7 +309,15 @@ public class SessaoService {
 			serie.setOrdem(i);
 			serie.setReps(s.reps());
 			serie.setCarga(s.carga());
-			serie.setConcluida(s.concluida());
+			serie.setTipo(s.tipoOuNormal());
+			if (serie.getTipo() == TipoSerie.DROP) {
+				// O drop-set e uma serie so: o drop segue o check da serie normal (e so conta se teve repeticao).
+				serie.setConcluida(blocoConcluido && s.reps() != null && s.reps() >= 1);
+			}
+			else {
+				blocoConcluido = s.concluida();
+				serie.setConcluida(s.concluida());
+			}
 			resultado.add(serie);
 		}
 		ex.getSeries().clear();
