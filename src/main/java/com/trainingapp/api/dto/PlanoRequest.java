@@ -34,7 +34,7 @@ public record PlanoRequest(
 			@Min(1) @Max(100) int repsMax,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal cargaAlvo,
 			@Min(0) @Max(1800) Integer descansoSegundos,
-			/** Drops depois da ultima serie; ausente vale 0. */
+			/** Drops depois de cada serie (drop-set ligado); ausente vale 0. */
 			@Min(0) @Max(Blocos.MAX_DROPS) Integer drops) {
 	}
 }

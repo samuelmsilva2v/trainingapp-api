@@ -50,7 +50,7 @@ public class ExercicioPlano {
 
 	private Integer descansoSegundos;
 
-	/** Drops (0 a 3) depois da ultima serie. */
+	/** Drops (0 a 3) depois de cada serie; 0 = series normais. */
 	@Column(nullable = false)
 	private int drops;
 }

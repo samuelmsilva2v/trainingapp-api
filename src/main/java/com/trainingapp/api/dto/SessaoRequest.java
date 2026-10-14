@@ -39,7 +39,7 @@ public record SessaoRequest(
 			@Min(1) @Max(100) int metaRepsMax,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal metaCarga,
 			@Min(0) @Max(1800) Integer metaDescansoSegundos,
-			/** Snapshot dos drops planejados na ultima serie; ausente vale 0. */
+			/** Snapshot dos drops planejados em cada serie; ausente vale 0. */
 			@Min(0) @Max(Blocos.MAX_DROPS) Integer metaDrops,
 			@NotNull @Size(max = 50) @Valid List<SerieRequest> series) {
 	}
