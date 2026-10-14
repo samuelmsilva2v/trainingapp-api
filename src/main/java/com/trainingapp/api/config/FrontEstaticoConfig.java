@@ -51,7 +51,8 @@ public class FrontEstaticoConfig implements WebMvcConfigurer {
 							return null; // rota de API que nao existe: 404, nunca o index.html
 						}
 						Resource arquivo = base.createRelative(caminho);
-						if (arquivo.isReadable()) {
+						// checkResource: o arquivo tem de ficar dentro da pasta (nao depende so do firewall barrar o "../").
+						if (arquivo.isReadable() && checkResource(arquivo, base)) {
 							return arquivo;
 						}
 						// Rotas do Angular (/planos/123) nao sao arquivos: devolve o index.html e o roteador resolve.

@@ -16,6 +16,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
@@ -33,7 +34,10 @@ class FrontEstaticoTest {
 
 	static Path criarPastaDoFront() {
 		try {
-			Path pasta = Files.createTempDirectory("front");
+			// O segredo fica ao lado da pasta do front, como o application.properties fica ao lado do dist.
+			Path raiz = Files.createTempDirectory("front");
+			Files.writeString(raiz.resolve("segredo.txt"), "SEGREDO");
+			Path pasta = Files.createDirectory(raiz.resolve("browser"));
 			Files.writeString(pasta.resolve("index.html"), "<app-root></app-root>");
 			Files.writeString(pasta.resolve("main-ABC.js"), "console.log('app')");
 			return pasta;
@@ -80,5 +84,15 @@ class FrontEstaticoTest {
 				.andExpect(jsonPath("$.nome").value("Atleta"));
 		mvc.perform(get("/api/nao-existe"))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void caminhoParaForaDaPastaNuncaDevolveOArquivo() throws Exception {
+		for (String caminho : new String[] { "/%2e%2e/segredo.txt", "/..%2fsegredo.txt", "/%2e%2e%2fsegredo.txt",
+				"/..%5csegredo.txt", "/main-ABC.js/%2e%2e/%2e%2e/segredo.txt" }) {
+			var resposta = mvc.perform(get(java.net.URI.create(caminho))).andReturn().getResponse();
+			assertThat(resposta.getContentAsString()).as(caminho).doesNotContain("SEGREDO");
+			assertThat(resposta.getStatus()).as(caminho).isIn(400, 404);
+		}
 	}
 }
