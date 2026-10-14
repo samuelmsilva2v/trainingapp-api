@@ -307,6 +307,52 @@ class AuthApiTest {
 		login(EMAIL, "Nova-Senha-789!").andExpect(status().isOk());
 	}
 
+	// --- app Android: refresh no corpo ---
+
+	@Test
+	void appRecebeORefreshNoCorpoSemCookieERenovaESaiPeloCorpo() throws Exception {
+		criarContaConfirmada(EMAIL);
+		MvcResult app = loginApp(EMAIL, SENHA).andExpect(status().isOk())
+				.andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+				.andExpect(jsonPath("$.acesso").isNotEmpty())
+				.andReturn();
+		String refresh = JsonPath.read(app.getResponse().getContentAsString(), "$.refresh");
+
+		renovarPeloCorpo(refresh).andExpect(status().isOk())
+				.andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+				.andExpect(jsonPath("$.acesso").isNotEmpty());
+		renovarPeloCorpo("token-que-nao-existe").andExpect(status().isUnauthorized());
+
+		post("/api/auth/sair", "{\"refresh\":\"%s\"}".formatted(refresh)).andExpect(status().isNoContent());
+		renovarPeloCorpo(refresh).andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void webContinuaSoComOCookie() throws Exception {
+		criarContaConfirmada(EMAIL);
+		login(EMAIL, SENHA).andExpect(status().isOk())
+				.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refresh_token=")))
+				.andExpect(jsonPath("$.refresh").doesNotExist());
+	}
+
+	@Test
+	void trocarSenhaNoAppMantemOAparelhoQueMandouORefreshNoCorpo() throws Exception {
+		criarContaConfirmada(EMAIL);
+		MvcResult a = loginApp(EMAIL, SENHA).andReturn();
+		MvcResult b = loginApp(EMAIL, SENHA).andReturn();
+		String refreshA = JsonPath.read(a.getResponse().getContentAsString(), "$.refresh");
+		String refreshB = JsonPath.read(b.getResponse().getContentAsString(), "$.refresh");
+
+		mvc.perform(MockMvcRequestBuilders.post("/api/auth/trocar-senha")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + acesso(a))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"senhaAtual\":\"%s\",\"novaSenha\":\"Nova-Senha-789!\",\"refresh\":\"%s\"}".formatted(SENHA, refreshA)))
+				.andExpect(status().isNoContent());
+
+		renovarPeloCorpo(refreshA).andExpect(status().isOk());
+		renovarPeloCorpo(refreshB).andExpect(status().isUnauthorized());
+	}
+
 	// --- Google ---
 
 	@Test
@@ -384,6 +430,15 @@ class AuthApiTest {
 
 	ResultActions google(String codigo) throws Exception {
 		return post("/api/auth/google", "{\"codigo\":\"%s\"}".formatted(codigo));
+	}
+
+	ResultActions loginApp(String email, String senha) throws Exception {
+		return mvc.perform(requisicao("/api/auth/login", "{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, senha), ipNovo())
+				.header("X-Cliente", "android"));
+	}
+
+	ResultActions renovarPeloCorpo(String refresh) throws Exception {
+		return post("/api/auth/refresh", "{\"refresh\":\"%s\"}".formatted(refresh));
 	}
 
 	ResultActions renovar(String refresh) throws Exception {

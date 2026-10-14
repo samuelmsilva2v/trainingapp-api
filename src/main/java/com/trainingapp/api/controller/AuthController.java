@@ -9,6 +9,7 @@ import com.trainingapp.api.dto.ExcluirContaRequest;
 import com.trainingapp.api.dto.GoogleRequest;
 import com.trainingapp.api.dto.LoginRequest;
 import com.trainingapp.api.dto.RedefinirSenhaRequest;
+import com.trainingapp.api.dto.RefreshRequest;
 import com.trainingapp.api.dto.TokenRequest;
 import com.trainingapp.api.dto.TrocarSenhaRequest;
 import com.trainingapp.api.service.AuthService;
@@ -22,18 +23,23 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 
-/** O refresh token vai e volta so no cookie HttpOnly (path /api/auth); o corpo da resposta traz so o access token. */
+/**
+ * Na web o refresh token vai e volta so no cookie HttpOnly (path /api/auth) e o corpo traz so o access token. O app
+ * Android (header {@value #CLIENTE}: android) nao tem o cookie: recebe o refresh no corpo do login e o manda no corpo.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
 	static final String COOKIE = "refresh_token";
+	static final String CLIENTE = "X-Cliente";
 
 	private final AuthService auth;
 	private final AuthProperties props;
@@ -62,25 +68,33 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<AcessoResponse> entrar(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
-		return comCookie(auth.entrar(request, http.getRemoteAddr()));
+	public ResponseEntity<AcessoResponse> entrar(@Valid @RequestBody LoginRequest request, HttpServletRequest http,
+			@RequestHeader(name = CLIENTE, required = false) String cliente) {
+		return entregar(auth.entrar(request, http.getRemoteAddr()), cliente);
 	}
 
 	@PostMapping("/google")
-	public ResponseEntity<AcessoResponse> entrarComGoogle(@Valid @RequestBody GoogleRequest request, HttpServletRequest http) {
-		return comCookie(auth.entrarComGoogle(request.codigo(), http.getRemoteAddr()));
+	public ResponseEntity<AcessoResponse> entrarComGoogle(@Valid @RequestBody GoogleRequest request, HttpServletRequest http,
+			@RequestHeader(name = CLIENTE, required = false) String cliente) {
+		return entregar(auth.entrarComGoogle(request.codigo(), http.getRemoteAddr()), cliente);
 	}
 
 	@PostMapping("/refresh")
-	public ResponseEntity<AcessoResponse> renovar(@CookieValue(name = COOKIE, required = false) String refresh) {
+	public ResponseEntity<AcessoResponse> renovar(@CookieValue(name = COOKIE, required = false) String refresh,
+			@Valid @RequestBody(required = false) RefreshRequest corpo) {
+		if (refresh == null) {
+			// App Android: o refresh vem no corpo e continua o mesmo (nao rotaciona), entao nao ha o que devolver alem do acesso.
+			return ResponseEntity.ok(auth.renovar(corpo == null ? null : corpo.refresh()));
+		}
 		AcessoResponse acesso = auth.renovar(refresh);
 		// Reenvia o mesmo cookie com 1 ano novo: o navegador o apagaria no fim do prazo original.
 		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie(refresh, AuthService.REFRESH_VALIDADE).toString()).body(acesso);
 	}
 
 	@PostMapping("/sair")
-	public ResponseEntity<Void> sair(@CookieValue(name = COOKIE, required = false) String refresh) {
-		auth.sair(refresh);
+	public ResponseEntity<Void> sair(@CookieValue(name = COOKIE, required = false) String refresh,
+			@Valid @RequestBody(required = false) RefreshRequest corpo) {
+		auth.sair(refresh != null ? refresh : corpo == null ? null : corpo.refresh());
 		return semCookie();
 	}
 
@@ -106,7 +120,7 @@ public class AuthController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void trocarSenha(@Valid @RequestBody TrocarSenhaRequest request,
 			@CookieValue(name = COOKIE, required = false) String refresh) {
-		auth.trocarSenha(request.senhaAtual(), request.novaSenha(), refresh);
+		auth.trocarSenha(request.senhaAtual(), request.novaSenha(), refresh != null ? refresh : request.refresh());
 	}
 
 	@PostMapping("/excluir-conta")
@@ -115,7 +129,10 @@ public class AuthController {
 		return semCookie();
 	}
 
-	private ResponseEntity<AcessoResponse> comCookie(AuthService.Login login) {
+	private ResponseEntity<AcessoResponse> entregar(AuthService.Login login, String cliente) {
+		if ("android".equalsIgnoreCase(cliente)) {
+			return ResponseEntity.ok(login.acesso().comRefresh(login.refresh()));
+		}
 		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie(login.refresh(), AuthService.REFRESH_VALIDADE).toString())
 				.body(login.acesso());
 	}
