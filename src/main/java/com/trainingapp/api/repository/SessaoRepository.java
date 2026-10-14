@@ -46,4 +46,10 @@ public interface SessaoRepository extends JpaRepository<Sessao, UUID> {
 			""")
 	BigDecimal maiorCargaAnterior(@Param("usuarioId") UUID usuarioId, @Param("exercicioId") UUID exercicioId,
 			@Param("sessaoId") UUID sessaoId);
+
+	@Query("select count(e) from ExercicioSessao e where e.id in :ids and e.sessao.id <> :sessaoId")
+	long contarExerciciosDeOutraSessao(@Param("ids") Collection<UUID> ids, @Param("sessaoId") UUID sessaoId);
+
+	@Query("select count(s) from SerieSessao s where s.id in :ids and s.exercicioSessao.sessao.id <> :sessaoId")
+	long contarSeriesDeOutraSessao(@Param("ids") Collection<UUID> ids, @Param("sessaoId") UUID sessaoId);
 }

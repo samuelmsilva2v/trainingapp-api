@@ -23,6 +23,7 @@ import com.trainingapp.api.repository.SessaoRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -51,10 +52,12 @@ public class SessaoService {
 	private final GamificacaoService gamificacao;
 	private final UsuarioAtual usuarioAtual;
 	private final ImagensExercicio imagens;
+	private final Clock relogio;
 
 	public SessaoService(SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
-			GamificacaoService gamificacao, UsuarioAtual usuarioAtual, ImagensExercicio imagens) {
+			GamificacaoService gamificacao, UsuarioAtual usuarioAtual, ImagensExercicio imagens, Clock relogio) {
 		this.imagens = imagens;
+		this.relogio = relogio;
 		this.gamificacao = gamificacao;
 		this.sessoes = sessoes;
 		this.planos = planos;
@@ -153,6 +156,7 @@ public class SessaoService {
 		}
 
 		validar(request, existente == null);
+		validarIdsLivres(id, request);
 		validarUnicaEmAndamento(id, request, usuario);
 
 		Sessao sessao = existente != null ? existente : nova(id, usuario);
@@ -204,7 +208,7 @@ public class SessaoService {
 		if (request.finalizadaEm() != null && request.finalizadaEm().isBefore(request.iniciadaEm())) {
 			throw new RegraDeNegocioException("finalizadaEm nao pode ser anterior a iniciadaEm");
 		}
-		Instant agora = Instant.now();
+		Instant agora = Instant.now(relogio);
 		if (request.iniciadaEm().isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
 			throw new RegraDeNegocioException("iniciadaEm nao pode estar no futuro");
 		}
@@ -244,6 +248,18 @@ public class SessaoService {
 					throw new RegraDeNegocioException("Serie concluida precisa de pelo menos 1 repeticao");
 				}
 			}
+		}
+	}
+
+	/** Id de exercicio ou serie que ja e de outra sessao: o merge em cascata moveria aquela linha para esta sessao. */
+	private void validarIdsLivres(UUID id, SessaoRequest request) {
+		List<UUID> exercicioIds = request.exercicios().stream().map(SessaoRequest.ExercicioRequest::id).toList();
+		List<UUID> serieIds = request.exercicios().stream().flatMap(e -> e.series().stream())
+				.map(SessaoRequest.SerieRequest::id).toList();
+		// Sem consulta com lista vazia: "in ()" e invalido no Postgres.
+		if ((!exercicioIds.isEmpty() && sessoes.contarExerciciosDeOutraSessao(exercicioIds, id) > 0)
+				|| (!serieIds.isEmpty() && sessoes.contarSeriesDeOutraSessao(serieIds, id) > 0)) {
+			throw new RegraDeNegocioException("Id de exercicio ou serie ja utilizado em outra sessao");
 		}
 	}
 
