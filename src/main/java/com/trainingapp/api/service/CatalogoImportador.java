@@ -43,9 +43,8 @@ public class CatalogoImportador {
 	@Transactional
 	public int importar() {
 		List<ItemCatalogo> itens = ler();
-		// Uma consulta so; os exercicios ja gerenciados sao atualizados pelo dirty checking.
-		Map<String, Exercicio> existentes = repository.findAll().stream()
-				.filter(e -> e.getSlug() != null)
+		// Uma consulta so, sem os exercicios proprios dos usuarios; os ja gerenciados sao atualizados pelo dirty checking.
+		Map<String, Exercicio> existentes = repository.findBySlugIsNotNull().stream()
 				.collect(Collectors.toMap(Exercicio::getSlug, Function.identity()));
 		List<Exercicio> novos = new ArrayList<>();
 		for (ItemCatalogo item : itens) {

@@ -12,6 +12,9 @@ public interface ExercicioRepository extends JpaRepository<Exercicio, UUID> {
 
 	Optional<Exercicio> findBySlug(String slug);
 
+	/** So o catalogo importado (os exercicios proprios nao tem slug). */
+	List<Exercicio> findBySlugIsNotNull();
+
 	/** So os exercicios criados pelo usuario (o catalogo global tem usuario nulo). */
 	List<Exercicio> findByUsuarioId(UUID usuarioId);
 
