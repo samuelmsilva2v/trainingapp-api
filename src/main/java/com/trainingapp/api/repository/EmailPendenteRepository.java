@@ -11,6 +11,8 @@ public interface EmailPendenteRepository extends JpaRepository<EmailPendente, UU
 
 	void deleteByDestinatario(String destinatario);
 
+	long deleteByCriadoEmBefore(Instant limite);
+
 	List<EmailPendente> findTop20ByEnviadoEmIsNullAndTentativasLessThanAndProximaTentativaEmLessThanEqualOrderByCriadoEmAsc(
 			int maxTentativas, Instant agora);
 }
