@@ -87,6 +87,7 @@ Sem o perfil `dev`, valem os padrões de produção de `application.properties`:
 | `TRAININGAPP_AUTH_CADASTRO_ABERTO` | `true` deixa qualquer e-mail se cadastrar e entrar (a lista é ignorada); padrão `false` |
 | `TRAININGAPP_AUTH_GOOGLE_CLIENT_ID`, `TRAININGAPP_AUTH_GOOGLE_CLIENT_SECRET` | Client id e segredo do Google (qualquer um vazio = sem botão do Google) |
 | `TRAININGAPP_WEB_URL_BASE` | Endereço do app, usado nos links dos e-mails (ex.: `https://app.exemplo.com`) |
+| `TRAININGAPP_CORS_ORIGENS` | Origens de fora que podem chamar a API (CORS, sem cookies), separadas por vírgula; padrão `https://localhost`, a origem do app Android. A web, na mesma origem, não depende disso |
 | `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` | SMTP (Gmail com senha de app, Brevo, Resend...) |
 | `TRAININGAPP_EMAIL_REMETENTE` | Remetente, ex.: `TrainingApp <voce@gmail.com>` (obrigatório com SMTP) |
 
