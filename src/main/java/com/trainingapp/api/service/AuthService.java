@@ -139,9 +139,19 @@ public class AuthService {
 		return iniciarSessao(u);
 	}
 
+	/** Web: o codigo de uso unico do popup do Google. */
 	public Login entrarComGoogle(String codigo, String ip) {
 		limite.tentar("google:" + ip, LIMITE_POR_IP);
-		VerificadorGoogle.Identidade g = google.verificarCodigo(codigo);
+		return entrarComo(google.verificarCodigo(codigo));
+	}
+
+	/** App Android: o ID token que o Credential Manager entregou (o popup do Google nao abre em WebView). */
+	public Login entrarComGoogleIdToken(String idToken, String ip) {
+		limite.tentar("google:" + ip, LIMITE_POR_IP);
+		return entrarComo(google.verificarIdToken(idToken));
+	}
+
+	private Login entrarComo(VerificadorGoogle.Identidade g) {
 		if (!g.emailVerificado()) {
 			throw new ErroDeAutenticacaoException(FORBIDDEN, "O e-mail desta conta Google não está verificado");
 		}
@@ -260,10 +270,10 @@ public class AuthService {
 
 	/**
 	 * Apaga a conta e todos os dados dela, sem volta. Exige provar quem esta pedindo, porque um access token roubado nao
-	 * pode bastar para destruir uma conta: a senha (conta com senha) ou um login novo no Google (conta so do Google, o
-	 * codigo do popup tem de ser da mesma conta Google ligada a esta).
+	 * pode bastar para destruir uma conta: a senha (conta com senha) ou um login novo no Google (conta so do Google: o
+	 * codigo do popup na web ou o ID token no app, da mesma conta Google ligada a esta).
 	 */
-	public void excluirConta(String senha, String codigo) {
+	public void excluirConta(String senha, String codigo, String idToken) {
 		Usuario u = usuarioAtual.obter();
 		String chave = "excluir:" + u.getId();
 		limite.tentar(chave);
@@ -272,8 +282,9 @@ public class AuthService {
 				throw new RegraDeNegocioException("Senha incorreta");
 			}
 		}
-		else if (codigo != null && !codigo.isBlank()) {
-			VerificadorGoogle.Identidade g = google.verificarCodigo(codigo);
+		else if ((codigo != null && !codigo.isBlank()) || (idToken != null && !idToken.isBlank())) {
+			VerificadorGoogle.Identidade g = codigo != null && !codigo.isBlank() ? google.verificarCodigo(codigo)
+					: google.verificarIdToken(idToken);
 			if (u.getGoogleSub() == null || !u.getGoogleSub().equals(g.sub())) {
 				throw new ErroDeAutenticacaoException(FORBIDDEN, "Esta não é a conta Google ligada à sua conta");
 			}

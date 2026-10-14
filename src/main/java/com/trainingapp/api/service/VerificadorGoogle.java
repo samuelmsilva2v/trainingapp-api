@@ -8,4 +8,7 @@ public interface VerificadorGoogle {
 
 	/** Troca o codigo de autorizacao que o popup do Google entregou ao front pelos tokens e valida o ID token. */
 	Identidade verificarCodigo(String codigo);
+
+	/** Valida um ID token que o app Android recebeu do Credential Manager (destinatario = nosso client id web). */
+	Identidade verificarIdToken(String idToken);
 }

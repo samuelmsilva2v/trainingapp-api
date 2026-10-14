@@ -7,6 +7,7 @@ import com.trainingapp.api.dto.CadastroRequest;
 import com.trainingapp.api.dto.EmailRequest;
 import com.trainingapp.api.dto.ExcluirContaRequest;
 import com.trainingapp.api.dto.GoogleRequest;
+import com.trainingapp.api.dto.GoogleTokenRequest;
 import com.trainingapp.api.dto.LoginRequest;
 import com.trainingapp.api.dto.RedefinirSenhaRequest;
 import com.trainingapp.api.dto.RefreshRequest;
@@ -79,6 +80,13 @@ public class AuthController {
 		return entregar(auth.entrarComGoogle(request.codigo(), http.getRemoteAddr()), cliente);
 	}
 
+	/** App Android: o ID token do Credential Manager, ja que o popup do Google nao abre em WebView. */
+	@PostMapping("/google/token")
+	public ResponseEntity<AcessoResponse> entrarComGoogleIdToken(@Valid @RequestBody GoogleTokenRequest request,
+			HttpServletRequest http, @RequestHeader(name = CLIENTE, required = false) String cliente) {
+		return entregar(auth.entrarComGoogleIdToken(request.idToken(), http.getRemoteAddr()), cliente);
+	}
+
 	@PostMapping("/refresh")
 	public ResponseEntity<AcessoResponse> renovar(@CookieValue(name = COOKIE, required = false) String refresh,
 			@Valid @RequestBody(required = false) RefreshRequest corpo) {
@@ -125,7 +133,7 @@ public class AuthController {
 
 	@PostMapping("/excluir-conta")
 	public ResponseEntity<Void> excluirConta(@Valid @RequestBody ExcluirContaRequest request) {
-		auth.excluirConta(request.senha(), request.codigo());
+		auth.excluirConta(request.senha(), request.codigo(), request.idToken());
 		return semCookie();
 	}
 

@@ -396,6 +396,23 @@ class AuthApiTest {
 	}
 
 	@Test
+	void appEntraComOIdTokenDoGoogleVinculandoAContaDeSenhaERecebeORefreshNoCorpo() throws Exception {
+		criarContaConfirmada(EMAIL);
+		when(google.verificarIdToken("id-bom")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
+		when(google.verificarIdToken("id-ruim")).thenThrow(new ErroDeAutenticacaoException(HttpStatus.UNAUTHORIZED, "recusado"));
+
+		mvc.perform(requisicao("/api/auth/google/token", "{\"idToken\":\"id-bom\"}", ipNovo()).header("X-Cliente", "android"))
+				.andExpect(status().isOk())
+				.andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+				.andExpect(jsonPath("$.acesso").isNotEmpty())
+				.andExpect(jsonPath("$.refresh").isNotEmpty());
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow().getGoogleSub()).isEqualTo("sub-1");
+
+		post("/api/auth/google/token", "{\"idToken\":\"id-ruim\"}").andExpect(status().isUnauthorized());
+		post("/api/auth/google/token", "{\"idToken\":\"\"}").andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void googleDescartaASenhaDeContaQueNuncaConfirmouOEmail() throws Exception {
 		// Alguem se cadastrou com o e-mail da Maria sem provar que e dela; quando a Maria entra pelo Google, a senha dele some.
 		post("/api/auth/cadastro", cadastro("Impostor", EMAIL)).andExpect(status().isCreated());

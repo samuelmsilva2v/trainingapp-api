@@ -177,6 +177,22 @@ class ExclusaoDeContaApiTest {
 		assertThat(usuarios.findById(maria.usuarioId())).isEmpty();
 	}
 
+	@Test
+	void noAppAContaSoDoGoogleConfirmaComOIdTokenDaMesmaConta() throws Exception {
+		when(google.verificarCodigo("entrada")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
+		when(google.verificarIdToken("id-outra")).thenReturn(new Identidade("sub-2", "maria@teste.com", true, "Outra"));
+		when(google.verificarIdToken("id-mesma")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
+		MvcResult entrou = post("/api/auth/google", "{\"codigo\":\"entrada\"}").andExpect(status().isOk()).andReturn();
+		Sessao maria = new Sessao(JsonPath.read(entrou.getResponse().getContentAsString(), "$.acesso"),
+				entrou.getResponse().getCookie("refresh_token").getValue(), usuarios.findByEmail(EMAIL).orElseThrow().getId());
+
+		excluir(maria, "{\"idToken\":\"id-outra\"}").andExpect(status().isForbidden());
+		assertThat(usuarios.findById(maria.usuarioId())).isPresent();
+
+		excluir(maria, "{\"idToken\":\"id-mesma\"}").andExpect(status().isNoContent());
+		assertThat(usuarios.findById(maria.usuarioId())).isEmpty();
+	}
+
 	// --- apoio ---
 
 	/** Cria a conta pelo cadastro de verdade, confirma o e-mail pelo link da fila e entra. */

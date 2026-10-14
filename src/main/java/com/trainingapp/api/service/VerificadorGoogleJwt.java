@@ -117,6 +117,11 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 		}
 	}
 
+	@Override
+	public Identidade verificarIdToken(String idToken) {
+		return verificar(idToken);
+	}
+
 	/** Valida o ID token. Separado da troca do codigo para ser testado com um token gerado localmente. */
 	Identidade verificar(String idToken) {
 		if (clientId == null || clientId.isBlank()) {
