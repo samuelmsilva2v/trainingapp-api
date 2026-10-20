@@ -8,6 +8,7 @@ import com.trainingapp.api.model.Exercicio;
 import com.trainingapp.api.model.GrupoMuscular;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import com.trainingapp.api.repository.ExercicioRepository;
+import com.trainingapp.api.repository.PesoRegistroRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
 import com.trainingapp.api.repository.SessaoRepository;
@@ -78,6 +79,8 @@ class ExclusaoDeContaApiTest {
 	RefreshTokenRepository refreshTokens;
 	@Autowired
 	TokenEmailRepository tokensEmail;
+	@Autowired
+	PesoRegistroRepository pesos;
 
 	@MockitoBean
 	VerificadorGoogle google;
@@ -95,6 +98,7 @@ class ExclusaoDeContaApiTest {
 		assertThat(sessoes.findByUsuarioId(maria.usuarioId())).hasSize(1);
 		assertThat(xp.findByUsuarioId(maria.usuarioId())).isNotEmpty();
 		assertThat(exercicios.findByUsuarioId(maria.usuarioId())).hasSize(1);
+		assertThat(pesos.findByUsuarioIdOrderByDataAsc(maria.usuarioId())).hasSize(1);
 		assertThat(refreshTokens.findAll()).isNotEmpty();
 
 		excluir(maria, "{\"senha\":\"" + SENHA + "\"}").andExpect(status().isNoContent())
@@ -105,6 +109,7 @@ class ExclusaoDeContaApiTest {
 		assertThat(sessoes.findByUsuarioId(maria.usuarioId())).isEmpty();
 		assertThat(xp.findByUsuarioId(maria.usuarioId())).isEmpty();
 		assertThat(exercicios.findByUsuarioId(maria.usuarioId())).isEmpty();
+		assertThat(pesos.findByUsuarioIdOrderByDataAsc(maria.usuarioId())).isEmpty();
 		assertThat(refreshTokens.findAll()).isEmpty();
 		assertThat(tokensEmail.findAll()).isEmpty();
 		assertThat(emails.findAll().stream().filter(e -> e.getDestinatario().equals(EMAIL))).isEmpty();
@@ -227,6 +232,7 @@ class ExclusaoDeContaApiTest {
 				   "metaCarga":60,"metaDescansoSegundos":90,"series":[%s]}]}
 				""".formatted(plano, inicio, inicio.plusSeconds(60), inicio, UUID.randomUUID(), exercicio, series);
 		comToken(s, MockMvcRequestBuilders.put("/api/sessoes/" + sessao), corpo).andExpect(status().isOk());
+		comToken(s, MockMvcRequestBuilders.put("/api/peso/" + java.time.LocalDate.now()), "{\"kg\":70}").andExpect(status().isOk());
 	}
 
 	static String serie() {

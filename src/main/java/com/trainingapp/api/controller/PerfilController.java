@@ -35,6 +35,7 @@ public class PerfilController {
 	public PerfilResponse atualizar(@Valid @RequestBody PerfilRequest request) {
 		Usuario usuario = usuarioAtual.obter();
 		usuario.setNome(request.nome());
+		usuario.setLembretePesoDias(request.lembretePesoDias());
 		return PerfilResponse.de(repository.save(usuario));
 	}
 }

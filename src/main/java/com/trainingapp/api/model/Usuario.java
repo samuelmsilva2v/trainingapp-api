@@ -40,6 +40,9 @@ public class Usuario {
 	@Column(nullable = false)
 	private boolean emailVerificado;
 
+	// A cada quantos dias lembrar de se pesar (7, 15 ou 30); nulo = desligado.
+	private Integer lembretePesoDias;
+
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)
 	private Instant criadoEm;

@@ -105,6 +105,18 @@ class IsolamentoEntreUsuariosApiTest {
 				.andExpect(jsonPath("$.exercicios[0].series[0].reps").value(10));
 	}
 
+	@Test
+	void outroUsuarioNaoVeNemApagaAsPesagensDoAtleta() throws Exception {
+		String hoje = java.time.LocalDate.now().toString();
+		mvc.perform(put("/api/peso/" + hoje).contentType(MediaType.APPLICATION_JSON).content("{\"kg\":80}")).andExpect(status().isOk());
+
+		mvc.perform(get("/api/peso").with(outro)).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(delete("/api/peso/" + hoje).with(outro)).andExpect(status().isNoContent());
+		mvc.perform(put("/api/peso/" + hoje).with(outro).contentType(MediaType.APPLICATION_JSON).content("{\"kg\":90}")).andExpect(status().isOk());
+
+		mvc.perform(get("/api/peso")).andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].kg").value(80));
+	}
+
 	private String criarExercicio(RequestPostProcessor quem) throws Exception {
 		var requisicao = post("/api/exercicios").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\"Supino\",\"grupoMuscular\":\"PEITO\",\"equipamento\":\"BARRA\"}");

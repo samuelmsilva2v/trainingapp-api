@@ -51,6 +51,24 @@ class PerfilApiTest {
 	}
 
 	@Test
+	void guardaOLembreteDePesagemEOPerfilInteiroSubstitui() throws Exception {
+		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"nome\":\"Samuel\",\"lembretePesoDias\":15}"))
+				.andExpect(status().isOk());
+		mvc.perform(get("/api/perfil")).andExpect(jsonPath("$.lembretePesoDias").value(15));
+
+		// Campo ausente vira nulo: lembrete desligado.
+		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Samuel\"}"))
+				.andExpect(jsonPath("$.lembretePesoDias").isEmpty());
+	}
+
+	@Test
+	void lembreteForaDe7_15_30Retorna400() throws Exception {
+		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"S\",\"lembretePesoDias\":10}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void nomeEmBrancoRetorna400() throws Exception {
 		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\" \"}"))
