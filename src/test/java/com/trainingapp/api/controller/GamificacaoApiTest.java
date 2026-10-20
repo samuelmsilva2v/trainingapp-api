@@ -162,7 +162,8 @@ class GamificacaoApiTest {
 				.andExpect(jsonPath("$.recordes").value(1))
 				.andExpect(jsonPath("$.treinos").value(2))
 				.andExpect(jsonPath("$.melhorStreak").value(2))
-				.andExpect(jsonPath("$.conquistas[?(@.codigo=='PRIMEIRO_RECORDE')].conquistada").value(true));
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='PRIMEIRO_RECORDE')].conquistada").value(true))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='RECORDES_VARIADOS_5')].progresso").value(1));
 	}
 
 	@Test
@@ -229,7 +230,8 @@ class GamificacaoApiTest {
 				.andExpect(jsonPath("$.xpTotal").value(36))
 				.andExpect(jsonPath("$.treinos").value(1))
 				.andExpect(jsonPath("$.recordes").value(0))
-				.andExpect(jsonPath("$.melhorStreak").value(1));
+				.andExpect(jsonPath("$.melhorStreak").value(1))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='RECORDES_VARIADOS_5')].progresso").value(0));
 		mvc.perform(get("/api/sessoes")).andExpect(jsonPath("$.length()").value(1));
 		mvc.perform(delete("/api/sessoes/" + recorde)).andExpect(status().isNotFound());
 	}

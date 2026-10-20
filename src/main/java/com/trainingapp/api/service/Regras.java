@@ -1,11 +1,13 @@
 package com.trainingapp.api.service;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /** Regras de gamificacao puras (sem banco): faceis de testar e de ajustar num lugar so. */
 public final class Regras {
@@ -19,6 +21,15 @@ public final class Regras {
 
 	/** O streak quebra apos mais de 2 dias sem treinar: entre dois treinos cabem no maximo 2 dias de folga. */
 	public static final int FOLGAS_TOLERADAS = 2;
+
+	/** Semana firme: semana (segunda a domingo) com pelo menos 3 treinos. */
+	public static final int TREINOS_SEMANA_FIRME = 3;
+
+	/** "De volta": treinar depois de 14 dias ou mais sem treino. */
+	public static final int DIAS_PARADO_DE_VOLTA = 14;
+
+	/** "Dia inspirado": recordes no mesmo treino. */
+	public static final int RECORDES_DIA_INSPIRADO = 3;
 
 	private Regras() {
 	}
@@ -99,5 +110,34 @@ public final class Regras {
 		}
 		boolean viva = anterior != null && ChronoUnit.DAYS.between(anterior, hoje) <= FOLGAS_TOLERADAS + 1;
 		return new Streak(viva ? corrente : 0, melhor);
+	}
+
+	/** Maior numero de semanas seguidas (segunda a domingo) com pelo menos 3 dias de treino cada. */
+	public static int melhorSemanasFirmes(Collection<LocalDate> diasDeTreino) {
+		TreeSet<LocalDate> firmes = new TreeSet<>(diasDeTreino).stream()
+				.collect(Collectors.groupingBy(d -> d.with(DayOfWeek.MONDAY), Collectors.counting()))
+				.entrySet().stream().filter(s -> s.getValue() >= TREINOS_SEMANA_FIRME).map(java.util.Map.Entry::getKey)
+				.collect(Collectors.toCollection(TreeSet::new));
+		int melhor = 0;
+		int corrente = 0;
+		LocalDate anterior = null;
+		for (LocalDate segunda : firmes) {
+			corrente = segunda.minusWeeks(1).equals(anterior) ? corrente + 1 : 1;
+			melhor = Math.max(melhor, corrente);
+			anterior = segunda;
+		}
+		return melhor;
+	}
+
+	/** Houve um treino depois de 14 dias ou mais sem treino (o primeiro treino da vida nao conta). */
+	public static boolean voltouDepoisDePausa(Collection<LocalDate> diasDeTreino) {
+		LocalDate anterior = null;
+		for (LocalDate dia : new TreeSet<>(diasDeTreino)) {
+			if (anterior != null && ChronoUnit.DAYS.between(anterior, dia) > DIAS_PARADO_DE_VOLTA) {
+				return true;
+			}
+			anterior = dia;
+		}
+		return false;
 	}
 }

@@ -98,4 +98,34 @@ class RegrasTest {
 	void diasRepetidosContamUmaVez() {
 		assertThat(Regras.streak(List.of(D, D, D), D)).isEqualTo(new Regras.Streak(1, 1));
 	}
+
+	@Test
+	void semanasFirmesContamSemanasSeguidasCom3Treinos() {
+		LocalDate seg = LocalDate.of(2026, 10, 5); // segunda
+		var tresPorSemana = List.of(seg, seg.plusDays(2), seg.plusDays(6), // domingo ainda e a mesma semana
+				seg.plusWeeks(1), seg.plusWeeks(1).plusDays(1), seg.plusWeeks(1).plusDays(3));
+		assertThat(Regras.melhorSemanasFirmes(tresPorSemana)).isEqualTo(2);
+		assertThat(Regras.melhorSemanasFirmes(List.of(seg, seg, seg, seg.plusDays(1)))).isZero(); // dias repetidos contam uma vez
+		assertThat(Regras.melhorSemanasFirmes(List.of())).isZero();
+	}
+
+	@Test
+	void semanaFracaNoMeioQuebraAsSemanasFirmes() {
+		LocalDate seg = LocalDate.of(2026, 10, 5);
+		var dias = new java.util.ArrayList<LocalDate>();
+		for (int semana : new int[] { 0, 2, 3, 4 }) {
+			for (int d = 0; d < 3; d++) {
+				dias.add(seg.plusWeeks(semana).plusDays(d));
+			}
+		}
+		dias.add(seg.plusWeeks(1)); // so 1 treino na semana 1
+		assertThat(Regras.melhorSemanasFirmes(dias)).isEqualTo(3);
+	}
+
+	@Test
+	void deVoltaExige14DiasSemTreinoEntreDoisTreinos() {
+		assertThat(Regras.voltouDepoisDePausa(List.of(D, D.plusDays(15)))).isTrue(); // 14 dias parado entre eles
+		assertThat(Regras.voltouDepoisDePausa(List.of(D, D.plusDays(14)))).isFalse(); // 13 dias parado
+		assertThat(Regras.voltouDepoisDePausa(List.of(D))).isFalse();
+	}
 }

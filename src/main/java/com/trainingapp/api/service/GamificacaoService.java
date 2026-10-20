@@ -163,9 +163,24 @@ public class GamificacaoService {
 		Regras.Streak streak = Regras.streak(dias, hoje);
 		int nivel = Regras.nivel(xp);
 
+		// Recordes que valem (saldo positivo por sessao e exercicio, descontando estornos).
+		Set<UUID> exerciciosComRecorde = new HashSet<>();
+		boolean diaInspirado = false;
+		for (java.util.Map<UUID, Integer> porExercicio : todos.stream()
+				.filter(e -> e.getTipo() == TipoXp.RECORDE)
+				.collect(Collectors.groupingBy(XpEvent::getSessaoId, Collectors.groupingBy(XpEvent::getExercicioId,
+						Collectors.summingInt(e -> Integer.signum(e.getPontos())))))
+				.values()) {
+			List<UUID> valendo = porExercicio.entrySet().stream().filter(r -> r.getValue() > 0)
+					.map(java.util.Map.Entry::getKey).toList();
+			exerciciosComRecorde.addAll(valendo);
+			diaInspirado |= valendo.size() >= Regras.RECORDES_DIA_INSPIRADO;
+		}
+
 		return new GamificacaoResponse(xp, nivel, Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
 				streak.atual(), streak.melhor(), dias.size(), recordes, dias.contains(hoje),
-				Conquistas.avaliar(dias.size(), recordes, streak.melhor(), nivel));
+				Conquistas.avaliar(new Conquistas.Totais(dias.size(), streak.melhor(), Regras.melhorSemanasFirmes(dias),
+						recordes, exerciciosComRecorde.size(), nivel, Regras.voltouDepoisDePausa(dias), diaInspirado)));
 	}
 
 	/** XP ganho e exercicios com recorde, por sessao (para as telas de treino e historico). */
