@@ -256,6 +256,25 @@ class SessaoApiTest {
 	}
 
 	@Test
+	void naoMudaOInicioDepoisDeCriadaParaFugirDoRetroativo() throws Exception {
+		UUID sessao = UUID.randomUUID();
+		UUID exSessao = UUID.randomUUID();
+		UUID s = UUID.randomUUID();
+		Instant inicio = agora();
+		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio, null, serie(s, 8, "60", true)).andExpect(status().isOk());
+
+		// Inicio e fim levados para um ano atras: o XP cairia naquele dia.
+		Instant anoPassado = inicio.minus(365, ChronoUnit.DAYS);
+		salvar(sessao, exSessao, "CONCLUIDA", anoPassado, inicio.plusSeconds(60), anoPassado.plusSeconds(3600), serie(s, 8, "60", true))
+				.andExpect(status().isUnprocessableContent());
+
+		// So o inicio reenviado diferente: fica o salvo.
+		salvar(sessao, exSessao, "EM_ANDAMENTO", anoPassado, inicio.plusSeconds(120), null, serie(s, 8, "60", true))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.iniciadaEm").value(inicio.toString()));
+	}
+
+	@Test
 	void historicoListaSoEncerradasComTotais() throws Exception {
 		salvar(UUID.randomUUID(), "CONCLUIDA", agora(), agora().plusSeconds(60),
 				serie(UUID.randomUUID(), 10, "50", true), serie(UUID.randomUUID(), 8, "60", true),

@@ -158,7 +158,9 @@ public class SessaoService {
 			}
 		}
 
-		validar(request, existente == null);
+		// O inicio so e definido na criacao: muda-lo depois furaria a janela do retroativo (XP em dias passados).
+		Instant iniciadaEm = existente != null ? existente.getIniciadaEm() : request.iniciadaEm();
+		validar(request, iniciadaEm, existente == null);
 		validarIdsLivres(id, request);
 		validarUnicaEmAndamento(id, request, usuario);
 
@@ -171,7 +173,7 @@ public class SessaoService {
 		sessao.setDiaOrdem(request.diaOrdem());
 		sessao.setEstado(request.estado());
 		sessao.setAndamentoUsuarioId(request.estado() == EstadoSessao.EM_ANDAMENTO ? usuario.getId() : null);
-		sessao.setIniciadaEm(request.iniciadaEm());
+		sessao.setIniciadaEm(iniciadaEm);
 		sessao.setFinalizadaEm(request.finalizadaEm());
 		sessao.setAtualizadoEm(request.atualizadoEm());
 		reconciliar(sessao, request, usuario);
@@ -200,7 +202,7 @@ public class SessaoService {
 		return sessao;
 	}
 
-	private void validar(SessaoRequest request, boolean criacao) {
+	private void validar(SessaoRequest request, Instant iniciadaEm, boolean criacao) {
 		boolean encerrada = request.estado() != EstadoSessao.EM_ANDAMENTO;
 		if (encerrada && request.finalizadaEm() == null) {
 			throw new RegraDeNegocioException("finalizadaEm e obrigatorio em sessao concluida ou abandonada");
@@ -208,11 +210,11 @@ public class SessaoService {
 		if (!encerrada && request.finalizadaEm() != null) {
 			throw new RegraDeNegocioException("finalizadaEm so vale para sessao concluida ou abandonada");
 		}
-		if (request.finalizadaEm() != null && request.finalizadaEm().isBefore(request.iniciadaEm())) {
+		if (request.finalizadaEm() != null && request.finalizadaEm().isBefore(iniciadaEm)) {
 			throw new RegraDeNegocioException("finalizadaEm nao pode ser anterior a iniciadaEm");
 		}
 		Instant agora = Instant.now(relogio);
-		if (request.iniciadaEm().isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
+		if (iniciadaEm.isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
 			throw new RegraDeNegocioException("iniciadaEm nao pode estar no futuro");
 		}
 		if (request.atualizadoEm().isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
@@ -221,7 +223,7 @@ public class SessaoService {
 		if (request.finalizadaEm() != null && request.finalizadaEm().isAfter(agora.plus(TOLERANCIA_RELOGIO))) {
 			throw new RegraDeNegocioException("finalizadaEm nao pode estar no futuro");
 		}
-		if (criacao && request.iniciadaEm().isBefore(agora.minus(JANELA_INICIO))) {
+		if (criacao && iniciadaEm.isBefore(agora.minus(JANELA_INICIO))) {
 			throw new RegraDeNegocioException("Nao e possivel registrar treino retroativo");
 		}
 		Set<UUID> ids = new HashSet<>();
