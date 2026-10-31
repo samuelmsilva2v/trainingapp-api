@@ -46,6 +46,22 @@ class RegrasTest {
 	}
 
 	@Test
+	void tituloMudaNosLimitesDeCadaFaixaDeNivel() {
+		assertThat(Regras.titulo(1)).isEqualTo("Iniciante");
+		assertThat(Regras.titulo(4)).isEqualTo("Iniciante");
+		assertThat(Regras.titulo(5)).isEqualTo("Dedicado");
+		assertThat(Regras.titulo(9)).isEqualTo("Dedicado");
+		assertThat(Regras.titulo(10)).isEqualTo("Atleta");
+		assertThat(Regras.titulo(19)).isEqualTo("Atleta");
+		assertThat(Regras.titulo(20)).isEqualTo("Veterano");
+		assertThat(Regras.titulo(29)).isEqualTo("Veterano");
+		assertThat(Regras.titulo(30)).isEqualTo("Elite");
+		assertThat(Regras.titulo(49)).isEqualTo("Elite");
+		assertThat(Regras.titulo(50)).isEqualTo("Lenda");
+		assertThat(Regras.titulo(80)).isEqualTo("Lenda");
+	}
+
+	@Test
 	void bonusDeSequenciaComecaNoSegundoDiaETemTeto() {
 		assertThat(Regras.xpDaSequencia(0)).isZero();
 		assertThat(Regras.xpDaSequencia(1)).isZero();

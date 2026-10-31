@@ -4,11 +4,13 @@ import java.util.List;
 
 /**
  * Situacao do usuario. O nivel atual vai de {@code xpInicioDoNivel} ate {@code xpProximoNivel}
- * (XP total). {@code treinos} conta dias de treino valido (a primeira sessao do dia, com 3+ series).
+ * (XP total). {@code treinos} conta dias de treino valido (a primeira sessao do dia, com 3+ series). {@code titulo} e o
+ * nome da faixa do nivel (Iniciante, Dedicado, Atleta...).
  */
 public record GamificacaoResponse(
 		long xpTotal,
 		int nivel,
+		String titulo,
 		long xpInicioDoNivel,
 		long xpProximoNivel,
 		int streakAtual,

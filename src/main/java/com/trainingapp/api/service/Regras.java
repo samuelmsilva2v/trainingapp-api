@@ -72,6 +72,23 @@ public final class Regras {
 		return (long) Math.ceil(100 * Math.pow(nivel, 1.5));
 	}
 
+	/** Titulo da faixa de nivel: Iniciante (1-4), Dedicado (5-9), Atleta (10-19), Veterano (20-29), Elite (30-49), Lenda (50+). */
+	public static String titulo(int nivel) {
+		if (nivel >= 50) {
+			return "Lenda";
+		}
+		if (nivel >= 30) {
+			return "Elite";
+		}
+		if (nivel >= 20) {
+			return "Veterano";
+		}
+		if (nivel >= 10) {
+			return "Atleta";
+		}
+		return nivel >= 5 ? "Dedicado" : "Iniciante";
+	}
+
 	/** Nivel de quem tem este XP total; todo mundo comeca no nivel 1. */
 	public static int nivel(long xpTotal) {
 		int nivel = Math.max(1, (int) Math.floor(Math.pow(xpTotal / 100.0, 2.0 / 3.0)));

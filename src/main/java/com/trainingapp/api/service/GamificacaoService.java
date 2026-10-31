@@ -190,7 +190,7 @@ public class GamificacaoService {
 			diaInspirado |= valendo.size() >= Regras.RECORDES_DIA_INSPIRADO;
 		}
 
-		return new GamificacaoResponse(xp, nivel, Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
+		return new GamificacaoResponse(xp, nivel, Regras.titulo(nivel), Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
 				streak.atual(), streak.melhor(), dias.size(), recordes, dias.contains(hoje),
 				Conquistas.avaliar(new Conquistas.Totais(dias.size(), streak.melhor(), Regras.melhorSemanasFirmes(dias),
 						recordes, exerciciosComRecorde.size(), nivel, Regras.voltouDepoisDePausa(dias), diaInspirado)));

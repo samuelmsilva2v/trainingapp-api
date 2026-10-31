@@ -118,6 +118,7 @@ class GamificacaoApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.xpTotal").value(36))
 				.andExpect(jsonPath("$.nivel").value(1))
+				.andExpect(jsonPath("$.titulo").value("Iniciante"))
 				.andExpect(jsonPath("$.xpInicioDoNivel").value(0))
 				.andExpect(jsonPath("$.xpProximoNivel").value(283))
 				.andExpect(jsonPath("$.streakAtual").value(1))
