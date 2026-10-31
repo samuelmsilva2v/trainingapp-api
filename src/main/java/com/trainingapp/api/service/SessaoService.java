@@ -18,7 +18,6 @@ import com.trainingapp.api.model.SerieSessao;
 import com.trainingapp.api.model.TipoSerie;
 import com.trainingapp.api.model.Sessao;
 import com.trainingapp.api.model.Usuario;
-import com.trainingapp.api.repository.ExercicioRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.SessaoRepository;
 import org.springframework.data.domain.PageRequest;
@@ -49,13 +48,13 @@ public class SessaoService {
 
 	private final SessaoRepository sessoes;
 	private final PlanoRepository planos;
-	private final ExercicioRepository exercicios;
+	private final ExercicioService exercicios;
 	private final GamificacaoService gamificacao;
 	private final UsuarioAtual usuarioAtual;
 	private final ImagensExercicio imagens;
 	private final Clock relogio;
 
-	public SessaoService(SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
+	public SessaoService(SessaoRepository sessoes, PlanoRepository planos, ExercicioService exercicios,
 			GamificacaoService gamificacao, UsuarioAtual usuarioAtual, ImagensExercicio imagens, Clock relogio) {
 		this.imagens = imagens;
 		this.relogio = relogio;
@@ -284,7 +283,8 @@ public class SessaoService {
 	 * de apagar e estourar a chave primaria dos ids reaproveitados pelo cliente.
 	 */
 	private void reconciliar(Sessao sessao, SessaoRequest request, Usuario usuario) {
-		Map<UUID, Exercicio> catalogo = carregarExercicios(request, usuario);
+		Map<UUID, Exercicio> catalogo = exercicios.disponiveis(request.exercicios().stream()
+				.map(SessaoRequest.ExercicioRequest::exercicioId).distinct().toList(), usuario);
 		Map<UUID, ExercicioSessao> atuais = sessao.getExercicios().stream()
 				.collect(Collectors.toMap(ExercicioSessao::getId, Function.identity()));
 
@@ -343,22 +343,5 @@ public class SessaoService {
 		}
 		ex.getSeries().clear();
 		ex.getSeries().addAll(resultado);
-	}
-
-	/** Garante que os exercicios sao do catalogo ou do proprio usuario. */
-	private Map<UUID, Exercicio> carregarExercicios(SessaoRequest request, Usuario usuario) {
-		List<UUID> ids = request.exercicios().stream()
-				.map(SessaoRequest.ExercicioRequest::exercicioId)
-				.distinct()
-				.toList();
-		Map<UUID, Exercicio> encontrados = exercicios.findAllById(ids).stream()
-				.filter(e -> e.getUsuario() == null || e.getUsuario().getId().equals(usuario.getId()))
-				.collect(Collectors.toMap(Exercicio::getId, Function.identity()));
-		for (UUID id : ids) {
-			if (!encontrados.containsKey(id)) {
-				throw new RegraDeNegocioException("Exercicio nao encontrado: " + id);
-			}
-		}
-		return encontrados;
 	}
 }

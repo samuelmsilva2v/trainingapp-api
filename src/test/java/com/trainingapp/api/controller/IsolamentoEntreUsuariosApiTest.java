@@ -80,9 +80,13 @@ class IsolamentoEntreUsuariosApiTest {
 		mvc.perform(get("/api/sessoes/" + sessao).with(outro)).andExpect(status().isNotFound());
 		mvc.perform(delete("/api/sessoes/" + sessao).with(outro)).andExpect(status().isNotFound());
 
-		// Nem usar o exercicio proprio do atleta num plano dele.
+		// Nem usar o exercicio proprio do atleta num plano ou num treino dele.
 		mvc.perform(post("/api/planos").with(outro).contentType(MediaType.APPLICATION_JSON).content(planoCom(exercicio)))
 				.andExpect(status().isUnprocessableContent());
+		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).with(outro).contentType(MediaType.APPLICATION_JSON)
+				.content(sessaoCom(UUID.randomUUID(), exercicio, UUID.randomUUID())))
+				.andExpect(status().isUnprocessableContent())
+				.andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith("Exercicio nao encontrado")));
 
 		mvc.perform(get("/api/planos/" + plano)).andExpect(status().isOk()).andExpect(jsonPath("$.nome").value("ABC"));
 	}

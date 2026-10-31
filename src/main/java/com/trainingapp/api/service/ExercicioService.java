@@ -11,8 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -52,6 +57,23 @@ public class ExercicioService {
 		exercicio.setEquipamento(request.equipamento());
 		exercicio.setUsuario(usuario);
 		return ExercicioResponse.de(repository.save(exercicio), imagens);
+	}
+
+	/**
+	 * Os exercicios citados, garantindo que cada um e do catalogo ou do proprio usuario (nunca o exercicio proprio de
+	 * outra conta). Usado por planos e sessoes: e esta checagem que isola os exercicios entre usuarios.
+	 */
+	@Transactional(readOnly = true)
+	public Map<UUID, Exercicio> disponiveis(Collection<UUID> ids, Usuario usuario) {
+		Map<UUID, Exercicio> encontrados = repository.findAllById(ids).stream()
+				.filter(e -> e.getUsuario() == null || e.getUsuario().getId().equals(usuario.getId()))
+				.collect(Collectors.toMap(Exercicio::getId, Function.identity()));
+		for (UUID id : ids) {
+			if (!encontrados.containsKey(id)) {
+				throw new RegraDeNegocioException("Exercicio nao encontrado: " + id);
+			}
+		}
+		return encontrados;
 	}
 
 	// Busca ignora acento e caixa: "agachamento" acha "Agachamento", "triceps" acha "Tríceps".

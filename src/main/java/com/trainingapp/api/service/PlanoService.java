@@ -10,7 +10,6 @@ import com.trainingapp.api.model.Exercicio;
 import com.trainingapp.api.model.ExercicioPlano;
 import com.trainingapp.api.model.Plano;
 import com.trainingapp.api.model.Usuario;
-import com.trainingapp.api.repository.ExercicioRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,11 +26,11 @@ public class PlanoService {
 	public static final int LIMITE_POR_USUARIO = 50;
 
 	private final PlanoRepository planos;
-	private final ExercicioRepository exercicios;
+	private final ExercicioService exercicios;
 	private final UsuarioAtual usuarioAtual;
 	private final ImagensExercicio imagens;
 
-	public PlanoService(PlanoRepository planos, ExercicioRepository exercicios, UsuarioAtual usuarioAtual,
+	public PlanoService(PlanoRepository planos, ExercicioService exercicios, UsuarioAtual usuarioAtual,
 			ImagensExercicio imagens) {
 		this.planos = planos;
 		this.exercicios = exercicios;
@@ -98,7 +95,8 @@ public class PlanoService {
 		plano.setNome(request.nome().trim());
 		plano.setObjetivo(request.objetivo());
 
-		Map<UUID, Exercicio> disponiveis = carregarExercicios(request, usuario);
+		Map<UUID, Exercicio> disponiveis = exercicios.disponiveis(request.dias().stream()
+				.flatMap(d -> d.exercicios().stream()).map(PlanoRequest.ItemRequest::exercicioId).distinct().toList(), usuario);
 
 		for (int d = 0; d < request.dias().size(); d++) {
 			PlanoRequest.DiaRequest diaReq = request.dias().get(d);
@@ -127,23 +125,5 @@ public class PlanoService {
 			}
 			plano.getDias().add(dia);
 		}
-	}
-
-	/** Carrega os exercicios citados e garante que sao do catalogo ou do proprio usuario. */
-	private Map<UUID, Exercicio> carregarExercicios(PlanoRequest request, Usuario usuario) {
-		List<UUID> ids = request.dias().stream()
-				.flatMap(d -> d.exercicios().stream())
-				.map(PlanoRequest.ItemRequest::exercicioId)
-				.distinct()
-				.toList();
-		Map<UUID, Exercicio> encontrados = exercicios.findAllById(ids).stream()
-				.filter(e -> e.getUsuario() == null || e.getUsuario().getId().equals(usuario.getId()))
-				.collect(Collectors.toMap(Exercicio::getId, Function.identity()));
-		for (UUID id : ids) {
-			if (!encontrados.containsKey(id)) {
-				throw new RegraDeNegocioException("Exercicio nao encontrado: " + id);
-			}
-		}
-		return encontrados;
 	}
 }
