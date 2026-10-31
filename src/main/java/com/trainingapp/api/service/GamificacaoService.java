@@ -1,6 +1,7 @@
 package com.trainingapp.api.service;
 
 import com.trainingapp.api.dto.ConquistaResponse;
+import com.trainingapp.api.dto.DesafioResponse;
 import com.trainingapp.api.dto.GamificacaoResponse;
 import com.trainingapp.api.model.ExercicioSessao;
 import com.trainingapp.api.model.SerieSessao;
@@ -61,9 +62,42 @@ public class GamificacaoService {
 
 	/** Eventos de XP que a sessao rende se terminar em `fim`: os do treino e as conquistas que ele libera. */
 	private List<XpEvent> calcularEventos(Sessao sessao, Instant fim) {
+		LocalDate dia = diaDoTreino(fim);
 		List<XpEvent> novos = new ArrayList<>(eventosDoTreino(sessao, fim));
-		novos.addAll(conquistasNovas(sessao, fim, novos));
+		List<XpEvent> todos = new ArrayList<>(eventos.findByUsuarioId(sessao.getUsuario().getId()));
+		todos.addAll(novos);
+		// Desafios antes das conquistas: o XP deles tambem pode subir o nivel e liberar uma conquista de nivel.
+		List<XpEvent> desafios = desafiosNovos(sessao, dia, todos);
+		novos.addAll(desafios);
+		todos.addAll(desafios);
+		novos.addAll(conquistasNovas(sessao, dia, todos));
 		return novos;
+	}
+
+	/**
+	 * Desafios da semana do treino que passam a valer e ainda nao foram creditados nesta semana. Roda em toda conclusao,
+	 * entao os treinos da semana feitos antes do deploy tambem contam.
+	 */
+	private List<XpEvent> desafiosNovos(Sessao sessao, LocalDate dia, List<XpEvent> todos) {
+		Set<LocalDate> dias = diasDeTreino(todos);
+		int recordes = recordesNaSemana(todos, dia);
+		Set<String> creditados = codigosCreditados(todos);
+		List<XpEvent> novos = new ArrayList<>();
+		for (Desafios.Desafio d : Desafios.TODOS) {
+			String codigo = Desafios.codigo(d, dia);
+			if (Desafios.progresso(d, dias, recordes, dia) >= d.meta() && creditados.add(codigo)) {
+				XpEvent e = evento(sessao.getUsuario(), sessao, TipoXp.DESAFIO, d.xp(), null, dia);
+				e.setCodigo(codigo);
+				novos.add(e);
+			}
+		}
+		return novos;
+	}
+
+	/** Recordes que valem (descontando estornos) em treinos da semana de {@code dia}. */
+	private static int recordesNaSemana(List<XpEvent> todos, LocalDate dia) {
+		return todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE && Desafios.naSemana(e.getDia(), dia))
+				.mapToInt(e -> Integer.signum(e.getPontos())).sum();
 	}
 
 	/**
@@ -71,11 +105,8 @@ public class GamificacaoService {
 	 * liberar outra. Roda em toda conclusao, mesmo sem XP de treino, entao a primeira conclusao depois do deploy credita
 	 * as conquistas que ja valiam antes (retroativo decidido na #37).
 	 */
-	private List<XpEvent> conquistasNovas(Sessao sessao, Instant fim, List<XpEvent> doTreino) {
+	private List<XpEvent> conquistasNovas(Sessao sessao, LocalDate dia, List<XpEvent> todos) {
 		Usuario usuario = sessao.getUsuario();
-		LocalDate dia = diaDoTreino(fim);
-		List<XpEvent> todos = new ArrayList<>(eventos.findByUsuarioId(usuario.getId()));
-		todos.addAll(doTreino);
 		Set<String> creditadas = codigosCreditados(todos);
 		List<XpEvent> novas = new ArrayList<>();
 		while (true) {
@@ -99,9 +130,9 @@ public class GamificacaoService {
 		}
 	}
 
-	/** Codigos das conquistas ja creditadas (gravadas como evento CONQUISTA). */
+	/** Codigos ja creditados: conquistas (CONQUISTA) e desafios da semana (DESAFIO, com a semana no codigo). */
 	private static Set<String> codigosCreditados(List<XpEvent> eventos) {
-		return eventos.stream().filter(e -> e.getTipo() == TipoXp.CONQUISTA && e.getCodigo() != null)
+		return eventos.stream().filter(e -> e.getCodigo() != null)
 				.map(XpEvent::getCodigo).collect(Collectors.toCollection(HashSet::new));
 	}
 
@@ -162,8 +193,8 @@ public class GamificacaoService {
 	public void estornar(UUID sessaoId) {
 		List<XpEvent> estornos = new ArrayList<>();
 		for (XpEvent original : eventos.findBySessaoIdIn(List.of(sessaoId))) {
-			// A conquista creditada permanece (decisao da #37): apagar um treino antigo nao "desconquista" nada.
-			if (original.getPontos() <= 0 || original.getTipo() == TipoXp.CONQUISTA) {
+			// Conquista e desafio creditados permanecem (#37 e #38): apagar um treino nao os desfaz.
+			if (original.getPontos() <= 0 || original.getTipo() == TipoXp.CONQUISTA || original.getTipo() == TipoXp.DESAFIO) {
 				continue;
 			}
 			XpEvent estorno = evento(original.getUsuario(), original.getSessaoId(), original.getTipo(),
@@ -230,8 +261,19 @@ public class GamificacaoService {
 								c.meta()))
 				.toList();
 
+		// Desafios da semana de hoje; cumprido tambem se o XP ja foi creditado (apagar o treino nao tira).
+		int recordesSemana = recordesNaSemana(todos, hoje);
+		List<DesafioResponse> desafios = Desafios.TODOS.stream()
+				.map(d -> {
+					int progresso = Desafios.progresso(d, dias, recordesSemana, hoje);
+					return new DesafioResponse(d.codigo(), d.nome(), progresso, d.meta(), d.xp(),
+							progresso >= d.meta() || creditadas.contains(Desafios.codigo(d, hoje)));
+				})
+				.toList();
+
 		return new GamificacaoResponse(xp, nivel, Regras.titulo(nivel), Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
-				streak.atual(), streak.melhor(), dias.size(), totais.recordes(), dias.contains(hoje), conquistas);
+				streak.atual(), streak.melhor(), dias.size(), totais.recordes(), dias.contains(hoje), conquistas, desafios,
+				Desafios.fimDaSemana(hoje));
 	}
 
 	/** Totais das conquistas a partir dos eventos (estornos tem pontos negativos e descontam). */
@@ -274,22 +316,34 @@ public class GamificacaoService {
 	public record ConquistaGanha(String codigo, String nome, int xp) {
 	}
 
-	/** XP total da sessao, o detalhe por tipo, os exercicios com recorde e as conquistas creditadas. */
-	public record Ganho(int xp, int xpSeries, int xpRecordes, int xpStreak, int xpConquistas, List<UUID> recordes,
-			List<ConquistaGanha> conquistas) {
+	/** Desafio da semana cumprido num treino, com o XP que rendeu. */
+	public record DesafioGanho(String codigo, String nome, int xp) {
+	}
 
-		public static final Ganho NENHUM = new Ganho(0, 0, 0, 0, 0, List.of(), List.of());
+	/** XP total da sessao, o detalhe por tipo, os exercicios com recorde e as conquistas creditadas. */
+	public record Ganho(int xp, int xpSeries, int xpRecordes, int xpStreak, int xpConquistas, int xpDesafios,
+			List<UUID> recordes, List<ConquistaGanha> conquistas, List<DesafioGanho> desafios) {
+
+		public static final Ganho NENHUM = new Ganho(0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of());
 
 		static Ganho de(List<XpEvent> eventos) {
 			int series = pontos(eventos, TipoXp.SERIES);
 			int recordes = pontos(eventos, TipoXp.RECORDE);
 			int streak = pontos(eventos, TipoXp.STREAK);
 			int conquistas = pontos(eventos, TipoXp.CONQUISTA);
-			return new Ganho(series + recordes + streak + conquistas, series, recordes, streak, conquistas,
+			int desafios = pontos(eventos, TipoXp.DESAFIO);
+			return new Ganho(series + recordes + streak + conquistas + desafios, series, recordes, streak, conquistas, desafios,
 					eventos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).map(XpEvent::getExercicioId).toList(),
 					eventos.stream().filter(e -> e.getTipo() == TipoXp.CONQUISTA && e.getPontos() > 0)
 							.map(e -> new ConquistaGanha(e.getCodigo(), Conquistas.NOMES.getOrDefault(e.getCodigo(), e.getCodigo()),
 									e.getPontos()))
+							.toList(),
+					eventos.stream().filter(e -> e.getTipo() == TipoXp.DESAFIO && e.getPontos() > 0)
+							.map(e -> {
+								Desafios.Desafio d = Desafios.deCodigo(e.getCodigo());
+								return new DesafioGanho(d == null ? e.getCodigo() : d.codigo(), d == null ? e.getCodigo() : d.nome(),
+										e.getPontos());
+							})
 							.toList());
 		}
 

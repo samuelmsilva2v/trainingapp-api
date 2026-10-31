@@ -1,5 +1,6 @@
 package com.trainingapp.api.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -18,5 +19,8 @@ public record GamificacaoResponse(
 		int treinos,
 		int recordes,
 		boolean treinouHoje,
-		List<ConquistaResponse> conquistas) {
+		List<ConquistaResponse> conquistas,
+		/** Desafios da semana atual (segunda a domingo) e o domingo em que ela termina. */
+		List<DesafioResponse> desafios,
+		LocalDate semanaTerminaEm) {
 }

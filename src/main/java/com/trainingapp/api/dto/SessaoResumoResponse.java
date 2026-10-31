@@ -24,6 +24,7 @@ public record SessaoResumoResponse(
 		int xpGanho,
 		int xpStreak,
 		int xpConquistas,
+		int xpDesafios,
 		int recordes) {
 
 	public static SessaoResumoResponse de(Sessao s, GamificacaoService.Ganho ganho) {
@@ -43,7 +44,7 @@ public record SessaoResumoResponse(
 			}
 		}
 		return new SessaoResumoResponse(s.getId(), s.getPlanoNome(), s.getDiaNome(), s.getEstado(), s.getIniciadaEm(),
-				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, ganho.xp(), ganho.xpStreak(), ganho.xpConquistas(),
+				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, ganho.xp(), ganho.xpStreak(), ganho.xpConquistas(), ganho.xpDesafios(),
 				ganho.recordes().size());
 	}
 }
