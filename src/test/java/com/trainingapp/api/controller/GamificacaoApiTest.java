@@ -1,6 +1,10 @@
 package com.trainingapp.api.controller;
 
 import com.trainingapp.api.model.Plano;
+import com.trainingapp.api.model.TipoXp;
+import com.trainingapp.api.model.XpEvent;
+import com.trainingapp.api.repository.UsuarioRepository;
+import com.trainingapp.api.repository.XpEventRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -83,6 +88,12 @@ class GamificacaoApiTest {
 
 	@Autowired
 	RelogioMutavel relogio;
+
+	@Autowired
+	XpEventRepository eventos;
+
+	@Autowired
+	UsuarioRepository usuarios;
 
 	String supino;
 	// Cada sessao comeca alguns segundos depois da anterior, para a ordem do historico ser estavel.
@@ -292,6 +303,58 @@ class GamificacaoApiTest {
 	}
 
 	@Test
+	void primeiroDiaDaSequenciaNaoRendeBonus() throws Exception {
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.xpStreak").value(0));
+	}
+
+	@Test
+	void bonusDeSequenciaCresceComOsDiasSeguidosEVemNaPreviaNaRespostaENoHistorico() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(hoje.minusDays(3), hoje.minusDays(2), hoje.minusDays(1)); // hoje e o 4o dia: 5 x 3 = 15
+
+		UUID id = emAndamento(3, "60");
+		mvc.perform(get("/api/sessoes/" + id)).andExpect(jsonPath("$.xpGanho").value(51)).andExpect(jsonPath("$.xpStreak").value(15));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(90)); // a previa nao grava nada
+
+		concluir(id, 3, "60").andExpect(jsonPath("$.xpGanho").value(51)).andExpect(jsonPath("$.xpSeries").value(36))
+				.andExpect(jsonPath("$.xpStreak").value(15));
+		mvc.perform(get("/api/sessoes")).andExpect(jsonPath("$[0].xpGanho").value(51)).andExpect(jsonPath("$[0].xpStreak").value(15));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(141)).andExpect(jsonPath("$.streakAtual").value(4))
+				.andExpect(jsonPath("$.treinos").value(4)); // o bonus nao conta como dia de treino
+	}
+
+	@Test
+	void folgaDeDoisDiasMantemASequenciaETresQuebram() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(hoje.minusDays(3)); // 2 dias de folga: hoje e o 2o dia
+		concluir(3, "60").andExpect(jsonPath("$.xpStreak").value(5));
+	}
+
+	@Test
+	void folgaDeTresDiasQuebraASequencia() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(hoje.minusDays(5), hoje.minusDays(4)); // 3 dias de folga: hoje recomeca no dia 1
+		concluir(3, "60").andExpect(jsonPath("$.xpStreak").value(0));
+	}
+
+	@Test
+	void bonusDeSequenciaTemTetoDe50() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(java.util.stream.IntStream.rangeClosed(1, 20).mapToObj(hoje::minusDays).toArray(LocalDate[]::new));
+		concluir(3, "60").andExpect(jsonPath("$.xpStreak").value(50));
+	}
+
+	@Test
+	void apagarOTreinoEstornaOBonusDeSequencia() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(hoje.minusDays(1));
+		String id = idDe(concluir(3, "60").andExpect(jsonPath("$.xpStreak").value(5)));
+
+		mvc.perform(delete("/api/sessoes/" + id)).andExpect(status().isNoContent());
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(30)); // so o dia gravado antes
+	}
+
+	@Test
 	void sessaoAbandonadaNaoRendeXp() throws Exception {
 		Instant inicio = agora();
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
@@ -318,10 +381,28 @@ class GamificacaoApiTest {
 	}
 
 	private org.springframework.test.web.servlet.ResultActions concluir(int series, String carga) throws Exception {
+		return concluir(UUID.randomUUID(), series, carga);
+	}
+
+	private org.springframework.test.web.servlet.ResultActions concluir(UUID id, int series, String carga) throws Exception {
 		Instant inicio = agora().plusSeconds(++deslocamento * 10L);
-		return mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+		return mvc.perform(put("/api/sessoes/" + id).contentType(MediaType.APPLICATION_JSON)
 				.content(corpo("CONCLUIDA", inicio, inicio.plusSeconds(60), series, carga)))
 				.andExpect(status().isOk());
+	}
+
+	/** Dias de treino validos anteriores (30 XP cada), gravados direto: o fuso do relogio so separa dois dias. */
+	private void treinouEm(LocalDate... dias) {
+		for (LocalDate dia : dias) {
+			XpEvent e = new XpEvent();
+			e.setUsuario(usuarios.getReferenceById(UUID.fromString(UsuarioDeTeste.ID)));
+			e.setSessaoId(UUID.randomUUID());
+			e.setTipo(TipoXp.SERIES);
+			e.setPontos(30);
+			e.setDia(dia);
+			e.setDiaUnico(dia);
+			eventos.save(e);
+		}
 	}
 
 	private void definirFuso(String fuso) {

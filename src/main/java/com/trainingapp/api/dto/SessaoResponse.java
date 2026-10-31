@@ -27,6 +27,7 @@ public record SessaoResponse(
 		int xpGanho,
 		int xpSeries,
 		int xpRecordes,
+		int xpStreak,
 		List<UUID> recordes) {
 
 	public record ExercicioResponse(
@@ -65,6 +66,6 @@ public record SessaoResponse(
 										.toList(),
 								ganho.xpSeries() > 0 ? Blocos.xp(e.getSeries()) : 0))
 						.toList(),
-				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.recordes());
+				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.xpStreak(), ganho.recordes());
 	}
 }

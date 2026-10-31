@@ -17,4 +17,6 @@ public interface XpEventRepository extends JpaRepository<XpEvent, UUID> {
 	boolean existsBySessaoId(UUID sessaoId);
 
 	List<XpEvent> findByUsuarioIdAndTipoAndDia(UUID usuarioId, TipoXp tipo, LocalDate dia);
+
+	List<XpEvent> findByUsuarioIdAndTipo(UUID usuarioId, TipoXp tipo);
 }

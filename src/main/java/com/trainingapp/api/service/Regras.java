@@ -31,7 +31,16 @@ public final class Regras {
 	/** "Dia inspirado": recordes no mesmo treino. */
 	public static final int RECORDES_DIA_INSPIRADO = 3;
 
+	/** Bonus por dia de sequencia alem do primeiro, e o teto do bonus por treino. */
+	public static final int XP_POR_DIA_DE_SEQUENCIA = 5;
+	public static final int XP_MAXIMO_SEQUENCIA = 50;
+
 	private Regras() {
+	}
+
+	/** Bonus de um treino no dia N da sequencia: 5 XP x (N - 1), ate 50. O dia 1 nao rende bonus. */
+	public static int xpDaSequencia(int dias) {
+		return Math.min(XP_MAXIMO_SEQUENCIA, XP_POR_DIA_DE_SEQUENCIA * Math.max(0, dias - 1));
 	}
 
 	/**

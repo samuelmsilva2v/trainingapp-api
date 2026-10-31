@@ -88,7 +88,24 @@ public class GamificacaoService {
 						exercicio.getExercicio().getId(), dia));
 			}
 		}
+		// Bonus pela sequencia que este treino estende; dias depois dele (treino sincronizado com atraso) nao contam.
+		Set<LocalDate> dias = diasDeTreino(eventos.findByUsuarioIdAndTipo(usuario.getId(), TipoXp.SERIES));
+		dias.removeIf(d -> d.isAfter(dia));
+		dias.add(dia);
+		int xpSequencia = Regras.xpDaSequencia(Regras.streak(dias, dia).atual());
+		if (xpSequencia > 0) {
+			novos.add(evento(usuario, sessao, TipoXp.STREAK, xpSequencia, null, dia));
+		}
 		return novos;
+	}
+
+	/** Dias com treino valido: saldo de SERIES positivo no dia (apagar o treino estorna e libera o dia). */
+	private static Set<LocalDate> diasDeTreino(List<XpEvent> eventos) {
+		return eventos.stream()
+				.filter(e -> e.getTipo() == TipoXp.SERIES)
+				.collect(Collectors.groupingBy(XpEvent::getDia, Collectors.summingInt(XpEvent::getPontos)))
+				.entrySet().stream().filter(d -> d.getValue() > 0).map(java.util.Map.Entry::getKey)
+				.collect(Collectors.toCollection(HashSet::new));
 	}
 
 	/**
@@ -153,11 +170,7 @@ public class GamificacaoService {
 
 		long xp = todos.stream().mapToLong(XpEvent::getPontos).sum();
 		// Estornos tem pontos negativos: um dia so conta com saldo positivo, e cada recorde estornado desconta um.
-		Set<LocalDate> dias = todos.stream()
-				.filter(e -> e.getTipo() == TipoXp.SERIES)
-				.collect(Collectors.groupingBy(XpEvent::getDia, Collectors.summingInt(XpEvent::getPontos)))
-				.entrySet().stream().filter(d -> d.getValue() > 0).map(java.util.Map.Entry::getKey)
-				.collect(Collectors.toSet());
+		Set<LocalDate> dias = diasDeTreino(todos);
 		int recordes = todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).mapToInt(e -> Integer.signum(e.getPontos())).sum();
 		LocalDate hoje = LocalDate.now(relogio);
 		Regras.Streak streak = Regras.streak(dias, hoje);
@@ -195,14 +208,15 @@ public class GamificacaoService {
 	}
 
 	/** XP total da sessao, o detalhe por tipo e os exercicios com recorde. */
-	public record Ganho(int xp, int xpSeries, int xpRecordes, List<UUID> recordes) {
+	public record Ganho(int xp, int xpSeries, int xpRecordes, int xpStreak, List<UUID> recordes) {
 
-		public static final Ganho NENHUM = new Ganho(0, 0, 0, List.of());
+		public static final Ganho NENHUM = new Ganho(0, 0, 0, 0, List.of());
 
 		static Ganho de(List<XpEvent> eventos) {
 			int series = pontos(eventos, TipoXp.SERIES);
 			int recordes = pontos(eventos, TipoXp.RECORDE);
-			return new Ganho(series + recordes, series, recordes,
+			int streak = pontos(eventos, TipoXp.STREAK);
+			return new Ganho(series + recordes + streak, series, recordes, streak,
 					eventos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).map(XpEvent::getExercicioId).toList());
 		}
 

@@ -22,6 +22,7 @@ public record SessaoResumoResponse(
 		int seriesConcluidas,
 		BigDecimal volumeKg,
 		int xpGanho,
+		int xpStreak,
 		int recordes) {
 
 	public static SessaoResumoResponse de(Sessao s, GamificacaoService.Ganho ganho) {
@@ -41,7 +42,7 @@ public record SessaoResumoResponse(
 			}
 		}
 		return new SessaoResumoResponse(s.getId(), s.getPlanoNome(), s.getDiaNome(), s.getEstado(), s.getIniciadaEm(),
-				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, ganho.xp(),
+				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, ganho.xp(), ganho.xpStreak(),
 				ganho.recordes().size());
 	}
 }

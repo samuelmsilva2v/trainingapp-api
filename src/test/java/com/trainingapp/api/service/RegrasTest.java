@@ -46,6 +46,17 @@ class RegrasTest {
 	}
 
 	@Test
+	void bonusDeSequenciaComecaNoSegundoDiaETemTeto() {
+		assertThat(Regras.xpDaSequencia(0)).isZero();
+		assertThat(Regras.xpDaSequencia(1)).isZero();
+		assertThat(Regras.xpDaSequencia(2)).isEqualTo(5);
+		assertThat(Regras.xpDaSequencia(5)).isEqualTo(20);
+		assertThat(Regras.xpDaSequencia(10)).isEqualTo(45);
+		assertThat(Regras.xpDaSequencia(11)).isEqualTo(50);
+		assertThat(Regras.xpDaSequencia(30)).isEqualTo(50);
+	}
+
+	@Test
 	void serieSemRepeticaoNaoRendeXp() {
 		assertThat(serie("60", 0)).isZero();
 		assertThat(serie("60", null)).isZero();
