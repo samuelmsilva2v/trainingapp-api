@@ -46,6 +46,16 @@ class RegrasTest {
 	}
 
 	@Test
+	void conquistaValePelaFaixaEFaixaUnicaVale50() {
+		assertThat(Regras.xpDaConquista(1, false)).isEqualTo(25);
+		assertThat(Regras.xpDaConquista(2, false)).isEqualTo(50);
+		assertThat(Regras.xpDaConquista(3, false)).isEqualTo(100);
+		assertThat(Regras.xpDaConquista(4, false)).isEqualTo(150);
+		assertThat(Regras.xpDaConquista(5, false)).isEqualTo(200);
+		assertThat(Regras.xpDaConquista(1, true)).isEqualTo(50);
+	}
+
+	@Test
 	void tituloMudaNosLimitesDeCadaFaixaDeNivel() {
 		assertThat(Regras.titulo(1)).isEqualTo("Iniciante");
 		assertThat(Regras.titulo(4)).isEqualTo("Iniciante");

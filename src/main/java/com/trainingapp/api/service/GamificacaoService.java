@@ -1,5 +1,6 @@
 package com.trainingapp.api.service;
 
+import com.trainingapp.api.dto.ConquistaResponse;
 import com.trainingapp.api.dto.GamificacaoResponse;
 import com.trainingapp.api.model.ExercicioSessao;
 import com.trainingapp.api.model.SerieSessao;
@@ -58,8 +59,54 @@ public class GamificacaoService {
 		return Ganho.de(calcularEventos(sessao, relogio.instant()));
 	}
 
-	/** Eventos de XP que a sessao rende se terminar em `fim`; vazio quando nao rende nada. */
+	/** Eventos de XP que a sessao rende se terminar em `fim`: os do treino e as conquistas que ele libera. */
 	private List<XpEvent> calcularEventos(Sessao sessao, Instant fim) {
+		List<XpEvent> novos = new ArrayList<>(eventosDoTreino(sessao, fim));
+		novos.addAll(conquistasNovas(sessao, fim, novos));
+		return novos;
+	}
+
+	/**
+	 * Conquistas que valem agora e ainda nao foram creditadas, em cascata: o XP de uma conquista pode subir o nivel e
+	 * liberar outra. Roda em toda conclusao, mesmo sem XP de treino, entao a primeira conclusao depois do deploy credita
+	 * as conquistas que ja valiam antes (retroativo decidido na #37).
+	 */
+	private List<XpEvent> conquistasNovas(Sessao sessao, Instant fim, List<XpEvent> doTreino) {
+		Usuario usuario = sessao.getUsuario();
+		LocalDate dia = diaDoTreino(fim);
+		List<XpEvent> todos = new ArrayList<>(eventos.findByUsuarioId(usuario.getId()));
+		todos.addAll(doTreino);
+		Set<String> creditadas = codigosCreditados(todos);
+		List<XpEvent> novas = new ArrayList<>();
+		while (true) {
+			List<ConquistaResponse> lista = Conquistas.avaliar(totais(todos));
+			java.util.Map<String, Long> faixasPorFamilia = lista.stream()
+					.collect(Collectors.groupingBy(ConquistaResponse::familia, Collectors.counting()));
+			List<XpEvent> rodada = new ArrayList<>();
+			for (ConquistaResponse c : lista) {
+				if (c.conquistada() && creditadas.add(c.codigo())) {
+					XpEvent e = evento(usuario, sessao, TipoXp.CONQUISTA,
+							Regras.xpDaConquista(c.faixa(), faixasPorFamilia.get(c.familia()) == 1), null, dia);
+					e.setCodigo(c.codigo());
+					rodada.add(e);
+				}
+			}
+			if (rodada.isEmpty()) {
+				return novas;
+			}
+			novas.addAll(rodada);
+			todos.addAll(rodada);
+		}
+	}
+
+	/** Codigos das conquistas ja creditadas (gravadas como evento CONQUISTA). */
+	private static Set<String> codigosCreditados(List<XpEvent> eventos) {
+		return eventos.stream().filter(e -> e.getTipo() == TipoXp.CONQUISTA && e.getCodigo() != null)
+				.map(XpEvent::getCodigo).collect(Collectors.toCollection(HashSet::new));
+	}
+
+	/** XP do treino em si (series, recordes e sequencia); vazio quando o dia ja rendeu ou ha menos de 3 series. */
+	private List<XpEvent> eventosDoTreino(Sessao sessao, Instant fim) {
 		Usuario usuario = sessao.getUsuario();
 		LocalDate dia = diaDoTreino(fim);
 		// Saldo > 0: o dia ja rendeu XP e nao foi estornado (apagar o treino libera o dia).
@@ -115,7 +162,8 @@ public class GamificacaoService {
 	public void estornar(UUID sessaoId) {
 		List<XpEvent> estornos = new ArrayList<>();
 		for (XpEvent original : eventos.findBySessaoIdIn(List.of(sessaoId))) {
-			if (original.getPontos() <= 0) {
+			// A conquista creditada permanece (decisao da #37): apagar um treino antigo nao "desconquista" nada.
+			if (original.getPontos() <= 0 || original.getTipo() == TipoXp.CONQUISTA) {
 				continue;
 			}
 			XpEvent estorno = evento(original.getUsuario(), original.getSessaoId(), original.getTipo(),
@@ -169,12 +217,28 @@ public class GamificacaoService {
 		List<XpEvent> todos = eventos.findByUsuarioId(usuario.getId());
 
 		long xp = todos.stream().mapToLong(XpEvent::getPontos).sum();
-		// Estornos tem pontos negativos: um dia so conta com saldo positivo, e cada recorde estornado desconta um.
 		Set<LocalDate> dias = diasDeTreino(todos);
-		int recordes = todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).mapToInt(e -> Integer.signum(e.getPontos())).sum();
 		LocalDate hoje = LocalDate.now(relogio);
 		Regras.Streak streak = Regras.streak(dias, hoje);
-		int nivel = Regras.nivel(xp);
+		Conquistas.Totais totais = totais(todos);
+		int nivel = totais.nivel();
+		// Conquistada = a regra da agora ou ja foi creditada (a conquista gravada nunca "desconquista").
+		Set<String> creditadas = codigosCreditados(todos);
+		List<ConquistaResponse> conquistas = Conquistas.avaliar(totais).stream()
+				.map(c -> c.conquistada() || !creditadas.contains(c.codigo()) ? c
+						: new ConquistaResponse(c.codigo(), c.nome(), c.descricao(), true, c.familia(), c.faixa(), c.progresso(),
+								c.meta()))
+				.toList();
+
+		return new GamificacaoResponse(xp, nivel, Regras.titulo(nivel), Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
+				streak.atual(), streak.melhor(), dias.size(), totais.recordes(), dias.contains(hoje), conquistas);
+	}
+
+	/** Totais das conquistas a partir dos eventos (estornos tem pontos negativos e descontam). */
+	private static Conquistas.Totais totais(List<XpEvent> todos) {
+		long xp = todos.stream().mapToLong(XpEvent::getPontos).sum();
+		Set<LocalDate> dias = diasDeTreino(todos);
+		int recordes = todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).mapToInt(e -> Integer.signum(e.getPontos())).sum();
 
 		// Recordes que valem (saldo positivo por sessao e exercicio, descontando estornos).
 		Set<UUID> exerciciosComRecorde = new HashSet<>();
@@ -189,11 +253,10 @@ public class GamificacaoService {
 			exerciciosComRecorde.addAll(valendo);
 			diaInspirado |= valendo.size() >= Regras.RECORDES_DIA_INSPIRADO;
 		}
-
-		return new GamificacaoResponse(xp, nivel, Regras.titulo(nivel), Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
-				streak.atual(), streak.melhor(), dias.size(), recordes, dias.contains(hoje),
-				Conquistas.avaliar(new Conquistas.Totais(dias.size(), streak.melhor(), Regras.melhorSemanasFirmes(dias),
-						recordes, exerciciosComRecorde.size(), nivel, Regras.voltouDepoisDePausa(dias), diaInspirado)));
+		// A melhor sequencia nao depende de "hoje".
+		int melhorStreak = Regras.streak(dias, LocalDate.MAX).melhor();
+		return new Conquistas.Totais(dias.size(), melhorStreak, Regras.melhorSemanasFirmes(dias), recordes,
+				exerciciosComRecorde.size(), Regras.nivel(xp), Regras.voltouDepoisDePausa(dias), diaInspirado);
 	}
 
 	/** XP ganho e exercicios com recorde, por sessao (para as telas de treino e historico). */
@@ -207,17 +270,27 @@ public class GamificacaoService {
 						Collectors.collectingAndThen(Collectors.toList(), Ganho::de)));
 	}
 
-	/** XP total da sessao, o detalhe por tipo e os exercicios com recorde. */
-	public record Ganho(int xp, int xpSeries, int xpRecordes, int xpStreak, List<UUID> recordes) {
+	/** Conquista creditada num treino, com o XP que rendeu. */
+	public record ConquistaGanha(String codigo, String nome, int xp) {
+	}
 
-		public static final Ganho NENHUM = new Ganho(0, 0, 0, 0, List.of());
+	/** XP total da sessao, o detalhe por tipo, os exercicios com recorde e as conquistas creditadas. */
+	public record Ganho(int xp, int xpSeries, int xpRecordes, int xpStreak, int xpConquistas, List<UUID> recordes,
+			List<ConquistaGanha> conquistas) {
+
+		public static final Ganho NENHUM = new Ganho(0, 0, 0, 0, 0, List.of(), List.of());
 
 		static Ganho de(List<XpEvent> eventos) {
 			int series = pontos(eventos, TipoXp.SERIES);
 			int recordes = pontos(eventos, TipoXp.RECORDE);
 			int streak = pontos(eventos, TipoXp.STREAK);
-			return new Ganho(series + recordes + streak, series, recordes, streak,
-					eventos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).map(XpEvent::getExercicioId).toList());
+			int conquistas = pontos(eventos, TipoXp.CONQUISTA);
+			return new Ganho(series + recordes + streak + conquistas, series, recordes, streak, conquistas,
+					eventos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).map(XpEvent::getExercicioId).toList(),
+					eventos.stream().filter(e -> e.getTipo() == TipoXp.CONQUISTA && e.getPontos() > 0)
+							.map(e -> new ConquistaGanha(e.getCodigo(), Conquistas.NOMES.getOrDefault(e.getCodigo(), e.getCodigo()),
+									e.getPontos()))
+							.toList());
 		}
 
 		private static int pontos(List<XpEvent> eventos, TipoXp tipo) {

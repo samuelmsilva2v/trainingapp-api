@@ -38,6 +38,20 @@ public final class Regras {
 	private Regras() {
 	}
 
+	/** XP de uma conquista: pela faixa (1 = 25, 2 = 50, 3 = 100, 4 = 150, 5 em diante = 200); conquista de faixa unica vale 50. */
+	public static int xpDaConquista(int faixa, boolean faixaUnica) {
+		if (faixaUnica) {
+			return 50;
+		}
+		return switch (faixa) {
+			case 1 -> 25;
+			case 2 -> 50;
+			case 3 -> 100;
+			case 4 -> 150;
+			default -> 200;
+		};
+	}
+
 	/** Bonus de um treino no dia N da sequencia: 5 XP x (N - 1), ate 50. O dia 1 nao rende bonus. */
 	public static int xpDaSequencia(int dias) {
 		return Math.min(XP_MAXIMO_SEQUENCIA, XP_POR_DIA_DE_SEQUENCIA * Math.max(0, dias - 1));

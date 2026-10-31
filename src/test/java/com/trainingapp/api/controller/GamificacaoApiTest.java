@@ -109,14 +109,19 @@ class GamificacaoApiTest {
 
 	@Test
 	void sessaoValidaRendeXpPorSerieEApareceNoResumo() throws Exception {
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.recordes.length()").value(0))
+		// 36 das series + 25 da conquista "Primeiro treino", creditada ao concluir.
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(61)).andExpect(jsonPath("$.recordes.length()").value(0))
 				.andExpect(jsonPath("$.xpSeries").value(36))
+				.andExpect(jsonPath("$.xpConquistas").value(25))
+				.andExpect(jsonPath("$.conquistas[0].codigo").value("PRIMEIRO_TREINO"))
+				.andExpect(jsonPath("$.conquistas[0].nome").value("Primeiro treino"))
+				.andExpect(jsonPath("$.conquistas[0].xp").value(25))
 				.andExpect(jsonPath("$.exercicios[0].xp").value(36))
 				.andExpect(jsonPath("$.xpRecordes").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.xpTotal").value(36))
+				.andExpect(jsonPath("$.xpTotal").value(61))
 				.andExpect(jsonPath("$.nivel").value(1))
 				.andExpect(jsonPath("$.titulo").value("Iniciante"))
 				.andExpect(jsonPath("$.xpInicioDoNivel").value(0))
@@ -149,11 +154,11 @@ class GamificacaoApiTest {
 
 	@Test
 	void soAPrimeiraSessaoDoDiaConta() throws Exception {
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(61)); // 36 + 25 de "Primeiro treino"
 		concluir(5, "80").andExpect(jsonPath("$.xpGanho").value(0));
 
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.xpTotal").value(36))
+				.andExpect(jsonPath("$.xpTotal").value(61))
 				.andExpect(jsonPath("$.treinos").value(1))
 				.andExpect(jsonPath("$.recordes").value(0));
 	}
@@ -162,15 +167,15 @@ class GamificacaoApiTest {
 	void recordeExigeMarcaAnteriorEMaiorCarga() throws Exception {
 		definirFuso(FUSO_ADIANTADO);
 		// Primeira vez no exercicio: nao ha marca para superar.
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.recordes.length()").value(0));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(61)).andExpect(jsonPath("$.recordes.length()").value(0));
 
 		definirFuso(FUSO_ATRASADO);
 		concluir(3, "70")
-				.andExpect(jsonPath("$.xpGanho").value(67))
+				.andExpect(jsonPath("$.xpGanho").value(92)) // 3 x 14 + 25 do recorde + 25 da conquista "Novo recorde"
 				.andExpect(jsonPath("$.recordes[0]").value(supino));
 
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.xpTotal").value(103))
+				.andExpect(jsonPath("$.xpTotal").value(153))
 				.andExpect(jsonPath("$.recordes").value(1))
 				.andExpect(jsonPath("$.treinos").value(2))
 				.andExpect(jsonPath("$.melhorStreak").value(2))
@@ -198,10 +203,10 @@ class GamificacaoApiTest {
 						bloco.formatted(UUID.randomUUID(), supino,
 								series.formatted(UUID.randomUUID()) + "," + series.formatted(UUID.randomUUID())));
 
-		// 4 series de 70 kg x 8 reps (14 XP cada) + um unico recorde (25).
+		// 4 series de 70 kg x 8 reps (14 XP cada) + um unico recorde (25) + a conquista "Novo recorde" (25).
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content(corpo))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.xpGanho").value(81))
+				.andExpect(jsonPath("$.xpGanho").value(106))
 				.andExpect(jsonPath("$.recordes.length()").value(1));
 	}
 
@@ -223,9 +228,10 @@ class GamificacaoApiTest {
 
 		mvc.perform(get("/api/sessoes"))
 				.andExpect(jsonPath("$.length()").value(2))
-				.andExpect(jsonPath("$[0].xpGanho").value(81))
+				.andExpect(jsonPath("$[0].xpGanho").value(106))
+				.andExpect(jsonPath("$[0].xpConquistas").value(25))
 				.andExpect(jsonPath("$[0].recordes").value(1))
-				.andExpect(jsonPath("$[1].xpGanho").value(36))
+				.andExpect(jsonPath("$[1].xpGanho").value(61))
 				.andExpect(jsonPath("$[1].recordes").value(0));
 	}
 
@@ -239,9 +245,10 @@ class GamificacaoApiTest {
 		mvc.perform(delete("/api/sessoes/" + recorde)).andExpect(status().isNoContent());
 
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.xpTotal").value(36))
+				.andExpect(jsonPath("$.xpTotal").value(86)) // 61 do 1o treino + 25 de "Novo recorde", que permanece
 				.andExpect(jsonPath("$.treinos").value(1))
 				.andExpect(jsonPath("$.recordes").value(0))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='PRIMEIRO_RECORDE')].conquistada").value(true))
 				.andExpect(jsonPath("$.melhorStreak").value(1))
 				.andExpect(jsonPath("$.conquistas[?(@.codigo=='RECORDES_VARIADOS_5')].progresso").value(0));
 		mvc.perform(get("/api/sessoes")).andExpect(jsonPath("$.length()").value(1));
@@ -252,11 +259,11 @@ class GamificacaoApiTest {
 	void apagarOTreinoDoDiaLiberaOUsoDoDiaParaRenderXpDeNovo() throws Exception {
 		String id = idDe(concluir(3, "60"));
 		mvc.perform(delete("/api/sessoes/" + id)).andExpect(status().isNoContent());
-		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(0))
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(25)) // a conquista permanece
 				.andExpect(jsonPath("$.treinouHoje").value(false));
 
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36));
-		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(36));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.xpConquistas").value(0)); // ja creditada
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(61));
 	}
 
 	@Test
@@ -275,7 +282,8 @@ class GamificacaoApiTest {
 		UUID id = emAndamento(3, "60");
 
 		mvc.perform(get("/api/sessoes/" + id))
-				.andExpect(jsonPath("$.xpGanho").value(36))
+				.andExpect(jsonPath("$.xpGanho").value(61)) // a previa inclui a conquista que o treino libera
+				.andExpect(jsonPath("$.xpConquistas").value(25))
 				.andExpect(jsonPath("$.exercicios[0].xp").value(36))
 				.andExpect(jsonPath("$.recordes.length()").value(0));
 		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(0));
@@ -289,7 +297,7 @@ class GamificacaoApiTest {
 
 		UUID comRecorde = emAndamento(3, "70");
 		mvc.perform(get("/api/sessoes/" + comRecorde))
-				.andExpect(jsonPath("$.xpGanho").value(67)) // 3 x 14 + 25 do recorde
+				.andExpect(jsonPath("$.xpGanho").value(92)) // 3 x 14 + 25 do recorde + 25 de "Novo recorde"
 				.andExpect(jsonPath("$.recordes[0]").value(supino));
 	}
 
@@ -305,7 +313,7 @@ class GamificacaoApiTest {
 
 	@Test
 	void primeiroDiaDaSequenciaNaoRendeBonus() throws Exception {
-		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(36)).andExpect(jsonPath("$.xpStreak").value(0));
+		concluir(3, "60").andExpect(jsonPath("$.xpGanho").value(61)).andExpect(jsonPath("$.xpStreak").value(0));
 	}
 
 	@Test
@@ -314,13 +322,14 @@ class GamificacaoApiTest {
 		treinouEm(hoje.minusDays(3), hoje.minusDays(2), hoje.minusDays(1)); // hoje e o 4o dia: 5 x 3 = 15
 
 		UUID id = emAndamento(3, "60");
-		mvc.perform(get("/api/sessoes/" + id)).andExpect(jsonPath("$.xpGanho").value(51)).andExpect(jsonPath("$.xpStreak").value(15));
+		// 36 + 15 da sequencia + 25 de "Primeiro treino" (ja valia pelos dias gravados, credito retroativo).
+		mvc.perform(get("/api/sessoes/" + id)).andExpect(jsonPath("$.xpGanho").value(76)).andExpect(jsonPath("$.xpStreak").value(15));
 		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(90)); // a previa nao grava nada
 
-		concluir(id, 3, "60").andExpect(jsonPath("$.xpGanho").value(51)).andExpect(jsonPath("$.xpSeries").value(36))
+		concluir(id, 3, "60").andExpect(jsonPath("$.xpGanho").value(76)).andExpect(jsonPath("$.xpSeries").value(36))
 				.andExpect(jsonPath("$.xpStreak").value(15));
-		mvc.perform(get("/api/sessoes")).andExpect(jsonPath("$[0].xpGanho").value(51)).andExpect(jsonPath("$[0].xpStreak").value(15));
-		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(141)).andExpect(jsonPath("$.streakAtual").value(4))
+		mvc.perform(get("/api/sessoes")).andExpect(jsonPath("$[0].xpGanho").value(76)).andExpect(jsonPath("$[0].xpStreak").value(15));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(166)).andExpect(jsonPath("$.streakAtual").value(4))
 				.andExpect(jsonPath("$.treinos").value(4)); // o bonus nao conta como dia de treino
 	}
 
@@ -352,7 +361,34 @@ class GamificacaoApiTest {
 		String id = idDe(concluir(3, "60").andExpect(jsonPath("$.xpStreak").value(5)));
 
 		mvc.perform(delete("/api/sessoes/" + id)).andExpect(status().isNoContent());
-		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(30)); // so o dia gravado antes
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.xpTotal").value(55)); // o dia gravado antes + "Primeiro treino", que permanece
+	}
+
+	@Test
+	void conquistaQueSobeONivelLiberaAConquistaDeNivelEmCascata() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(1070, hoje.minusDays(5)); // 1070 + 36 = 1106 (< 1118, nivel 5); com os 25 de "Primeiro treino", 1131
+
+		concluir(3, "60")
+				.andExpect(jsonPath("$.xpConquistas").value(50))
+				.andExpect(jsonPath("$.xpGanho").value(86)) // 36 + 25 (Primeiro treino) + 25 (Nivel 5)
+				.andExpect(jsonPath("$.conquistas[*].codigo").value(org.hamcrest.Matchers.containsInAnyOrder("PRIMEIRO_TREINO", "NIVEL_5")));
+		mvc.perform(get("/api/gamificacao")).andExpect(jsonPath("$.nivel").value(5))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='NIVEL_5')].conquistada").value(true));
+	}
+
+	@Test
+	void conquistasQueJaValiamSaoCreditadasNaPrimeiraConclusaoMesmoSemXpDeTreino() throws Exception {
+		LocalDate hoje = LocalDate.now(relogio);
+		treinouEm(java.util.stream.IntStream.rangeClosed(11, 20).mapToObj(hoje::minusDays).toArray(LocalDate[]::new));
+
+		// 2 series nao rendem XP de treino, mas a conclusao credita o que ja valia: 25 + 50 (10 treinos) + 25 (7 dias).
+		concluir(2, "60")
+				.andExpect(jsonPath("$.xpSeries").value(0))
+				.andExpect(jsonPath("$.xpGanho").value(100))
+				.andExpect(jsonPath("$.conquistas[*].codigo")
+						.value(org.hamcrest.Matchers.containsInAnyOrder("PRIMEIRO_TREINO", "TREINOS_10", "STREAK_7")));
+		concluir(2, "60").andExpect(jsonPath("$.xpGanho").value(0)); // credito unico
 	}
 
 	@Test
@@ -394,12 +430,16 @@ class GamificacaoApiTest {
 
 	/** Dias de treino validos anteriores (30 XP cada), gravados direto: o fuso do relogio so separa dois dias. */
 	private void treinouEm(LocalDate... dias) {
+		treinouEm(30, dias);
+	}
+
+	private void treinouEm(int pontos, LocalDate... dias) {
 		for (LocalDate dia : dias) {
 			XpEvent e = new XpEvent();
 			e.setUsuario(usuarios.getReferenceById(UUID.fromString(UsuarioDeTeste.ID)));
 			e.setSessaoId(UUID.randomUUID());
 			e.setTipo(TipoXp.SERIES);
-			e.setPontos(30);
+			e.setPontos(pontos);
 			e.setDia(dia);
 			e.setDiaUnico(dia);
 			eventos.save(e);

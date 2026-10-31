@@ -25,7 +25,8 @@ import java.util.UUID;
  * SERIES, com o XP de todas as series do treino, existe uma vez por dia de treino valido).
  */
 @Entity
-@Table(name = "xp_event", uniqueConstraints = @UniqueConstraint(columnNames = { "usuario_id", "dia_unico" }))
+@Table(name = "xp_event", uniqueConstraints = { @UniqueConstraint(columnNames = { "usuario_id", "dia_unico" }),
+		@UniqueConstraint(columnNames = { "usuario_id", "codigo" }) })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,6 +60,10 @@ public class XpEvent {
 	// Preenchido so no evento SERIES: a chave unica garante um treino valido por usuario por dia.
 	@Column(name = "dia_unico")
 	private LocalDate diaUnico;
+
+	// So nos eventos CONQUISTA: o codigo da conquista; a chave unica garante um credito por usuario.
+	@Column(length = 60)
+	private String codigo;
 
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)

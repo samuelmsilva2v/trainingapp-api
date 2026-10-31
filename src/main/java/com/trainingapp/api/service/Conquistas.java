@@ -3,6 +3,8 @@ package com.trainingapp.api.service;
 import com.trainingapp.api.dto.ConquistaResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Conquistas derivadas dos eventos (nada e gravado): so dependem de totais ja calculados, entao
@@ -20,6 +22,10 @@ final class Conquistas {
 
 	private record Faixa(String codigo, String nome, String descricao, int meta) {
 	}
+
+	/** Nome de cada codigo, para mostrar as conquistas creditadas num treino. */
+	static final Map<String, String> NOMES = avaliar(new Totais(0, 0, 0, 0, 0, 1, false, false)).stream()
+			.collect(Collectors.toMap(ConquistaResponse::codigo, ConquistaResponse::nome));
 
 	static List<ConquistaResponse> avaliar(Totais t) {
 		List<ConquistaResponse> lista = new ArrayList<>();

@@ -28,7 +28,10 @@ public record SessaoResponse(
 		int xpSeries,
 		int xpRecordes,
 		int xpStreak,
-		List<UUID> recordes) {
+		int xpConquistas,
+		List<UUID> recordes,
+		/** Conquistas creditadas ao concluir este treino (ou que ele creditaria, na previa). */
+		List<GamificacaoService.ConquistaGanha> conquistas) {
 
 	public record ExercicioResponse(
 			UUID id,
@@ -66,6 +69,7 @@ public record SessaoResponse(
 										.toList(),
 								ganho.xpSeries() > 0 ? Blocos.xp(e.getSeries()) : 0))
 						.toList(),
-				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.xpStreak(), ganho.recordes());
+				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.xpStreak(), ganho.xpConquistas(), ganho.recordes(),
+				ganho.conquistas());
 	}
 }
