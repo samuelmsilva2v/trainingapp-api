@@ -3,6 +3,7 @@ package com.trainingapp.api.service;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,39 +11,44 @@ class RegrasTest {
 
 	private static final LocalDate D = LocalDate.of(2026, 10, 1);
 
+	/** Serie sem drop: um bloco de uma etapa. */
+	private static int serie(String carga, Integer reps) {
+		return Regras.xpDoBloco(Collections.singletonList(carga == null ? null : new BigDecimal(carga)),
+				Collections.singletonList(reps));
+	}
+
 	@Test
 	void serieRendeVolumeDivididoPor40() {
-		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 10)).isEqualTo(15);
-		assertThat(Regras.xpDaSerie(new BigDecimal("100"), 5)).isEqualTo(13); // 12,5 arredonda para cima
-		assertThat(Regras.xpDaSerie(new BigDecimal("32.5"), 12)).isEqualTo(10);
+		assertThat(serie("60", 10)).isEqualTo(15);
+		assertThat(serie("100", 5)).isEqualTo(13); // 12,5 arredonda para cima
+		assertThat(serie("32.5", 12)).isEqualTo(10);
 	}
 
 	@Test
 	void dropSetValeOVolumeSomadoComoUmaSerieSo() {
-		// (600 + 50 x 8 + 40 x 6) / 40 = 31; sem drop, igual a serie; o teto de 100 vale para o bloco inteiro.
+		// (600 + 50 x 8 + 40 x 6) / 40 = 31; o teto de 100 vale para o bloco inteiro.
 		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("60"), new BigDecimal("50"), new BigDecimal("40")), List.of(10, 8, 6)))
 				.isEqualTo(31);
-		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("60")), List.of(10))).isEqualTo(Regras.xpDaSerie(new BigDecimal("60"), 10));
 		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("200"), new BigDecimal("160")), List.of(15, 12))).isEqualTo(100);
 	}
 
 	@Test
 	void quantoMaisPesadaELongaMaisXp() {
-		assertThat(Regras.xpDaSerie(new BigDecimal("80"), 10)).isGreaterThan(Regras.xpDaSerie(new BigDecimal("60"), 10));
-		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 12)).isGreaterThan(Regras.xpDaSerie(new BigDecimal("60"), 8));
+		assertThat(serie("80", 10)).isGreaterThan(serie("60", 10));
+		assertThat(serie("60", 12)).isGreaterThan(serie("60", 8));
 	}
 
 	@Test
 	void serieLeveOuSemCargaRendeOMinimoENuncaPassaDoMaximo() {
-		assertThat(Regras.xpDaSerie(new BigDecimal("10"), 8)).isEqualTo(5);
-		assertThat(Regras.xpDaSerie(null, 20)).isEqualTo(5);
-		assertThat(Regras.xpDaSerie(new BigDecimal("300"), 30)).isEqualTo(100);
+		assertThat(serie("10", 8)).isEqualTo(5);
+		assertThat(serie(null, 20)).isEqualTo(5);
+		assertThat(serie("300", 30)).isEqualTo(100);
 	}
 
 	@Test
 	void serieSemRepeticaoNaoRendeXp() {
-		assertThat(Regras.xpDaSerie(new BigDecimal("60"), 0)).isZero();
-		assertThat(Regras.xpDaSerie(new BigDecimal("60"), null)).isZero();
+		assertThat(serie("60", 0)).isZero();
+		assertThat(serie("60", null)).isZero();
 	}
 
 	@Test

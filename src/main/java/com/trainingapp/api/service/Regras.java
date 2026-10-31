@@ -35,19 +35,9 @@ public final class Regras {
 	}
 
 	/**
-	 * XP de uma serie concluida: volume (carga x reps) / 40, entre 5 e 100. Quanto mais pesada e longa a
-	 * serie, mais XP; sem carga (peso corporal) vale o minimo. Zero se nao houve repeticao.
-	 */
-	public static int xpDaSerie(BigDecimal carga, Integer reps) {
-		if (reps == null || reps < 1) {
-			return 0;
-		}
-		return xpDoVolume((carga == null ? 0 : carga.doubleValue()) * reps, reps);
-	}
-
-	/**
-	 * XP de um bloco (serie normal + drops): e uma serie so, entao vale o volume somado das etapas / 40, entre 5 e
-	 * 100. Sem drop, da o mesmo que {@link #xpDaSerie}. As listas tem a carga e as reps de cada etapa concluida.
+	 * XP de um bloco (serie normal + drops): e uma serie so, entao vale o volume somado das etapas (carga x reps) / 40,
+	 * entre 5 e 100. Quanto mais pesada e longa, mais XP; sem carga (peso corporal) vale o minimo; zero se nao houve
+	 * repeticao. Serie sem drop e um bloco de uma etapa. As listas tem a carga e as reps de cada etapa concluida.
 	 */
 	public static int xpDoBloco(List<BigDecimal> cargas, List<Integer> reps) {
 		double volume = 0;
