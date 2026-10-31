@@ -51,11 +51,11 @@ class GamificacaoApiTest {
 	private static final String FUSO_ATRASADO = "Pacific/Pago_Pago";
 
 	/**
-	 * Relogio da API parado numa quarta-feira (28/10/2026 15:00 UTC), com o fuso trocavel: os desafios semanais dependem do
+	 * Relogio da API parado numa quarta-feira (28/10/2026 20:00 UTC), com o fuso trocavel: os desafios semanais dependem do
 	 * dia da semana, e com o relogio real o mesmo teste daria outro XP conforme o dia em que roda.
 	 */
 	static class RelogioMutavel extends Clock {
-		static final Instant AGORA = Instant.parse("2026-10-28T15:00:00Z");
+		static final Instant AGORA = Instant.parse("2026-10-28T20:00:00Z"); // de dia nos dois fusos: sem "Madrugador"/"Coruja"
 
 		private volatile ZoneId zona = ZoneId.systemDefault();
 
@@ -450,6 +450,53 @@ class GamificacaoApiTest {
 	}
 
 	@Test
+	void clubeDos100EMaisForteQueEuNumTreinoNaBarra() throws Exception {
+		mvc.perform(put("/api/peso/2026-10-01").contentType(MediaType.APPLICATION_JSON).content("{\"kg\":90}"))
+				.andExpect(status().isOk());
+		concluir(3, "100") // supino e de barra
+				.andExpect(jsonPath("$.conquistas[*].codigo").value(org.hamcrest.Matchers.hasItems("CLUBE_100", "MAIS_FORTE")));
+	}
+
+	@Test
+	void rotacaoCompletaComOsDoisDiasDoPlanoEmOrdem() throws Exception {
+		String plano = JsonPath.read(mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON).content("""
+				{"nome":"AB","objetivo":"HIPERTROFIA","dias":[
+				 {"nome":"A","exercicios":[{"exercicioId":"%s","series":3,"repsMin":8,"repsMax":12}]},
+				 {"nome":"B","exercicios":[{"exercicioId":"%s","series":3,"repsMin":8,"repsMax":12}]}]}
+				""".formatted(supino, supino))).andReturn().getResponse().getContentAsString(), "$.id");
+		definirFuso(FUSO_ADIANTADO);
+		concluirNoPlano(plano, 0).andExpect(jsonPath("$.conquistas[*].codigo").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("ROTACAO_COMPLETA"))));
+		definirFuso(FUSO_ATRASADO);
+		concluirNoPlano(plano, 1).andExpect(jsonPath("$.conquistas[*].codigo").value(org.hamcrest.Matchers.hasItem("ROTACAO_COMPLETA")));
+	}
+
+	@Test
+	void dropSetConcluidoLiberaPrimeiroDropSet() throws Exception {
+		Instant inicio = agora().plusSeconds(++deslocamento * 10L);
+		String series = """
+				{"id":"%s","reps":8,"carga":60,"concluida":true},{"id":"%s","reps":6,"carga":45,"concluida":true,"tipo":"DROP"},
+				{"id":"%s","reps":8,"carga":60,"concluida":true},{"id":"%s","reps":8,"carga":60,"concluida":true}"""
+				.formatted(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+				.content(corpo("CONCLUIDA", inicio, inicio.plusSeconds(60), 0, "60").replace("\"series\":[]", "\"series\":[" + series + "]")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.conquistas[*].codigo").value(org.hamcrest.Matchers.hasItem("DROPSET_1")));
+	}
+
+	@Test
+	void resumoTrazAsFamiliasDaFatia2ComAsOcultasMarcadas() throws Exception {
+		concluir(3, "60");
+		mvc.perform(get("/api/gamificacao"))
+				.andExpect(jsonPath("$.conquistas.length()").value(42))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='VOLUME_10T')].familia").value("Volume total"))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='VOLUME_10T')].progresso").value(1)) // 1.440 kg = 1 t
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='VARIEDADE_20')].progresso").value(1))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='MADRUGADOR')].oculta").value(true))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='MADRUGADOR')].conquistada").value(false))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='TREINO_PESADO')].oculta").value(false));
+	}
+
+	@Test
 	void sessaoAbandonadaNaoRendeXp() throws Exception {
 		Instant inicio = agora();
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
@@ -502,6 +549,14 @@ class GamificacaoApiTest {
 			e.setDiaUnico(dia);
 			eventos.save(e);
 		}
+	}
+
+	private org.springframework.test.web.servlet.ResultActions concluirNoPlano(String plano, int diaOrdem) throws Exception {
+		Instant inicio = agora().plusSeconds(++deslocamento * 10L);
+		return mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+				.content(corpo("CONCLUIDA", inicio, inicio.plusSeconds(60), 3, "60")
+						.replace("\"planoId\":null", "\"planoId\":\"" + plano + "\"").replace("\"diaOrdem\":0", "\"diaOrdem\":" + diaOrdem)))
+				.andExpect(status().isOk());
 	}
 
 	private void definirFuso(String fuso) {

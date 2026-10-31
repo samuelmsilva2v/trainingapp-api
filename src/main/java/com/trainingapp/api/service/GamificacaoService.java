@@ -9,7 +9,10 @@ import com.trainingapp.api.model.Sessao;
 import com.trainingapp.api.model.TipoXp;
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.model.XpEvent;
+import com.trainingapp.api.repository.PesoRegistroRepository;
+import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.SessaoRepository;
+import com.trainingapp.api.repository.TreinoDaConta;
 import com.trainingapp.api.repository.XpEventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,12 +31,20 @@ import java.util.stream.Collectors;
 @Transactional
 public class GamificacaoService {
 
+	/** Id que nenhuma sessao tem: o JPQL nao aceita parametro nulo no Postgres. */
+	private static final UUID SEM_TREINO_ATUAL = new UUID(0, 0);
+
 	private final XpEventRepository eventos;
 	private final SessaoRepository sessoes;
+	private final PlanoRepository planos;
+	private final PesoRegistroRepository pesos;
 	private final UsuarioAtual usuarioAtual;
 	private final Clock relogio;
 
-	public GamificacaoService(XpEventRepository eventos, SessaoRepository sessoes, UsuarioAtual usuarioAtual, Clock relogio) {
+	public GamificacaoService(XpEventRepository eventos, SessaoRepository sessoes, PlanoRepository planos, PesoRegistroRepository pesos,
+			UsuarioAtual usuarioAtual, Clock relogio) {
+		this.planos = planos;
+		this.pesos = pesos;
 		this.eventos = eventos;
 		this.sessoes = sessoes;
 		this.usuarioAtual = usuarioAtual;
@@ -70,7 +81,7 @@ public class GamificacaoService {
 		List<XpEvent> desafios = desafiosNovos(sessao, dia, todos);
 		novos.addAll(desafios);
 		todos.addAll(desafios);
-		novos.addAll(conquistasNovas(sessao, dia, todos));
+		novos.addAll(conquistasNovas(sessao, dia, todos, historico(sessao.getUsuario().getId(), sessao.getId(), fim, todos)));
 		return novos;
 	}
 
@@ -105,12 +116,12 @@ public class GamificacaoService {
 	 * liberar outra. Roda em toda conclusao, mesmo sem XP de treino, entao a primeira conclusao depois do deploy credita
 	 * as conquistas que ja valiam antes (retroativo decidido na #37).
 	 */
-	private List<XpEvent> conquistasNovas(Sessao sessao, LocalDate dia, List<XpEvent> todos) {
+	private List<XpEvent> conquistasNovas(Sessao sessao, LocalDate dia, List<XpEvent> todos, HistoricoDeTreinos.Totais historico) {
 		Usuario usuario = sessao.getUsuario();
 		Set<String> creditadas = codigosCreditados(todos);
 		List<XpEvent> novas = new ArrayList<>();
 		while (true) {
-			List<ConquistaResponse> lista = Conquistas.avaliar(totais(todos));
+			List<ConquistaResponse> lista = Conquistas.avaliar(totais(todos), historico);
 			java.util.Map<String, Long> faixasPorFamilia = lista.stream()
 					.collect(Collectors.groupingBy(ConquistaResponse::familia, Collectors.counting()));
 			List<XpEvent> rodada = new ArrayList<>();
@@ -255,10 +266,10 @@ public class GamificacaoService {
 		int nivel = totais.nivel();
 		// Conquistada = a regra da agora ou ja foi creditada (a conquista gravada nunca "desconquista").
 		Set<String> creditadas = codigosCreditados(todos);
-		List<ConquistaResponse> conquistas = Conquistas.avaliar(totais).stream()
+		List<ConquistaResponse> conquistas = Conquistas.avaliar(totais, historico(usuario.getId(), null, null, todos)).stream()
 				.map(c -> c.conquistada() || !creditadas.contains(c.codigo()) ? c
 						: new ConquistaResponse(c.codigo(), c.nome(), c.descricao(), true, c.familia(), c.faixa(), c.progresso(),
-								c.meta()))
+								c.meta(), c.oculta()))
 				.toList();
 
 		// Desafios da semana de hoje; cumprido tambem se o XP ja foi creditado (apagar o treino nao tira).
@@ -274,6 +285,26 @@ public class GamificacaoService {
 		return new GamificacaoResponse(xp, nivel, Regras.titulo(nivel), Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
 				streak.atual(), streak.melhor(), dias.size(), totais.recordes(), dias.contains(hoje), conquistas, desafios,
 				Desafios.fimDaSemana(hoje));
+	}
+
+	/**
+	 * Totais da fatia 2 das conquistas: o banco soma por exercicio de cada treino (sem carregar serie por serie) e o resto
+	 * e feito em memoria. {@code atual} e o treino sendo concluido ou na previa (null no resumo), que entra com o {@code fim}
+	 * dado; os validos vem do saldo de SERIES em {@code todos}, que ja inclui o deste treino.
+	 */
+	private HistoricoDeTreinos.Totais historico(UUID usuarioId, UUID atual, Instant fim, List<XpEvent> todos) {
+		UUID idAtual = atual == null ? SEM_TREINO_ATUAL : atual;
+		List<TreinoDaConta> treinos = sessoes.treinosDaConta(usuarioId, idAtual).stream()
+				.map(t -> t.id().equals(atual) ? new TreinoDaConta(t.id(), fim, t.planoId(), t.diaOrdem()) : t)
+				.toList();
+		Set<UUID> validos = HistoricoDeTreinos.validos(todos.stream().filter(e -> e.getTipo() == TipoXp.SERIES)
+				.collect(Collectors.groupingBy(XpEvent::getSessaoId, Collectors.summingInt(XpEvent::getPontos))));
+		java.util.NavigableMap<LocalDate, java.math.BigDecimal> pesoAte = new java.util.TreeMap<>();
+		pesos.findByUsuarioIdOrderByDataAsc(usuarioId).forEach(p -> pesoAte.put(p.getData(), p.getKg()));
+		java.util.Map<UUID, Integer> diasPorPlano = new java.util.HashMap<>();
+		planos.diasPorPlano(usuarioId).forEach(l -> diasPorPlano.put((UUID) l[0], ((Number) l[1]).intValue()));
+		return HistoricoDeTreinos.de(treinos, validos, sessoes.exerciciosDaConta(usuarioId, idAtual),
+				HistoricoDeTreinos.blocosComDrop(sessoes.seriesComDrop(usuarioId)), pesoAte, diasPorPlano, relogio.getZone());
 	}
 
 	/** Totais das conquistas a partir dos eventos (estornos tem pontos negativos e descontam). */

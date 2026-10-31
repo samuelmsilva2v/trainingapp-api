@@ -47,6 +47,42 @@ public interface SessaoRepository extends JpaRepository<Sessao, UUID> {
 	BigDecimal maiorCargaAnterior(@Param("usuarioId") UUID usuarioId, @Param("exercicioId") UUID exercicioId,
 			@Param("sessaoId") UUID sessaoId);
 
+	/**
+	 * Treinos concluidos da conta, mais o treino {@code atual} (a previa de um em andamento). Sem parametro nulo: sem
+	 * treino atual, passe um id que nao existe.
+	 */
+	@Query("""
+			select new com.trainingapp.api.repository.TreinoDaConta(s.id, s.finalizadaEm, s.planoId, s.diaOrdem)
+			from Sessao s
+			where s.usuario.id = :usuarioId and (s.estado = com.trainingapp.api.model.EstadoSessao.CONCLUIDA or s.id = :atual)
+			""")
+	List<TreinoDaConta> treinosDaConta(@Param("usuarioId") UUID usuarioId, @Param("atual") UUID atual);
+
+	/** Cada exercicio dos treinos acima, somado no banco (series concluidas com pelo menos 1 repeticao). */
+	@Query("""
+			select new com.trainingapp.api.repository.ExercicioDoTreino(s.id, x.id, x.grupoMuscular, x.equipamento,
+					sum(r.carga * r.reps), max(r.carga))
+			from SerieSessao r join r.exercicioSessao e join e.sessao s join e.exercicio x
+			where s.usuario.id = :usuarioId and (s.estado = com.trainingapp.api.model.EstadoSessao.CONCLUIDA or s.id = :atual)
+			  and r.concluida = true and r.reps >= 1
+			group by s.id, x.id, x.grupoMuscular, x.equipamento
+			""")
+	List<ExercicioDoTreino> exerciciosDaConta(@Param("usuarioId") UUID usuarioId, @Param("atual") UUID atual);
+
+	/**
+	 * Series (sessao, exercicio da sessao, ordem, tipo, concluida) so dos exercicios com drop concluido: o drop-set e raro,
+	 * entao isto traz poucas linhas, ja na ordem para montar os blocos.
+	 */
+	@Query("""
+			select e.sessao.id, e.id, r.ordem, r.tipo, r.concluida
+			from SerieSessao r join r.exercicioSessao e
+			where e.id in (select d.exercicioSessao.id from SerieSessao d
+					where d.tipo = com.trainingapp.api.model.TipoSerie.DROP and d.concluida = true
+					  and d.exercicioSessao.sessao.usuario.id = :usuarioId)
+			order by e.id, r.ordem
+			""")
+	List<Object[]> seriesComDrop(@Param("usuarioId") UUID usuarioId);
+
 	@Query("select count(e) from ExercicioSessao e where e.id in :ids and e.sessao.id <> :sessaoId")
 	long contarExerciciosDeOutraSessao(@Param("ids") Collection<UUID> ids, @Param("sessaoId") UUID sessaoId);
 
