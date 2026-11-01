@@ -283,7 +283,7 @@ public class GamificacaoService {
 				.toList();
 
 		return new GamificacaoResponse(xp, nivel, Regras.titulo(nivel), Regras.xpInicioDoNivel(nivel), Regras.xpParaNivel(nivel + 1),
-				streak.atual(), streak.melhor(), dias.size(), totais.recordes(), dias.contains(hoje), conquistas, desafios,
+				streak.atual(), streak.melhor(), streak.congelamentos(), streak.congelada(), dias.size(), totais.recordes(), dias.contains(hoje), conquistas, desafios,
 				Desafios.fimDaSemana(hoje));
 	}
 

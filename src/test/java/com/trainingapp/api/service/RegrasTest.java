@@ -108,25 +108,25 @@ class RegrasTest {
 
 	@Test
 	void semTreinosNaoHaStreak() {
-		assertThat(Regras.streak(List.of(), D)).isEqualTo(new Regras.Streak(0, 0));
+		assertThat(Regras.streak(List.of(), D)).isEqualTo(new Regras.Streak(0, 0, 0, false));
 	}
 
 	@Test
 	void diasSeguidosFormamUmaSequencia() {
 		var s = Regras.streak(List.of(D, D.plusDays(1), D.plusDays(2)), D.plusDays(2));
-		assertThat(s).isEqualTo(new Regras.Streak(3, 3));
+		assertThat(s).isEqualTo(new Regras.Streak(3, 3, 0, false));
 	}
 
 	@Test
 	void doisDiasDeFolgaAindaMantemASequencia() {
 		var s = Regras.streak(List.of(D, D.plusDays(3)), D.plusDays(3));
-		assertThat(s).isEqualTo(new Regras.Streak(2, 2));
+		assertThat(s).isEqualTo(new Regras.Streak(2, 2, 0, false));
 	}
 
 	@Test
 	void tresDiasDeFolgaQuebramASequencia() {
 		var s = Regras.streak(List.of(D, D.plusDays(1), D.plusDays(5)), D.plusDays(5));
-		assertThat(s).isEqualTo(new Regras.Streak(1, 2));
+		assertThat(s).isEqualTo(new Regras.Streak(1, 2, 0, false));
 	}
 
 	@Test
@@ -139,7 +139,85 @@ class RegrasTest {
 
 	@Test
 	void diasRepetidosContamUmaVez() {
-		assertThat(Regras.streak(List.of(D, D, D), D)).isEqualTo(new Regras.Streak(1, 1));
+		assertThat(Regras.streak(List.of(D, D, D), D)).isEqualTo(new Regras.Streak(1, 1, 0, false));
+	}
+
+	/** {@code n} dias de treino seguidos a partir de {@code inicio}. */
+	private static List<LocalDate> seguidos(LocalDate inicio, int n) {
+		return inicio.datesUntil(inicio.plusDays(n)).toList();
+	}
+
+	private static List<LocalDate> juntos(List<LocalDate> a, List<LocalDate> b) {
+		return java.util.stream.Stream.concat(a.stream(), b.stream()).toList();
+	}
+
+	/** Congelamentos guardados no dia do ultimo treino. */
+	private static int congelamentos(List<LocalDate> treinos) {
+		return Regras.streak(treinos, treinos.getLast()).congelamentos();
+	}
+
+	@Test
+	void congelamentoChegaNoSetimoENoVigesimoPrimeiroDia() {
+		assertThat(congelamentos(seguidos(D, 6))).isZero();
+		assertThat(congelamentos(seguidos(D, 7))).isEqualTo(1);
+		assertThat(congelamentos(seguidos(D, 20))).isEqualTo(1);
+		assertThat(congelamentos(seguidos(D, 21))).isEqualTo(2);
+	}
+
+	@Test
+	void guardaNoMaximoDoisCongelamentos() {
+		assertThat(congelamentos(seguidos(D, 60))).isEqualTo(2);
+	}
+
+	@Test
+	void congelamentoEUsadoSozinhoDepoisDaFolga() {
+		var treinos = seguidos(D, 7);
+		var ultimo = treinos.getLast();
+		assertThat(Regras.streak(treinos, ultimo.plusDays(3))).isEqualTo(new Regras.Streak(7, 7, 1, false)); // ainda folga
+		assertThat(Regras.streak(treinos, ultimo.plusDays(4))).isEqualTo(new Regras.Streak(7, 7, 0, true));
+		assertThat(Regras.streak(treinos, ultimo.plusDays(5))).isEqualTo(new Regras.Streak(7, 7, 0, true));
+		assertThat(Regras.streak(treinos, ultimo.plusDays(6))).isEqualTo(new Regras.Streak(0, 7, 0, false));
+	}
+
+	@Test
+	void treinarNumDiaCongeladoSomaNaSequenciaEGastaOCongelamento() {
+		var treinos = seguidos(D, 7);
+		var dia = treinos.getLast().plusDays(4);
+		assertThat(Regras.streak(juntos(treinos, List.of(dia)), dia)).isEqualTo(new Regras.Streak(8, 8, 0, false));
+	}
+
+	@Test
+	void doisCongelamentosSeguidos() {
+		var treinos = seguidos(D, 21);
+		var ultimo = treinos.getLast();
+		assertThat(Regras.streak(treinos, ultimo.plusDays(5))).isEqualTo(new Regras.Streak(21, 21, 1, true));
+		assertThat(Regras.streak(treinos, ultimo.plusDays(7))).isEqualTo(new Regras.Streak(21, 21, 0, true));
+		assertThat(Regras.streak(treinos, ultimo.plusDays(8)).atual()).isZero();
+		var volta = ultimo.plusDays(7);
+		assertThat(Regras.streak(juntos(treinos, List.of(volta)), volta)).isEqualTo(new Regras.Streak(22, 22, 0, false));
+	}
+
+	@Test
+	void progressoRecomecaDepoisDoUso() {
+		// 21 dias: 2 guardados; usa 1 e precisa de mais 14 para voltar a 2.
+		var antes = seguidos(D, 21);
+		var depois = antes.getLast().plusDays(4);
+		assertThat(congelamentos(juntos(antes, seguidos(depois, 13)))).isEqualTo(1);
+		assertThat(congelamentos(juntos(antes, seguidos(depois, 14)))).isEqualTo(2);
+		// 7 dias: 1 guardado; usa e precisa de mais 7.
+		var semana = seguidos(D, 7);
+		var volta = semana.getLast().plusDays(4);
+		assertThat(congelamentos(juntos(semana, seguidos(volta, 6)))).isZero();
+		assertThat(congelamentos(juntos(semana, seguidos(volta, 7)))).isEqualTo(1);
+	}
+
+	@Test
+	void quebraSemCongelamentoSuficienteZeraSequenciaEProgresso() {
+		var semana = seguidos(D, 7); // 1 congelamento, mas a folga pede 2
+		var volta = semana.getLast().plusDays(6);
+		var depois = juntos(semana, seguidos(volta, 6));
+		assertThat(Regras.streak(depois, depois.getLast())).isEqualTo(new Regras.Streak(6, 7, 0, false));
+		assertThat(congelamentos(juntos(semana, seguidos(volta, 7)))).isEqualTo(1);
 	}
 
 	@Test

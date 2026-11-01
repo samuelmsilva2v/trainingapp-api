@@ -120,26 +120,60 @@ public final class Regras {
 		return nivel <= 1 ? 0 : xpParaNivel(nivel);
 	}
 
-	public record Streak(int atual, int melhor) {
+	/** Congelamentos guardados no maximo, os dias de calendario que cada um cobre e o custo (dias de treino) do 1o e do 2o. */
+	public static final int MAXIMO_CONGELAMENTOS = 2;
+	public static final int DIAS_POR_CONGELAMENTO = 2;
+	private static final int[] CUSTO_CONGELAMENTO = {7, 14};
+
+	/** {@code congelamentos} guardados agora; {@code congelada}: hoje esta coberto por um congelamento (e nao treinou). */
+	public record Streak(int atual, int melhor, int congelamentos, boolean congelada) {
 	}
 
 	/**
 	 * Sequencias de dias de treino. Dias seguidos, ou com ate 2 dias de folga entre eles, formam uma
-	 * sequencia; a atual so vale enquanto o ultimo treino nao ficou para tras alem da tolerancia.
+	 * sequencia; a atual so vale enquanto o ultimo treino nao ficou para tras alem da tolerancia. Quando ia quebrar, um
+	 * congelamento cobre os 2 dias seguintes (e depois o segundo, se houver). Dias congelados nao somam. O 1o congelamento
+	 * custa 7 dias de treino e o 2o mais 14; o progresso recomeca a cada ganho, a cada uso e na quebra.
 	 */
 	public static Streak streak(Collection<LocalDate> diasDeTreino, LocalDate hoje) {
 		List<LocalDate> dias = List.copyOf(new TreeSet<>(diasDeTreino));
 		int melhor = 0;
 		int corrente = 0;
+		int congelamentos = 0;
+		int progresso = 0;
 		LocalDate anterior = null;
 		for (LocalDate dia : dias) {
-			boolean continua = anterior != null && ChronoUnit.DAYS.between(anterior, dia) <= FOLGAS_TOLERADAS + 1;
-			corrente = continua ? corrente + 1 : 1;
+			if (anterior != null) {
+				long usados = congelamentosNecessarios(anterior, dia);
+				if (usados > congelamentos) {
+					corrente = 0;
+					congelamentos = 0;
+					progresso = 0;
+				} else if (usados > 0) {
+					congelamentos -= (int) usados;
+					progresso = 0;
+				}
+			}
+			corrente++;
 			melhor = Math.max(melhor, corrente);
+			if (congelamentos < MAXIMO_CONGELAMENTOS && ++progresso == CUSTO_CONGELAMENTO[congelamentos]) {
+				congelamentos++;
+				progresso = 0;
+			}
 			anterior = dia;
 		}
-		boolean viva = anterior != null && ChronoUnit.DAYS.between(anterior, hoje) <= FOLGAS_TOLERADAS + 1;
-		return new Streak(viva ? corrente : 0, melhor);
+		if (anterior == null) {
+			return new Streak(0, 0, 0, false);
+		}
+		long usados = congelamentosNecessarios(anterior, hoje);
+		return usados > congelamentos ? new Streak(0, melhor, 0, false)
+				: new Streak(corrente, melhor, congelamentos - (int) usados, usados > 0);
+	}
+
+	/** Congelamentos que um intervalo entre treinos (ou ate hoje) consome: cada um estica a tolerancia em 2 dias. */
+	private static long congelamentosNecessarios(LocalDate anterior, LocalDate dia) {
+		long alem = ChronoUnit.DAYS.between(anterior, dia) - (FOLGAS_TOLERADAS + 1);
+		return alem <= 0 ? 0 : (alem + DIAS_POR_CONGELAMENTO - 1) / DIAS_POR_CONGELAMENTO;
 	}
 
 	/** Maior numero de semanas seguidas (segunda a domingo) com pelo menos 3 dias de treino cada. */

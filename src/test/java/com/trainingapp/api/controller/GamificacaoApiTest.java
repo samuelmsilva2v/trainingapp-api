@@ -132,6 +132,8 @@ class GamificacaoApiTest {
 				.andExpect(jsonPath("$.xpInicioDoNivel").value(0))
 				.andExpect(jsonPath("$.xpProximoNivel").value(283))
 				.andExpect(jsonPath("$.streakAtual").value(1))
+				.andExpect(jsonPath("$.congelamentos").value(0))
+				.andExpect(jsonPath("$.congelada").value(false))
 				.andExpect(jsonPath("$.treinos").value(1))
 				.andExpect(jsonPath("$.treinouHoje").value(true))
 				.andExpect(jsonPath("$.conquistas[?(@.codigo=='PRIMEIRO_TREINO')].conquistada").value(true))

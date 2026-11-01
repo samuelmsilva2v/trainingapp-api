@@ -16,6 +16,9 @@ public record GamificacaoResponse(
 		long xpProximoNivel,
 		int streakAtual,
 		int melhorStreak,
+		/** Congelamentos guardados (0 a 2) e se hoje a sequencia esta coberta por um. */
+		int congelamentos,
+		boolean congelada,
 		int treinos,
 		int recordes,
 		boolean treinouHoje,
