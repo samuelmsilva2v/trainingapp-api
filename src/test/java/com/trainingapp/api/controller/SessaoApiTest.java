@@ -15,6 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -353,7 +355,11 @@ class SessaoApiTest {
 
 	@Test
 	void doisDropsNaoValemPorDuasSeriesNoMinimoDoTreino() throws Exception {
-		Instant inicio = agora();
+		// De dia: as ocultas de horario (Madrugador, Coruja) valem mesmo em treino invalido e dariam XP de madrugada.
+		// shortcut: em 1 e 2 de janeiro o meio-dia recente pode liberar "Ano novo"; travar o Clock se isso incomodar.
+		ZonedDateTime agora = ZonedDateTime.now();
+		ZonedDateTime meioDia = agora.with(LocalTime.NOON);
+		Instant inicio = (meioDia.plusMinutes(1).isAfter(agora) ? meioDia.minusDays(1) : meioDia).toInstant();
 		salvar(UUID.randomUUID(), "CONCLUIDA", inicio, inicio.plusSeconds(60), serie(UUID.randomUUID(), 10, "60", true),
 				drop(UUID.randomUUID(), 8, "50", true), drop(UUID.randomUUID(), 6, "40", true))
 				.andExpect(status().isOk())
