@@ -41,18 +41,18 @@ class ConquistasTest {
 
 	@Test
 	void fatia2AlimentaAsFamiliasNovasEAsOcultasSaoMarcadas() {
-		var h = new HistoricoDeTreinos.Totais(100, true, 50, true, true, true, 25, true, false, true, true);
+		var h = new HistoricoDeTreinos.Totais(100, true, 50, true, true, true, 25, true, false, true, true, 2000, 35);
 		var lista = Conquistas.avaliar(new Conquistas.Totais(0, 0, 0, 0, 0, 1, false, false), h);
 		for (String c : List.of("VOLUME_100T", "TREINO_PESADO", "VARIEDADE_50", "CORPO_COMPLETO", "ROTACAO_COMPLETA", "CLUBE_100",
-				"DROPSET_25", "MADRUGADOR", "ANO_NOVO", "MAIS_FORTE")) {
+				"DROPSET_25", "MADRUGADOR", "ANO_NOVO", "MAIS_FORTE", "REPS_PESO_CORPORAL_2000", "SERIE_LONGA_35")) {
 			assertThat(codigo(lista, c).conquistada()).as(c).isTrue();
 		}
-		for (String c : List.of("VOLUME_1000T", "VARIEDADE_100", "DROPSET_100", "CORUJA")) {
+		for (String c : List.of("VOLUME_1000T", "VARIEDADE_100", "DROPSET_100", "CORUJA", "REPS_PESO_CORPORAL_10000", "SERIE_LONGA_50")) {
 			assertThat(codigo(lista, c).conquistada()).as(c).isFalse();
 		}
 		assertThat(lista).filteredOn(ConquistaResponse::oculta).extracting(ConquistaResponse::codigo)
 				.containsExactlyInAnyOrder("MADRUGADOR", "CORUJA", "ANO_NOVO");
-		assertThat(lista).hasSize(25 + 17) // fatia 1 (25 faixas) + fatia 2 (17)
+		assertThat(lista).hasSize(25 + 17 + 6) // fatia 1 (25 faixas) + fatia 2 (17) + peso corporal (6)
 				.extracting(ConquistaResponse::codigo).doesNotHaveDuplicates();
 	}
 }

@@ -193,6 +193,33 @@ class GamificacaoApiTest {
 	}
 
 	@Test
+	void pesoCorporalRendeRepsVezesOFatorIgnoraACargaEBateRecordePorReps() throws Exception {
+		supino = JsonPath.read(mvc.perform(post("/api/exercicios").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"nome\":\"Barra\",\"grupoMuscular\":\"COSTAS\",\"equipamento\":\"PESO_CORPORAL\"}"))
+				.andReturn().getResponse().getContentAsString(), "$.id");
+		definirFuso(FUSO_ADIANTADO);
+		// Exercicio proprio: fator 1,0, entao 8 reps = 8 XP por serie; os 80 kg gravados sao ignorados.
+		concluir(3, "80").andExpect(jsonPath("$.xpSeries").value(24)).andExpect(jsonPath("$.recordes.length()").value(0));
+
+		definirFuso(FUSO_ATRASADO);
+		// Mais reps com menos carga: recorde por reps (+25), que tambem cumpre o desafio da semana.
+		concluirComReps(3, 10, "0")
+				.andExpect(jsonPath("$.xpSeries").value(30))
+				.andExpect(jsonPath("$.xpRecordes").value(25))
+				.andExpect(jsonPath("$.recordes[0]").value(supino))
+				.andExpect(jsonPath("$.desafios[*].codigo").value(org.hamcrest.Matchers.hasItem("UM_RECORDE")));
+
+		mvc.perform(get("/api/sessoes"))
+				.andExpect(jsonPath("$[0].repsPesoCorporal").value(30))
+				.andExpect(jsonPath("$[0].volumeKg").value(0))
+				.andExpect(jsonPath("$[1].repsPesoCorporal").value(24))
+				.andExpect(jsonPath("$[1].volumeKg").value(0));
+		mvc.perform(get("/api/gamificacao"))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='REPS_PESO_CORPORAL_500')].progresso").value(54))
+				.andExpect(jsonPath("$.conquistas[?(@.codigo=='SERIE_LONGA_20')].progresso").value(10));
+	}
+
+	@Test
 	void mesmoExercicioDuasVezesNoDiaPagaUmRecordeSo() throws Exception {
 		definirFuso(FUSO_ADIANTADO);
 		concluir(3, "60");
@@ -489,7 +516,7 @@ class GamificacaoApiTest {
 	void resumoTrazAsFamiliasDaFatia2ComAsOcultasMarcadas() throws Exception {
 		concluir(3, "60");
 		mvc.perform(get("/api/gamificacao"))
-				.andExpect(jsonPath("$.conquistas.length()").value(42))
+				.andExpect(jsonPath("$.conquistas.length()").value(48))
 				.andExpect(jsonPath("$.conquistas[?(@.codigo=='VOLUME_10T')].familia").value("Volume total"))
 				.andExpect(jsonPath("$.conquistas[?(@.codigo=='VOLUME_10T')].progresso").value(1)) // 1.440 kg = 1 t
 				.andExpect(jsonPath("$.conquistas[?(@.codigo=='VARIEDADE_20')].progresso").value(1))
@@ -532,6 +559,13 @@ class GamificacaoApiTest {
 		Instant inicio = agora().plusSeconds(++deslocamento * 10L);
 		return mvc.perform(put("/api/sessoes/" + id).contentType(MediaType.APPLICATION_JSON)
 				.content(corpo("CONCLUIDA", inicio, inicio.plusSeconds(60), series, carga)))
+				.andExpect(status().isOk());
+	}
+
+	private org.springframework.test.web.servlet.ResultActions concluirComReps(int series, int reps, String carga) throws Exception {
+		Instant inicio = agora().plusSeconds(++deslocamento * 10L);
+		return mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+				.content(corpo("CONCLUIDA", inicio, inicio.plusSeconds(60), series, carga).replace("\"reps\":8", "\"reps\":" + reps)))
 				.andExpect(status().isOk());
 	}
 

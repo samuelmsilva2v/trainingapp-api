@@ -164,7 +164,7 @@ public class GamificacaoService {
 
 		List<XpEvent> novos = new ArrayList<>();
 		// Um unico evento com o XP de todas as series; ele tambem marca o dia de treino (dia_unico).
-		int xpSeries = sessao.getExercicios().stream().mapToInt(e -> Blocos.xp(e.getSeries())).sum();
+		int xpSeries = sessao.getExercicios().stream().mapToInt(Blocos::xp).sum();
 		XpEvent series = evento(usuario, sessao, TipoXp.SERIES, xpSeries, null, dia);
 		series.setDiaUnico(dia);
 		novos.add(series);
@@ -221,6 +221,14 @@ public class GamificacaoService {
 	 * aparece no historico nao e recorde: nao ha marca anterior para superar.
 	 */
 	private boolean bateuRecorde(Usuario usuario, Sessao sessao, ExercicioSessao exercicio) {
+		// Peso corporal (api#43): recorde = mais reps numa serie (ou etapa); a carga e ignorada.
+		if (exercicio.getExercicio().isPesoCorporal()) {
+			int maisRepsAgora = exercicio.getSeries().stream()
+					.filter(s -> s.isConcluida() && s.getReps() != null)
+					.mapToInt(SerieSessao::getReps).max().orElse(0);
+			Integer anterior = sessoes.maisRepsAnterior(usuario.getId(), exercicio.getExercicio().getId(), sessao.getId());
+			return maisRepsAgora >= 1 && anterior != null && maisRepsAgora > anterior;
+		}
 		BigDecimal melhorAgora = exercicio.getSeries().stream()
 				.filter(s -> s.isConcluida() && s.getReps() != null && s.getReps() >= 1 && s.getCarga() != null)
 				.map(SerieSessao::getCarga)

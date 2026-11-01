@@ -37,7 +37,30 @@ class HistoricoDeTreinosTest {
 	}
 
 	private void exercicio(UUID treino, GrupoMuscular grupo, Equipamento equip, String volume, String maior) {
-		exercicios.add(new ExercicioDoTreino(treino, UUID.randomUUID(), grupo, equip, new BigDecimal(volume), new BigDecimal(maior)));
+		exercicios.add(new ExercicioDoTreino(treino, UUID.randomUUID(), grupo, equip, new BigDecimal(volume), new BigDecimal(maior),
+				0L, 0));
+	}
+
+	/** Exercicio de peso corporal: carga gravada (ignorada), reps somadas e a serie com mais reps. */
+	private void pesoCorporal(UUID treino, String volume, long reps, int maisReps) {
+		exercicios.add(new ExercicioDoTreino(treino, UUID.randomUUID(), GrupoMuscular.COSTAS, Equipamento.PESO_CORPORAL,
+				new BigDecimal(volume), new BigDecimal("80"), reps, maisReps));
+	}
+
+	@Test
+	void pesoCorporalFicaForaDoVolumeESomaRepsSoDeTreinosValidos() {
+		UUID a = treino("2026-10-26T18:00", null, 0);
+		UUID b = treino("2026-10-27T18:00", null, 0);
+		UUID invalido = treino("2026-10-27T19:00", null, 0);
+		exercicio(a, GrupoMuscular.PEITO, Equipamento.BARRA, "2000", "60");
+		pesoCorporal(a, "9000", 30, 12);
+		pesoCorporal(b, "9000", 45, 25);
+		pesoCorporal(invalido, "9000", 500, 60);
+		var t = totais(Set.of(a, b));
+		assertThat(t.toneladas()).isEqualTo(2); // so a barra
+		assertThat(t.treinoPesado()).isFalse();
+		assertThat(t.repsPesoCorporal()).isEqualTo(75);
+		assertThat(t.serieLonga()).isEqualTo(25);
 	}
 
 	private HistoricoDeTreinos.Totais totais(Set<UUID> validos) {

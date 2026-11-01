@@ -59,7 +59,7 @@ public final class Regras {
 
 	/**
 	 * XP de um bloco (serie normal + drops): e uma serie so, entao vale o volume somado das etapas (carga x reps) / 40,
-	 * entre 5 e 100. Quanto mais pesada e longa, mais XP; sem carga (peso corporal) vale o minimo; zero se nao houve
+	 * entre 5 e 100. Quanto mais pesada e longa, mais XP; sem carga vale o minimo; zero se nao houve
 	 * repeticao. Serie sem drop e um bloco de uma etapa. As listas tem a carga e as reps de cada etapa concluida.
 	 */
 	public static int xpDoBloco(List<BigDecimal> cargas, List<Integer> reps) {
@@ -71,6 +71,15 @@ public final class Regras {
 			totalReps += r;
 		}
 		return xpDoVolume(volume, totalReps);
+	}
+
+	/** XP de um bloco de peso corporal (api#43): reps somadas das etapas x fator, entre 5 e 100; zero sem repeticao. */
+	public static int xpDoBlocoPesoCorporal(List<Integer> reps, double fator) {
+		int total = reps.stream().mapToInt(r -> r == null ? 0 : r).sum();
+		if (total < 1) {
+			return 0;
+		}
+		return (int) Math.min(XP_MAXIMO_SERIE, Math.max(XP_MINIMO_SERIE, Math.round(total * fator)));
 	}
 
 	private static int xpDoVolume(double volume, int reps) {

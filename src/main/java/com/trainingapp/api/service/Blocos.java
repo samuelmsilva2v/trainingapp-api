@@ -1,5 +1,7 @@
 package com.trainingapp.api.service;
 
+import com.trainingapp.api.model.Exercicio;
+import com.trainingapp.api.model.ExercicioSessao;
 import com.trainingapp.api.model.SerieSessao;
 import com.trainingapp.api.model.TipoSerie;
 
@@ -37,16 +39,21 @@ public final class Blocos {
 		return (int) de(series).stream().filter(b -> b.getFirst().isConcluida()).count();
 	}
 
-	/** XP dos blocos concluidos: cada um vale como uma serie, pelo volume somado das etapas. */
-	public static int xp(List<SerieSessao> series) {
+	/**
+	 * XP dos blocos concluidos: cada um vale como uma serie, pelo volume somado das etapas, ou pelas reps x fator no
+	 * peso corporal (a carga gravada e ignorada).
+	 */
+	public static int xp(ExercicioSessao exercicio) {
+		Exercicio x = exercicio.getExercicio();
 		int xp = 0;
-		for (List<SerieSessao> bloco : de(series)) {
+		for (List<SerieSessao> bloco : de(exercicio.getSeries())) {
 			if (!bloco.getFirst().isConcluida()) {
 				continue;
 			}
 			List<SerieSessao> feitas = bloco.stream().filter(SerieSessao::isConcluida).toList();
-			xp += Regras.xpDoBloco(feitas.stream().map(SerieSessao::getCarga).toList(),
-					feitas.stream().map(SerieSessao::getReps).toList());
+			List<Integer> reps = feitas.stream().map(SerieSessao::getReps).toList();
+			xp += x.isPesoCorporal() ? Regras.xpDoBlocoPesoCorporal(reps, x.fatorXpOuPadrao())
+					: Regras.xpDoBloco(feitas.stream().map(SerieSessao::getCarga).toList(), reps);
 		}
 		return xp;
 	}

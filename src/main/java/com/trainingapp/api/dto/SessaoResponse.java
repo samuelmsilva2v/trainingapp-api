@@ -70,7 +70,7 @@ public record SessaoResponse(
 										.map(r -> new SerieResponse(r.getId(), r.getOrdem(), r.getReps(), r.getCarga(),
 												r.isConcluida(), r.getTipo()))
 										.toList(),
-								ganho.xpSeries() > 0 ? Blocos.xp(e.getSeries()) : 0))
+								ganho.xpSeries() > 0 ? Blocos.xp(e) : 0))
 						.toList(),
 				ganho.xp(), ganho.xpSeries(), ganho.xpRecordes(), ganho.xpStreak(), ganho.xpConquistas(), ganho.xpDesafios(),
 				ganho.recordes(), ganho.conquistas(), ganho.desafios());

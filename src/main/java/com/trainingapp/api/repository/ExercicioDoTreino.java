@@ -11,5 +11,5 @@ import java.util.UUID;
  * Usado pelas conquistas da fatia 2, que leem o historico inteiro sem carregar serie por serie.
  */
 public record ExercicioDoTreino(UUID sessaoId, UUID exercicioId, GrupoMuscular grupo, Equipamento equipamento,
-		BigDecimal volume, BigDecimal maiorCarga) {
+		BigDecimal volume, BigDecimal maiorCarga, Long reps, Integer maisReps) {
 }

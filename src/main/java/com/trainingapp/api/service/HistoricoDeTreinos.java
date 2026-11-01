@@ -34,9 +34,10 @@ final class HistoricoDeTreinos {
 	}
 
 	record Totais(long toneladas, boolean treinoPesado, int variedade, boolean corpoCompleto, boolean rotacaoCompleta,
-			boolean clube100, int dropSets, boolean madrugador, boolean coruja, boolean anoNovo, boolean maisForte) {
+			boolean clube100, int dropSets, boolean madrugador, boolean coruja, boolean anoNovo, boolean maisForte,
+			long repsPesoCorporal, int serieLonga) {
 
-		static final Totais ZERO = new Totais(0, false, 0, false, false, false, 0, false, false, false, false);
+		static final Totais ZERO = new Totais(0, false, 0, false, false, false, 0, false, false, false, false, 0, 0);
 	}
 
 	static final BigDecimal TREINO_PESADO_KG = new BigDecimal("10000");
@@ -80,8 +81,16 @@ final class HistoricoDeTreinos {
 		Map<LocalDate, Set<String>> macrogruposPorSemana = new HashMap<>();
 		boolean clube100 = false;
 		boolean maisForte = false;
+		long repsPesoCorporal = 0;
+		int serieLonga = 0;
 		for (ExercicioDoTreino e : validosEx) {
-			BigDecimal v = e.volume() == null ? BigDecimal.ZERO : e.volume();
+			// Peso corporal (api#43): a carga e ignorada; as reps contam a parte.
+			boolean pesoCorporal = e.equipamento() == Equipamento.PESO_CORPORAL;
+			if (pesoCorporal) {
+				repsPesoCorporal += e.reps() == null ? 0 : e.reps();
+				serieLonga = Math.max(serieLonga, e.maisReps() == null ? 0 : e.maisReps());
+			}
+			BigDecimal v = pesoCorporal || e.volume() == null ? BigDecimal.ZERO : e.volume();
 			volume = volume.add(v);
 			volumePorTreino.merge(e.sessaoId(), v, BigDecimal::add);
 			distintos.add(e.exercicioId());
@@ -118,7 +127,7 @@ final class HistoricoDeTreinos {
 				rotacaoCompleta(treinos.stream().filter(t -> validos.contains(t.id()) && t.finalizadaEm() != null).toList(), diasPorPlano),
 				clube100,
 				(int) blocosComDrop.stream().filter(validos::contains).count(),
-				madrugador, coruja, anoNovo, maisForte);
+				madrugador, coruja, anoNovo, maisForte, repsPesoCorporal, serieLonga);
 	}
 
 	/**

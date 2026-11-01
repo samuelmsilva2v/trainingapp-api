@@ -47,6 +47,18 @@ public interface SessaoRepository extends JpaRepository<Sessao, UUID> {
 	BigDecimal maiorCargaAnterior(@Param("usuarioId") UUID usuarioId, @Param("exercicioId") UUID exercicioId,
 			@Param("sessaoId") UUID sessaoId);
 
+	/** Mais reps numa serie (ou etapa) concluida do exercicio em outros treinos concluidos: o recorde do peso corporal. */
+	@Query("""
+			select max(s.reps) from SerieSessao s
+			where s.concluida = true and s.reps >= 1
+			  and s.exercicioSessao.exercicio.id = :exercicioId
+			  and s.exercicioSessao.sessao.usuario.id = :usuarioId
+			  and s.exercicioSessao.sessao.estado = com.trainingapp.api.model.EstadoSessao.CONCLUIDA
+			  and s.exercicioSessao.sessao.id <> :sessaoId
+			""")
+	Integer maisRepsAnterior(@Param("usuarioId") UUID usuarioId, @Param("exercicioId") UUID exercicioId,
+			@Param("sessaoId") UUID sessaoId);
+
 	/**
 	 * Treinos concluidos da conta, mais o treino {@code atual} (a previa de um em andamento). Sem parametro nulo: sem
 	 * treino atual, passe um id que nao existe.
@@ -61,7 +73,7 @@ public interface SessaoRepository extends JpaRepository<Sessao, UUID> {
 	/** Cada exercicio dos treinos acima, somado no banco (series concluidas com pelo menos 1 repeticao). */
 	@Query("""
 			select new com.trainingapp.api.repository.ExercicioDoTreino(s.id, x.id, x.grupoMuscular, x.equipamento,
-					sum(r.carga * r.reps), max(r.carga))
+					sum(r.carga * r.reps), max(r.carga), sum(r.reps), max(r.reps))
 			from SerieSessao r join r.exercicioSessao e join e.sessao s join e.exercicio x
 			where s.usuario.id = :usuarioId and (s.estado = com.trainingapp.api.model.EstadoSessao.CONCLUIDA or s.id = :atual)
 			  and r.concluida = true and r.reps >= 1

@@ -46,10 +46,10 @@ final class Conquistas {
 				new Faixa("SEMANAS_12", "Trimestre firme", "Treine 3 vezes por semana por 12 semanas seguidas.", 12),
 				new Faixa("SEMANAS_26", "Semestre firme", "Treine 3 vezes por semana por 26 semanas seguidas.", 26));
 		familia(lista, "Recordes", t.recordes(),
-				new Faixa("PRIMEIRO_RECORDE", "Novo recorde", "Bata seu primeiro recorde de carga.", 1),
-				new Faixa("RECORDES_10", "Quebrador de marcas", "Bata 10 recordes de carga.", 10),
-				new Faixa("RECORDES_25", "Sem teto", "Bata 25 recordes de carga.", 25),
-				new Faixa("RECORDES_50", "Lenda das cargas", "Bata 50 recordes de carga.", 50));
+				new Faixa("PRIMEIRO_RECORDE", "Novo recorde", "Bata seu primeiro recorde.", 1),
+				new Faixa("RECORDES_10", "Quebrador de marcas", "Bata 10 recordes.", 10),
+				new Faixa("RECORDES_25", "Sem teto", "Bata 25 recordes.", 25),
+				new Faixa("RECORDES_50", "Lenda das cargas", "Bata 50 recordes.", 50));
 		familia(lista, "Recordes variados", t.recordesVariados(),
 				new Faixa("RECORDES_VARIADOS_5", "Evolução ampla", "Bata recordes em 5 exercícios diferentes.", 5),
 				new Faixa("RECORDES_VARIADOS_10", "Evolução geral", "Bata recordes em 10 exercícios diferentes.", 10),
@@ -84,6 +84,15 @@ final class Conquistas {
 				new Faixa("DROPSET_1", "Primeiro drop-set", "Conclua um drop-set.", 1),
 				new Faixa("DROPSET_25", "Queima total", "Conclua 25 drop-sets.", 25),
 				new Faixa("DROPSET_100", "Mestre do drop-set", "Conclua 100 drop-sets.", 100));
+		// Peso corporal (api#43).
+		familia(lista, "Reps de peso corporal", (int) Math.min(Integer.MAX_VALUE, h.repsPesoCorporal()),
+				new Faixa("REPS_PESO_CORPORAL_500", "Peso pena", "Some 500 reps em exercícios de peso corporal.", 500),
+				new Faixa("REPS_PESO_CORPORAL_2000", "Calistênico", "Some 2.000 reps em exercícios de peso corporal.", 2000),
+				new Faixa("REPS_PESO_CORPORAL_10000", "Mestre do próprio peso", "Some 10.000 reps em exercícios de peso corporal.", 10000));
+		familia(lista, "Série longa", h.serieLonga(),
+				new Faixa("SERIE_LONGA_20", "Fôlego", "Faça 20 reps numa série de peso corporal.", 20),
+				new Faixa("SERIE_LONGA_35", "Resistência", "Faça 35 reps numa série de peso corporal.", 35),
+				new Faixa("SERIE_LONGA_50", "Incansável", "Faça 50 reps numa série de peso corporal.", 50));
 		oculta(lista, "Madrugador", h.madrugador(), "MADRUGADOR", "Termine um treino antes das 6h.");
 		oculta(lista, "Coruja", h.coruja(), "CORUJA", "Termine um treino depois das 22h.");
 		oculta(lista, "Ano novo", h.anoNovo(), "ANO_NOVO", "Treine em 1º de janeiro.");

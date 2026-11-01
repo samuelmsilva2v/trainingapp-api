@@ -60,4 +60,14 @@ public class Exercicio {
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)
 	private Instant criadoEm;
+
+	/** Peso corporal (api#43): so reps contam; a carga e ignorada no XP, no volume e no recorde. */
+	public boolean isPesoCorporal() {
+		return equipamento == Equipamento.PESO_CORPORAL;
+	}
+
+	/** XP por rep de um exercicio de peso corporal: o fator do catalogo, ou 1,0 (exercicio proprio). */
+	public double fatorXpOuPadrao() {
+		return fatorXp == null ? 1.0 : fatorXp.doubleValue();
+	}
 }

@@ -21,6 +21,8 @@ public record SessaoResumoResponse(
 		int exercicios,
 		int seriesConcluidas,
 		BigDecimal volumeKg,
+		/** Reps concluidas em exercicios de peso corporal, que ficam fora do volume (api#43). */
+		int repsPesoCorporal,
 		int xpGanho,
 		int xpStreak,
 		int xpConquistas,
@@ -30,7 +32,9 @@ public record SessaoResumoResponse(
 	public static SessaoResumoResponse de(Sessao s, GamificacaoService.Ganho ganho) {
 		int series = 0;
 		BigDecimal volume = BigDecimal.ZERO;
+		int repsPesoCorporal = 0;
 		for (ExercicioSessao e : s.getExercicios()) {
+			boolean pesoCorporal = e.getExercicio().isPesoCorporal();
 			for (SerieSessao r : e.getSeries()) {
 				if (!r.isConcluida()) {
 					continue;
@@ -38,13 +42,16 @@ public record SessaoResumoResponse(
 				if (r.getTipo() != TipoSerie.DROP) {
 					series++; // o drop-set conta como uma serie so; o volume inclui as etapas
 				}
-				if (r.getCarga() != null && r.getReps() != null) {
+				if (pesoCorporal) {
+					repsPesoCorporal += r.getReps() == null ? 0 : r.getReps();
+				}
+				else if (r.getCarga() != null && r.getReps() != null) {
 					volume = volume.add(r.getCarga().multiply(BigDecimal.valueOf(r.getReps())));
 				}
 			}
 		}
 		return new SessaoResumoResponse(s.getId(), s.getPlanoNome(), s.getDiaNome(), s.getEstado(), s.getIniciadaEm(),
-				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, ganho.xp(), ganho.xpStreak(), ganho.xpConquistas(), ganho.xpDesafios(),
+				s.getFinalizadaEm(), s.getExercicios().size(), series, volume, repsPesoCorporal, ganho.xp(), ganho.xpStreak(), ganho.xpConquistas(), ganho.xpDesafios(),
 				ganho.recordes().size());
 	}
 }

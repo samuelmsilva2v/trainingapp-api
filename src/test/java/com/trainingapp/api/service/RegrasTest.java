@@ -33,6 +33,16 @@ class RegrasTest {
 	}
 
 	@Test
+	void pesoCorporalRendeRepsVezesOFatorEntre5E100() {
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(10), 2.0)).isEqualTo(20); // barra fixa
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(15), 0.5)).isEqualTo(8); // 7,5 arredonda para cima
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(6), 0.5)).isEqualTo(5); // minimo
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(60), 2.0)).isEqualTo(100); // maximo
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(8, 6), 1.0)).isEqualTo(14); // drop antigo: reps somadas
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(0), 1.0)).isZero();
+	}
+
+	@Test
 	void quantoMaisPesadaELongaMaisXp() {
 		assertThat(serie("80", 10)).isGreaterThan(serie("60", 10));
 		assertThat(serie("60", 12)).isGreaterThan(serie("60", 8));
