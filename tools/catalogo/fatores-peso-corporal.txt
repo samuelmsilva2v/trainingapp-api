@@ -1,0 +1,95 @@
+# Fator de XP dos exercicios de peso corporal do catalogo (api#42, api#43): XP da serie = reps x fator (5 a 100).
+# Formato: "slug | fator", com comentario opcional depois de "#". Todo exercicio de peso corporal que fica disponivel
+# precisa de um fator; o gerador recusa slug que nao seja de peso corporal disponivel.
+# Referencias: barra fixa 2,0; paralelas 1,5; flexao 1,0; agachamento livre 0,8; abdominal e prancha 0,5.
+
+# Barra fixa e parada de mao
+Chin-Up | 2.0  # Barra fixa supinada
+Pullups | 2.0  # Barra fixa pronada
+V-Bar_Pullup | 2.0  # Barra fixa na barra V
+Wide-Grip_Rear_Pull-Up | 2.0  # Barra fixa atras da nuca
+Gorilla_Chin_Crunch | 2.0  # Barra fixa com abdominal (gorila)
+Handstand_Push-Ups | 2.0  # Flexao em parada de mao
+Single-Arm_Push-Up | 2.0  # Flexao unilateral
+Scapular_Pull-Up | 1.0  # Barra fixa escapular
+Inverted_Row | 1.2  # Remada invertida
+
+# Paralelas e triceps
+Dips_-_Triceps_Version | 1.5  # Mergulho nas paralelas (triceps)
+Bench_Dips | 1.0  # Mergulho no banco
+Body-Up | 1.0  # Body-up (triceps)
+Body_Tricep_Press | 0.8  # Triceps com peso corporal
+Standing_Towel_Triceps_Extension | 0.5  # Triceps com toalha
+
+# Flexao
+Pushups | 1.0  # Flexao de braco
+Push-Up_Wide | 1.0  # Flexao aberta
+Push-Ups_-_Close_Triceps_Position | 1.0  # Flexao fechada (triceps)
+Pushups_Close_and_Wide_Hand_Positions | 1.0  # Flexao (maos fechadas e abertas)
+Close-Grip_Push-Up_off_of_a_Dumbbell | 1.0  # Flexao fechada sobre halter
+Clock_Push-Up | 1.0  # Flexao em relogio
+Push_Up_to_Side_Plank | 1.0  # Flexao com prancha lateral
+Isometric_Wipers | 1.0  # Limpadores isometricos
+Decline_Push-Up | 1.2  # Flexao declinada
+Push-Ups_With_Feet_Elevated | 1.2  # Flexao com pes elevados
+Incline_Push-Up | 0.8  # Flexao inclinada
+Incline_Push-Up_Close-Grip | 0.8  # Flexao inclinada fechada
+Incline_Push-Up_Medium | 0.8  # Flexao inclinada media
+Incline_Push-Up_Reverse_Grip | 0.8  # Flexao inclinada com pegada invertida
+Incline_Push-Up_Wide | 0.8  # Flexao inclinada aberta
+
+# Pernas, gluteos e lombar
+Bodyweight_Squat | 0.8  # Agachamento com peso corporal
+Bodyweight_Walking_Lunge | 0.8  # Afundo caminhando com peso corporal
+Step-up_with_Knee_Raise | 0.8  # Subida no banco com elevacao de joelho
+Freehand_Jump_Squat | 1.0  # Agachamento com salto
+Natural_Glute_Ham_Raise | 1.5  # Glute-ham raise natural
+Floor_Glute-Ham_Raise | 1.5  # Glute-ham raise no chao
+Hyperextensions_With_No_Hyperextension_Bench | 0.8  # Extensao lombar sem banco
+Single_Leg_Glute_Bridge | 0.8  # Ponte de gluteos unilateral
+Butt_Lift_Bridge | 0.5  # Elevacao de quadril (ponte)
+Glute_Kickback | 0.5  # Coice de gluteo
+Leg_Lift | 0.5  # Elevacao de pernas
+Flutter_Kicks | 0.5  # Flutter kicks
+Prone_Manual_Hamstring | 0.5  # Alongamento manual de posterior
+
+# Abdomen e pescoco
+Hanging_Pike | 1.2  # Elevacao de pernas em pike suspenso
+Hanging_Leg_Raise | 1.0  # Elevacao de pernas suspenso
+Spider_Crawl | 0.8  # Rastejar de aranha
+3_4_Sit-Up | 0.5  # Abdominal tres quartos
+Air_Bike | 0.5  # Abdominal bicicleta
+Alternate_Heel_Touchers | 0.5  # Toque alternado nos calcanhares
+Bent-Knee_Hip_Raise | 0.5  # Elevacao de quadril joelhos dobrados
+Bottoms_Up | 0.5  # Bottoms up
+Butt-Ups | 0.5  # Elevacao de gluteos
+Cocoons | 0.5  # Abdominal casulo
+Cross-Body_Crunch | 0.5  # Abdominal cruzado
+Crunch_-_Hands_Overhead | 0.5  # Abdominal com bracos estendidos
+Crunch_-_Legs_On_Exercise_Ball | 0.5  # Abdominal com pernas na bola
+Crunches | 0.5  # Abdominal crunch
+Dead_Bug | 0.5  # Dead bug
+Decline_Crunch | 0.5  # Abdominal declinado
+Decline_Oblique_Crunch | 0.5  # Abdominal obliquo declinado
+Decline_Reverse_Crunch | 0.5  # Abdominal invertido declinado
+Elbow_to_Knee | 0.5  # Cotovelo ao joelho
+Flat_Bench_Leg_Pull-In | 0.5  # Flexao de quadril no banco reto
+Flat_Bench_Lying_Leg_Raise | 0.5  # Elevacao de pernas no banco reto
+Frog_Sit-Ups | 0.5  # Abdominal do sapo
+Jackknife_Sit-Up | 0.5  # Abdominal canivete
+Janda_Sit-Up | 0.5  # Abdominal Janda
+Leg_Pull-In | 0.5  # Flexao de quadril (leg pull-in)
+Oblique_Crunches | 0.5  # Abdominal obliquo
+Oblique_Crunches_-_On_The_Floor | 0.5  # Abdominal obliquo no chao
+Plank | 0.5  # Prancha
+Reverse_Crunch | 0.5  # Abdominal invertido
+Russian_Twist | 0.5  # Rotacao russa
+Seated_Flat_Bench_Leg_Pull-In | 0.5  # Flexao de quadril sentado no banco reto
+Seated_Leg_Tucks | 0.5  # Joelhos ao peito sentado
+Side_Bridge | 0.5  # Prancha lateral
+Side_Jackknife | 0.5  # Canivete lateral
+Sit-Up | 0.5  # Abdominal completo
+Tuck_Crunch | 0.5  # Abdominal grupado
+Wind_Sprints | 0.5  # Tiros de velocidade
+Isometric_Neck_Exercise_-_Front_And_Back | 0.5  # Isometria de pescoco (frente e atras)
+Isometric_Neck_Exercise_-_Sides | 0.5  # Isometria de pescoco (laterais)

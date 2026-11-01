@@ -20,8 +20,8 @@ public interface ExercicioRepository extends JpaRepository<Exercicio, UUID> {
 
 	long countByUsuarioId(UUID usuarioId);
 
-	// Catalogo global + exercicios do usuario. O filtro por grupo/busca e feito em memoria
+	// Catalogo global disponivel + exercicios do usuario (sempre disponiveis). O filtro por grupo/busca e feito em memoria
 	// (o catalogo e pequeno) para evitar parametros nulos no JPQL, que o Postgres rejeita.
-	@Query("select e from Exercicio e where e.usuario is null or e.usuario.id = :usuarioId order by e.nome")
+	@Query("select e from Exercicio e where e.disponivel = true and (e.usuario is null or e.usuario.id = :usuarioId) order by e.nome")
 	List<Exercicio> findDisponiveis(UUID usuarioId);
 }

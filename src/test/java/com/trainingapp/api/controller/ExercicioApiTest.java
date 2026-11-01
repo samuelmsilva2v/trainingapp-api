@@ -54,20 +54,31 @@ class ExercicioApiTest {
 
 	@Test
 	void buscaIgnoraAcentoECaixa() throws Exception {
-		mvc.perform(get("/api/exercicios").param("busca", "LIBERACAO miofascial do quadriceps"))
+		mvc.perform(get("/api/exercicios").param("busca", "ELEVACAO de pernas SUSPENSO"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
-				.andExpect(jsonPath("$[0].nome").value("Liberação miofascial do quadríceps"))
+				.andExpect(jsonPath("$[0].nome").value("Elevação de pernas suspenso"))
 				.andExpect(jsonPath("$[0].personalizado").value(false))
 				.andExpect(jsonPath("$[0].imagens.length()").value(2))
 				.andExpect(jsonPath("$[0].imagens[0]").value(
-						"https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Quadriceps-SMR/0.jpg"));
+						"https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Hanging_Leg_Raise/0.jpg"));
 	}
 
 	@Test
 	void filtraPorGrupoMuscular() throws Exception {
-		mvc.perform(get("/api/exercicios").param("grupo", "CARDIO"))
-				.andExpect(jsonPath("$.length()").value(14));
+		mvc.perform(get("/api/exercicios").param("grupo", "TRAPEZIO"))
+				.andExpect(jsonPath("$[*].grupoMuscular").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("TRAPEZIO"))));
+	}
+
+	@Test
+	void naoListaCardioAlongamentoPliometriaNemStrongman() throws Exception {
+		mvc.perform(get("/api/exercicios").param("grupo", "CARDIO")).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(get("/api/exercicios")).andExpect(jsonPath("$.length()").value(876 - 14 - 123 - 61 - 21));
+		// Peso corporal fica, com o fator de XP do catalogo.
+		mvc.perform(get("/api/exercicios").param("busca", "barra fixa pronada")).andExpect(jsonPath("$.length()").value(1));
+		org.assertj.core.api.Assertions.assertThat(exercicios.findBySlug("Pullups").orElseThrow().getFatorXp())
+				.isEqualByComparingTo("2.0");
+		org.assertj.core.api.Assertions.assertThat(exercicios.findBySlug("Barbell_Squat").orElseThrow().getFatorXp()).isNull();
 	}
 
 	@Test

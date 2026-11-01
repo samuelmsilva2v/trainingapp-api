@@ -64,6 +64,22 @@ function lerTraducoes() {
   return mapa;
 }
 
+// Categorias do dataset que nao cabem em series x reps x kg; o importador as deixa indisponiveis (api#42).
+const CATEGORIAS_OCULTAS = new Set(['cardio', 'stretching', 'plyometrics', 'strongman']);
+
+function lerFatores() {
+  const mapa = new Map();
+  readFileSync(join(aqui, 'fatores-peso-corporal.txt'), 'utf8').split(/\r?\n/).forEach((linha, i) => {
+    const conteudo = linha.replace(/#.*/, '').trim();
+    if (!conteudo) return;
+    const [slug, fator] = conteudo.split('|').map((p) => p.trim());
+    if (!slug || !/^\d+(\.\d)?$/.test(fator ?? '')) throw new Error(`fatores-peso-corporal.txt:${i + 1}: formato invalido: ${linha}`);
+    if (mapa.has(slug)) throw new Error(`fatores-peso-corporal.txt:${i + 1}: fator duplicado para "${slug}"`);
+    mapa.set(slug, Number(fator));
+  });
+  return mapa;
+}
+
 async function lerDataset() {
   const caminho = process.argv[2];
   if (caminho) return JSON.parse(readFileSync(caminho, 'utf8'));
@@ -74,6 +90,7 @@ async function lerDataset() {
 
 const dataset = await lerDataset();
 const traducoes = lerTraducoes();
+const fatores = lerFatores();
 const erros = [];
 
 const nomesEn = new Set(dataset.map((e) => e.name));
@@ -86,8 +103,15 @@ const catalogo = dataset.map((e) => {
   const equipamento = e.equipment == null ? 'PESO_CORPORAL' : EQUIPAMENTO[e.equipment];
   if (!grupo) erros.push(`musculo sem mapeamento: ${musculo} (${e.id})`);
   if (!equipamento) erros.push(`equipamento sem mapeamento: ${e.equipment} (${e.id})`);
-  return { slug: e.id, nome: traducoes.get(e.name), grupoMuscular: grupo, equipamento };
+  const item = { slug: e.id, nome: traducoes.get(e.name), grupoMuscular: grupo, equipamento, categoria: e.category };
+  if (equipamento === 'PESO_CORPORAL' && !CATEGORIAS_OCULTAS.has(e.category)) {
+    if (!fatores.has(e.id)) erros.push(`peso corporal sem fator: ${e.id}`);
+    else item.fatorXp = fatores.get(e.id);
+    fatores.delete(e.id);
+  }
+  return item;
 });
+for (const slug of fatores.keys()) erros.push(`fator de exercicio que nao e de peso corporal disponivel: ${slug}`);
 
 const porNome = new Map();
 for (const item of catalogo) porNome.set(item.nome, [...(porNome.get(item.nome) ?? []), item.slug]);

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -43,6 +44,14 @@ public class Exercicio {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 30)
 	private Equipamento equipamento;
+
+	// Falso = some do seletor (categoria do catalogo fora de series x reps x kg); planos e historico seguem usando.
+	@Column(nullable = false)
+	private boolean disponivel = true;
+
+	// XP por rep nos exercicios de peso corporal do catalogo; nulo nos demais (exercicio proprio usa 1,0).
+	@Column(precision = 3, scale = 1)
+	private BigDecimal fatorXp;
 
 	// Nulo = exercicio do catalogo global; preenchido = exercicio criado pelo usuario.
 	@ManyToOne(fetch = FetchType.LAZY)

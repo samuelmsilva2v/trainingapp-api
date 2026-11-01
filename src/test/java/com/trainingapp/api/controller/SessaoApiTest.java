@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import com.trainingapp.api.UsuarioDeTeste;
+import com.trainingapp.api.repository.ExercicioRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +40,9 @@ class SessaoApiTest {
 
 	@Autowired
 	EntityManager em;
+
+	@Autowired
+	ExercicioRepository exercicios;
 
 	String exercicio;
 	String plano;
@@ -113,6 +117,19 @@ class SessaoApiTest {
 		// Sem batch fetch sao 1 + 10 (exercicios) + 10 (series) queries.
 		org.junit.jupiter.api.Assertions.assertTrue(stats.getPrepareStatementCount() < 10,
 				"queries: " + stats.getPrepareStatementCount());
+	}
+
+	@Test
+	void exercicioIndisponivelSomeDoSeletorMasOPlanoContinuaAbrindoEExecutando() throws Exception {
+		exercicios.findById(UUID.fromString(exercicio)).orElseThrow().setDisponivel(false);
+
+		mvc.perform(get("/api/exercicios").param("busca", "supino"))
+				.andExpect(jsonPath("$[?(@.id == '%s')]".formatted(exercicio)).isEmpty());
+		mvc.perform(get("/api/planos/" + plano))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.dias[0].exercicios[0].exercicioId").value(exercicio));
+		concluir(UUID.randomUUID(), 0, "Treino A");
+		mvc.perform(get("/api/hoje")).andExpect(jsonPath("$.proximoDia.nome").value("Treino B"));
 	}
 
 	@Test

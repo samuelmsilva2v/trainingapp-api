@@ -11,11 +11,13 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,11 @@ public class CatalogoImportador {
 
 	static final String ARQUIVO = "catalogo/exercicios.json";
 
-	record ItemCatalogo(String slug, String nome, GrupoMuscular grupoMuscular, Equipamento equipamento) {
+	/** Categorias do dataset fora de series x reps x kg: o exercicio fica indisponivel (some do seletor). */
+	static final Set<String> CATEGORIAS_OCULTAS = Set.of("cardio", "stretching", "plyometrics", "strongman");
+
+	record ItemCatalogo(String slug, String nome, GrupoMuscular grupoMuscular, Equipamento equipamento, String categoria,
+			BigDecimal fatorXp) {
 	}
 
 	private final ExercicioRepository repository;
@@ -57,6 +63,8 @@ public class CatalogoImportador {
 			exercicio.setNome(item.nome());
 			exercicio.setGrupoMuscular(item.grupoMuscular());
 			exercicio.setEquipamento(item.equipamento());
+			exercicio.setDisponivel(!CATEGORIAS_OCULTAS.contains(item.categoria()));
+			exercicio.setFatorXp(item.fatorXp());
 		}
 		repository.saveAll(novos);
 		return itens.size();
