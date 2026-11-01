@@ -4,6 +4,7 @@ import com.trainingapp.api.model.EmailPendente;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.MailSendException;
@@ -68,6 +69,20 @@ class EmailWorkerTest {
 
 		worker.enviarPendentes();
 		verify(smtp).send(any(SimpleMailMessage.class)); // nao reenvia
+	}
+
+	@Test
+	void responderParaViraReplyTo() {
+		fila.enfileirar("suporte@teste.com", "[Bug] travou", "relato", "maria@teste.com");
+		EmailPendente email = repository.findAll().getFirst();
+		email.setProximaTentativaEm(Instant.now(relogio).minusSeconds(1));
+		ArgumentCaptor<SimpleMailMessage> enviada = ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+		worker.enviarPendentes();
+
+		verify(smtp).send(enviada.capture());
+		assertThat(enviada.getValue().getTo()).containsExactly("suporte@teste.com");
+		assertThat(enviada.getValue().getReplyTo()).isEqualTo("maria@teste.com");
 	}
 
 	@Test

@@ -22,8 +22,15 @@ public class FilaDeEmail {
 
 	@Transactional
 	public void enfileirar(String destinatario, String assunto, String corpo) {
+		enfileirar(destinatario, assunto, corpo, null);
+	}
+
+	/** {@code responderPara} vai no Reply-To (nulo = sem). */
+	@Transactional
+	public void enfileirar(String destinatario, String assunto, String corpo, String responderPara) {
 		EmailPendente email = new EmailPendente();
 		email.setDestinatario(destinatario);
+		email.setResponderPara(responderPara);
 		email.setAssunto(assunto);
 		email.setCorpo(corpo);
 		email.setProximaTentativaEm(Instant.now(relogio));

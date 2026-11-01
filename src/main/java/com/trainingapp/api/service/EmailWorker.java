@@ -53,6 +53,9 @@ public class EmailWorker {
 				SimpleMailMessage mensagem = new SimpleMailMessage();
 				mensagem.setFrom(remetente);
 				mensagem.setTo(email.getDestinatario());
+				if (email.getResponderPara() != null) {
+					mensagem.setReplyTo(email.getResponderPara());
+				}
 				mensagem.setSubject(email.getAssunto());
 				mensagem.setText(email.getCorpo());
 				mailSender.send(mensagem);

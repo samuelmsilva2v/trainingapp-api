@@ -3,6 +3,7 @@ package com.trainingapp.api.service;
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import com.trainingapp.api.repository.ExercicioRepository;
+import com.trainingapp.api.repository.FeedbackRepository;
 import com.trainingapp.api.repository.PesoRegistroRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
@@ -18,8 +19,8 @@ import java.util.UUID;
 
 /**
  * Apaga a conta e tudo que e dela, de verdade e de uma vez: planos, treinos (com series), historico de XP (a excecao a
- * "XP nunca e apagado": sem a conta nao ha a quem o XP pertenca), exercicios proprios, pesagens, logins, links de e-mail e e-mails
- * na fila. O catalogo global e os dados de outros usuarios nao sao tocados. Roda numa transacao so: ou apaga tudo ou nada.
+ * "XP nunca e apagado": sem a conta nao ha a quem o XP pertenca), exercicios proprios, pesagens, relatos de feedback, logins, links
+ * de e-mail e e-mails na fila. O catalogo global e os dados de outros usuarios nao sao tocados. Roda numa transacao so: ou apaga tudo ou nada.
  */
 @Service
 public class ExclusaoDeConta {
@@ -32,12 +33,13 @@ public class ExclusaoDeConta {
 	private final RefreshTokenRepository refreshTokens;
 	private final TokenEmailRepository tokensEmail;
 	private final EmailPendenteRepository emails;
+	private final FeedbackRepository feedbacks;
 	private final UsuarioRepository usuarios;
 	private final EntityManager em;
 
 	public ExclusaoDeConta(XpEventRepository xp, SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
 			PesoRegistroRepository pesos, RefreshTokenRepository refreshTokens, TokenEmailRepository tokensEmail,
-			EmailPendenteRepository emails, UsuarioRepository usuarios, EntityManager em) {
+			EmailPendenteRepository emails, FeedbackRepository feedbacks, UsuarioRepository usuarios, EntityManager em) {
 		this.xp = xp;
 		this.sessoes = sessoes;
 		this.planos = planos;
@@ -46,6 +48,7 @@ public class ExclusaoDeConta {
 		this.refreshTokens = refreshTokens;
 		this.tokensEmail = tokensEmail;
 		this.emails = emails;
+		this.feedbacks = feedbacks;
 		this.usuarios = usuarios;
 		this.em = em;
 	}
@@ -64,6 +67,9 @@ public class ExclusaoDeConta {
 		refreshTokens.deleteByUsuarioId(id);
 		tokensEmail.deleteByUsuarioId(id);
 		emails.deleteByDestinatario(usuario.getEmail());
+		// Relatos ainda na fila carregam a mensagem do usuario; os ja enviados estao fora do nosso alcance.
+		emails.deleteByResponderPara(usuario.getEmail());
+		feedbacks.deleteByUsuarioId(id);
 		em.flush();
 		usuarios.delete(usuario);
 	}

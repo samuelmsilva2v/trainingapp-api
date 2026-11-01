@@ -50,6 +50,9 @@ public class EmailPendente {
 	@Column(length = 500)
 	private String erro;
 
+	// Reply-To; nulo = sem (so o feedback usa, com o e-mail de quem relatou).
+	private String responderPara;
+
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)
 	private Instant criadoEm;

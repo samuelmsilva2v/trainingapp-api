@@ -4,6 +4,7 @@ import com.trainingapp.api.dto.PerfilRequest;
 import com.trainingapp.api.dto.PerfilResponse;
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.UsuarioRepository;
+import com.trainingapp.api.service.FeedbackService;
 import com.trainingapp.api.service.UsuarioAtual;
 import jakarta.validation.Valid;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +20,17 @@ public class PerfilController {
 
 	private final UsuarioAtual usuarioAtual;
 	private final UsuarioRepository repository;
+	private final FeedbackService feedback;
 
-	public PerfilController(UsuarioAtual usuarioAtual, UsuarioRepository repository) {
+	public PerfilController(UsuarioAtual usuarioAtual, UsuarioRepository repository, FeedbackService feedback) {
 		this.usuarioAtual = usuarioAtual;
 		this.repository = repository;
+		this.feedback = feedback;
 	}
 
 	@GetMapping
 	public PerfilResponse obter() {
-		return PerfilResponse.de(usuarioAtual.obter());
+		return PerfilResponse.de(usuarioAtual.obter(), feedback.ativo());
 	}
 
 	@PutMapping
@@ -36,6 +39,6 @@ public class PerfilController {
 		Usuario usuario = usuarioAtual.obter();
 		usuario.setNome(request.nome());
 		usuario.setLembretePesoDias(request.lembretePesoDias());
-		return PerfilResponse.de(repository.save(usuario));
+		return PerfilResponse.de(repository.save(usuario), feedback.ativo());
 	}
 }
