@@ -7,9 +7,14 @@ services:
       - 'POSTGRES_USER=myuser'
     ports:
       - '127.0.0.1::5432'
+    # Volume nomeado: o banco de dev sobrevive a `docker compose down` (sem ele, cada contêiner novo nascia vazio).
+    volumes:
+      - 'postgres-data:/var/lib/postgresql/data'
   # Caixa de entrada falsa para os e-mails de dev (confirmar cadastro, redefinir senha): http://localhost:8025
   mailpit:
     image: 'axllent/mailpit'
     ports:
       - '127.0.0.1:1025:1025'
       - '127.0.0.1:8025:8025'
+volumes:
+  postgres-data:
