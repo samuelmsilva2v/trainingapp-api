@@ -6,6 +6,7 @@ import com.trainingapp.api.config.RegraDeNegocioException;
 import com.trainingapp.api.dto.AcessoResponse;
 import com.trainingapp.api.dto.CadastroRequest;
 import com.trainingapp.api.dto.LoginRequest;
+import com.trainingapp.api.model.FotoTipo;
 import com.trainingapp.api.model.RefreshToken;
 import com.trainingapp.api.model.TipoTokenEmail;
 import com.trainingapp.api.model.TokenEmail;
@@ -163,6 +164,8 @@ public class AuthService {
 					.orElseGet(() -> criarComGoogle(g, email));
 		}
 		exigirPermitido(u.getEmail());
+		// A URL da foto do Google pode mudar: todo login com Google traz a atual. O tipo da foto nao muda aqui.
+		u.setFotoGoogleUrl(g.foto());
 		return iniciarSessao(u);
 	}
 
@@ -178,6 +181,8 @@ public class AuthService {
 			tokensEmail.deleteByUsuarioIdAndTipo(u.getId(), TipoTokenEmail.CONFIRMACAO);
 		}
 		u.setGoogleSub(sub);
+		// Primeiro vinculo: quem nao tinha foto passa a usar a do Google; quem ja enviou uma, continua com ela.
+		if (u.getFotoTipo() == FotoTipo.PADRAO) u.setFotoTipo(FotoTipo.GOOGLE);
 		return u;
 	}
 
@@ -189,6 +194,7 @@ public class AuthService {
 		u.setEmail(email);
 		u.setGoogleSub(g.sub());
 		u.setEmailVerificado(true);
+		u.setFotoTipo(FotoTipo.GOOGLE);
 		return usuarios.save(u);
 	}
 

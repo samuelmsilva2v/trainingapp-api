@@ -4,6 +4,7 @@ import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import com.trainingapp.api.repository.ExercicioRepository;
 import com.trainingapp.api.repository.FeedbackRepository;
+import com.trainingapp.api.repository.FotoPerfilRepository;
 import com.trainingapp.api.repository.PesoRegistroRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
@@ -36,10 +37,12 @@ public class ExclusaoDeConta {
 	private final FeedbackRepository feedbacks;
 	private final UsuarioRepository usuarios;
 	private final EntityManager em;
+	private final FotoPerfilRepository fotos;
 
 	public ExclusaoDeConta(XpEventRepository xp, SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
 			PesoRegistroRepository pesos, RefreshTokenRepository refreshTokens, TokenEmailRepository tokensEmail,
-			EmailPendenteRepository emails, FeedbackRepository feedbacks, UsuarioRepository usuarios, EntityManager em) {
+			EmailPendenteRepository emails, FeedbackRepository feedbacks, UsuarioRepository usuarios, EntityManager em,
+			FotoPerfilRepository fotos) {
 		this.xp = xp;
 		this.sessoes = sessoes;
 		this.planos = planos;
@@ -51,6 +54,7 @@ public class ExclusaoDeConta {
 		this.feedbacks = feedbacks;
 		this.usuarios = usuarios;
 		this.em = em;
+		this.fotos = fotos;
 	}
 
 	@Transactional
@@ -70,6 +74,7 @@ public class ExclusaoDeConta {
 		// Relatos ainda na fila carregam a mensagem do usuario; os ja enviados estao fora do nosso alcance.
 		emails.deleteByResponderPara(usuario.getEmail());
 		feedbacks.deleteByUsuarioId(id);
+		fotos.deleteById(id);
 		em.flush();
 		usuarios.delete(usuario);
 	}

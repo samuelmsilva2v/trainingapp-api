@@ -139,7 +139,7 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 			throw recusado();
 		}
 		return new Identidade(jwt.getSubject(), email, Boolean.TRUE.equals(jwt.getClaimAsBoolean("email_verified")),
-				jwt.getClaimAsString("name"));
+				jwt.getClaimAsString("name"), jwt.getClaimAsString("picture"));
 	}
 
 	private static ErroDeAutenticacaoException recusado() {

@@ -9,6 +9,7 @@ import com.trainingapp.api.model.GrupoMuscular;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import com.trainingapp.api.repository.ExercicioRepository;
 import com.trainingapp.api.repository.FeedbackRepository;
+import com.trainingapp.api.repository.FotoPerfilRepository;
 import com.trainingapp.api.repository.PesoRegistroRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
@@ -84,6 +85,8 @@ class ExclusaoDeContaApiTest {
 	PesoRegistroRepository pesos;
 	@Autowired
 	FeedbackRepository feedbacks;
+	@Autowired
+	FotoPerfilRepository fotos;
 
 	@MockitoBean
 	VerificadorGoogle google;
@@ -104,6 +107,7 @@ class ExclusaoDeContaApiTest {
 		assertThat(pesos.findByUsuarioIdOrderByDataAsc(maria.usuarioId())).hasSize(1);
 		assertThat(refreshTokens.findAll()).isNotEmpty();
 		assertThat(feedbacks.findAll()).hasSize(1);
+		assertThat(fotos.findById(maria.usuarioId())).isPresent();
 		assertThat(emails.findAll().stream().filter(e -> EMAIL.equals(e.getResponderPara()))).hasSize(1);
 
 		excluir(maria, "{\"senha\":\"" + SENHA + "\"}").andExpect(status().isNoContent())
@@ -120,6 +124,7 @@ class ExclusaoDeContaApiTest {
 		assertThat(emails.findAll().stream().filter(e -> e.getDestinatario().equals(EMAIL))).isEmpty();
 		assertThat(emails.findAll().stream().filter(e -> EMAIL.equals(e.getResponderPara()))).isEmpty();
 		assertThat(feedbacks.findAll()).isEmpty();
+		assertThat(fotos.findById(maria.usuarioId())).isEmpty();
 		// O que nao e dele continua la.
 		assertThat(exercicios.findById(global.getId())).isPresent();
 		assertThat(exercicios.findById(deOutro.getId())).isPresent();
@@ -240,6 +245,9 @@ class ExclusaoDeContaApiTest {
 				""".formatted(plano, inicio, inicio.plusSeconds(60), inicio, UUID.randomUUID(), exercicio, series);
 		comToken(s, MockMvcRequestBuilders.put("/api/sessoes/" + sessao), corpo).andExpect(status().isOk());
 		comToken(s, MockMvcRequestBuilders.put("/api/peso/" + java.time.LocalDate.now()), "{\"kg\":70}").andExpect(status().isOk());
+		mvc.perform(MockMvcRequestBuilders.put("/api/perfil/foto").header(HttpHeaders.AUTHORIZATION, "Bearer " + s.acesso())
+				.contentType(MediaType.IMAGE_JPEG).content(new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 1, 2 }))
+				.andExpect(status().isOk());
 		comToken(s, MockMvcRequestBuilders.post("/api/feedback"), "{\"nome\":\"Maria\",\"categoria\":\"BUG\",\"mensagem\":\"O app travou no treino\"}")
 				.andExpect(status().isNoContent());
 	}

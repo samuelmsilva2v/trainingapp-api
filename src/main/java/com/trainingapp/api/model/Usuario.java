@@ -2,6 +2,8 @@ package com.trainingapp.api.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -42,6 +44,15 @@ public class Usuario {
 
 	// A cada quantos dias lembrar de se pesar (7, 15 ou 30); nulo = desligado.
 	private Integer lembretePesoDias;
+
+	// Conta do Google nasce GOOGLE; de e-mail, PADRAO. Enviar foto: PROPRIA; remover: PADRAO (api#48).
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 10)
+	private FotoTipo fotoTipo = FotoTipo.PADRAO;
+
+	// Claim "picture" do ultimo login com Google; so aparece com o tipo GOOGLE.
+	@Column(length = 2048)
+	private String fotoGoogleUrl;
 
 	@CreationTimestamp
 	@Column(nullable = false, updatable = false)

@@ -3,6 +3,7 @@ package com.trainingapp.api.controller;
 import com.jayway.jsonpath.JsonPath;
 import com.trainingapp.api.config.ErroDeAutenticacaoException;
 import com.trainingapp.api.model.EmailPendente;
+import com.trainingapp.api.model.FotoTipo;
 import com.trainingapp.api.model.Usuario;
 import com.trainingapp.api.repository.EmailPendenteRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
@@ -424,6 +425,57 @@ class AuthApiTest {
 		Usuario u = usuarios.findByEmail(EMAIL).orElseThrow();
 		assertThat(u.isEmailVerificado()).isTrue();
 		assertThat(u.getSenhaHash()).isNull();
+	}
+
+	// --- foto do perfil (api#48) ---
+
+	@Test
+	void contaCriadaPeloGoogleComecaComAFotoDoGoogleEOLoginAtualizaAUrl() throws Exception {
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria", "https://foto/1"));
+		google("cred").andExpect(status().isOk());
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow()).satisfies(u -> {
+			assertThat(u.getFotoTipo()).isEqualTo(FotoTipo.GOOGLE);
+			assertThat(u.getFotoGoogleUrl()).isEqualTo("https://foto/1");
+		});
+
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria", "https://foto/2"));
+		MvcResult segundo = google("cred").andExpect(status().isOk()).andReturn();
+		mvc.perform(get("/api/perfil").header(HttpHeaders.AUTHORIZATION, "Bearer " + acesso(segundo)))
+				.andExpect(jsonPath("$.fotoTipo").value("GOOGLE"))
+				.andExpect(jsonPath("$.fotoGoogleUrl").value("https://foto/2"));
+	}
+
+	@Test
+	void contaDeEmailComecaSemFotoEPassaAoGoogleSoNoPrimeiroVinculo() throws Exception {
+		criarContaConfirmada(EMAIL);
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow().getFotoTipo()).isEqualTo(FotoTipo.PADRAO);
+
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria", "https://foto/1"));
+		MvcResult vinculo = google("cred").andExpect(status().isOk()).andReturn();
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow().getFotoTipo()).isEqualTo(FotoTipo.GOOGLE);
+
+		// Removeu a foto do Google: os logins seguintes nao a trazem de volta.
+		mvc.perform(MockMvcRequestBuilders.delete("/api/perfil/foto").header(HttpHeaders.AUTHORIZATION, "Bearer " + acesso(vinculo)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.fotoTipo").value("PADRAO"));
+		google("cred").andExpect(status().isOk());
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow().getFotoTipo()).isEqualTo(FotoTipo.PADRAO);
+	}
+
+	@Test
+	void contaComFotoPropriaContinuaComElaAoVincularOGoogle() throws Exception {
+		criarContaConfirmada(EMAIL);
+		Usuario u = usuarios.findByEmail(EMAIL).orElseThrow();
+		u.setFotoTipo(FotoTipo.PROPRIA);
+		usuarios.save(u);
+
+		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria", "https://foto/1"));
+		google("cred").andExpect(status().isOk());
+
+		assertThat(usuarios.findByEmail(EMAIL).orElseThrow()).satisfies(conta -> {
+			assertThat(conta.getFotoTipo()).isEqualTo(FotoTipo.PROPRIA);
+			assertThat(conta.getFotoGoogleUrl()).isEqualTo("https://foto/1");
+		});
 	}
 
 	// --- apoio ---
