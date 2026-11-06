@@ -155,6 +155,17 @@ class PlanoApiTest {
 	}
 
 	@Test
+	void cargaAlvoAte1000Kg() throws Exception {
+		String supino = criarExercicio("Supino");
+		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON)
+				.content(plano("Teto", "{\"nome\":\"A\",\"exercicios\":[%s]}".formatted(item(supino, 3, 8, 12, "1000")))))
+				.andExpect(status().isCreated());
+		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON)
+				.content(plano("Teto", "{\"nome\":\"A\",\"exercicios\":[%s]}".formatted(item(supino, 3, 8, 12, "1000.5")))))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void corpoInvalidoRetorna400() throws Exception {
 		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\"\",\"objetivo\":\"FORCA\",\"dias\":[]}"))
