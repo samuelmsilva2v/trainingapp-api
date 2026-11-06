@@ -13,6 +13,7 @@ Handstand_Push-Ups | 2.0  # Flexao em parada de mao
 Single-Arm_Push-Up | 2.0  # Flexao unilateral
 Scapular_Pull-Up | 1.0  # Barra fixa escapular
 Inverted_Row | 1.2  # Remada invertida
+Bodyweight_Mid_Row | 1.2  # Remada com peso corporal (api#49)
 
 # Paralelas e triceps
 Dips_-_Triceps_Version | 1.5  # Mergulho nas paralelas (triceps)
@@ -23,6 +24,7 @@ Standing_Towel_Triceps_Extension | 0.5  # Triceps com toalha
 
 # Flexao
 Pushups | 1.0  # Flexao de braco
+Bodyweight_Flyes | 1.0  # Crucifixo com peso corporal (api#49)
 Push-Up_Wide | 1.0  # Flexao aberta
 Push-Ups_-_Close_Triceps_Position | 1.0  # Flexao fechada (triceps)
 Pushups_Close_and_Wide_Hand_Positions | 1.0  # Flexao (maos fechadas e abertas)

@@ -64,6 +64,12 @@ function lerTraducoes() {
   return mapa;
 }
 
+// Erros de equipamento do dataset (api#49): movimentos de peso corporal marcados com o aparelho de apoio.
+const CORRECOES_EQUIPAMENTO = {
+  Bodyweight_Flyes: 'PESO_CORPORAL', // rola sobre duas barras no chao; o dataset diz "barbell"
+  Bodyweight_Mid_Row: 'PESO_CORPORAL', // remada invertida numa barra; o dataset diz "other"
+};
+
 // Categorias do dataset que nao cabem em series x reps x kg; o importador as deixa indisponiveis (api#42).
 const CATEGORIAS_OCULTAS = new Set(['cardio', 'stretching', 'plyometrics', 'strongman']);
 
@@ -100,7 +106,7 @@ for (const en of traducoes.keys()) if (!nomesEn.has(en)) erros.push(`traducao se
 const catalogo = dataset.map((e) => {
   const musculo = e.primaryMuscles[0];
   const grupo = e.category === 'cardio' ? 'CARDIO' : GRUPO[musculo];
-  const equipamento = e.equipment == null ? 'PESO_CORPORAL' : EQUIPAMENTO[e.equipment];
+  const equipamento = CORRECOES_EQUIPAMENTO[e.id] ?? (e.equipment == null ? 'PESO_CORPORAL' : EQUIPAMENTO[e.equipment]);
   if (!grupo) erros.push(`musculo sem mapeamento: ${musculo} (${e.id})`);
   if (!equipamento) erros.push(`equipamento sem mapeamento: ${e.equipment} (${e.id})`);
   const item = { slug: e.id, nome: traducoes.get(e.name), grupoMuscular: grupo, equipamento, categoria: e.category };
