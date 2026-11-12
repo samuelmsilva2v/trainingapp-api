@@ -1,0 +1,2 @@
+# Segredo JWT só dos testes (application-test.properties), não é credencial real.
+b2f23a737492db0cb190b5b19ad02e6dfd9130f7:src/main/resources/application-test.properties:generic-api-key:13
