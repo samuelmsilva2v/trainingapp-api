@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class GamificacaoService {
 
-	/** Id que nenhuma sessao tem: o JPQL nao aceita parametro nulo no Postgres. */
+	// O Postgres rejeita parametro nulo no JPQL.
 	private static final UUID SEM_TREINO_ATUAL = new UUID(0, 0);
 
 	private final XpEventRepository eventos;
@@ -51,10 +51,6 @@ public class GamificacaoService {
 		this.relogio = relogio;
 	}
 
-	/**
-	 * Credita o XP de uma sessao recem-concluida. So conta a primeira sessao valida do dia (no fuso do
-	 * sistema) e com pelo menos 3 series concluidas; o chamador garante que isto roda uma vez por sessao.
-	 */
 	public void registrarSessaoConcluida(Sessao sessao) {
 		if (eventos.existsBySessaoId(sessao.getId())) {
 			return;
@@ -62,22 +58,17 @@ public class GamificacaoService {
 		eventos.saveAllAndFlush(calcularEventos(sessao, sessao.getFinalizadaEm()));
 	}
 
-	/**
-	 * Previa exata do XP de um treino em andamento: sao os mesmos eventos que seriam gravados se ele fosse
-	 * concluido agora (limite de um treino por dia, minimo de series e recordes incluidos), sem gravar nada.
-	 */
 	@Transactional(readOnly = true)
 	public Ganho previa(Sessao sessao) {
 		return Ganho.de(calcularEventos(sessao, relogio.instant()));
 	}
 
-	/** Eventos de XP que a sessao rende se terminar em `fim`: os do treino e as conquistas que ele libera. */
 	private List<XpEvent> calcularEventos(Sessao sessao, Instant fim) {
 		LocalDate dia = diaDoTreino(fim);
 		List<XpEvent> novos = new ArrayList<>(eventosDoTreino(sessao, fim));
 		List<XpEvent> todos = new ArrayList<>(eventos.findByUsuarioId(sessao.getUsuario().getId()));
 		todos.addAll(novos);
-		// Desafios antes das conquistas: o XP deles tambem pode subir o nivel e liberar uma conquista de nivel.
+		// Desafios antes das conquistas: o XP deles pode liberar uma conquista de nivel.
 		List<XpEvent> desafios = desafiosNovos(sessao, dia, todos);
 		novos.addAll(desafios);
 		todos.addAll(desafios);
@@ -85,10 +76,6 @@ public class GamificacaoService {
 		return novos;
 	}
 
-	/**
-	 * Desafios da semana do treino que passam a valer e ainda nao foram creditados nesta semana. Roda em toda conclusao,
-	 * entao os treinos da semana feitos antes do deploy tambem contam.
-	 */
 	private List<XpEvent> desafiosNovos(Sessao sessao, LocalDate dia, List<XpEvent> todos) {
 		Set<LocalDate> dias = diasDeTreino(todos);
 		int recordes = recordesNaSemana(todos, dia);
@@ -105,17 +92,11 @@ public class GamificacaoService {
 		return novos;
 	}
 
-	/** Recordes que valem (descontando estornos) em treinos da semana de {@code dia}. */
 	private static int recordesNaSemana(List<XpEvent> todos, LocalDate dia) {
 		return todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE && Desafios.naSemana(e.getDia(), dia))
 				.mapToInt(e -> Integer.signum(e.getPontos())).sum();
 	}
 
-	/**
-	 * Conquistas que valem agora e ainda nao foram creditadas, em cascata: o XP de uma conquista pode subir o nivel e
-	 * liberar outra. Roda em toda conclusao, mesmo sem XP de treino, entao a primeira conclusao depois do deploy credita
-	 * as conquistas que ja valiam antes (retroativo decidido na #37).
-	 */
 	private List<XpEvent> conquistasNovas(Sessao sessao, LocalDate dia, List<XpEvent> todos, HistoricoDeTreinos.Totais historico) {
 		Usuario usuario = sessao.getUsuario();
 		Set<String> creditadas = codigosCreditados(todos);
@@ -141,43 +122,36 @@ public class GamificacaoService {
 		}
 	}
 
-	/** Codigos ja creditados: conquistas (CONQUISTA) e desafios da semana (DESAFIO, com a semana no codigo). */
 	private static Set<String> codigosCreditados(List<XpEvent> eventos) {
 		return eventos.stream().filter(e -> e.getCodigo() != null)
 				.map(XpEvent::getCodigo).collect(Collectors.toCollection(HashSet::new));
 	}
 
-	/** XP do treino em si (series, recordes e sequencia); vazio quando o dia ja rendeu ou ha menos de 3 series. */
 	private List<XpEvent> eventosDoTreino(Sessao sessao, Instant fim) {
 		Usuario usuario = sessao.getUsuario();
 		LocalDate dia = diaDoTreino(fim);
-		// Saldo > 0: o dia ja rendeu XP e nao foi estornado (apagar o treino libera o dia).
 		if (eventos.findByUsuarioIdAndTipoAndDia(usuario.getId(), TipoXp.SERIES, dia).stream()
 				.mapToInt(XpEvent::getPontos).sum() > 0) {
 			return List.of();
 		}
-		// O drop-set conta como uma serie so (um bloco), nas series minimas e no XP.
 		int concluidas = sessao.getExercicios().stream().mapToInt(e -> Blocos.concluidos(e.getSeries())).sum();
 		if (concluidas < Regras.SERIES_MINIMAS) {
 			return List.of();
 		}
 
 		List<XpEvent> novos = new ArrayList<>();
-		// Um unico evento com o XP de todas as series; ele tambem marca o dia de treino (dia_unico).
 		int xpSeries = sessao.getExercicios().stream().mapToInt(Blocos::xp).sum();
 		XpEvent series = evento(usuario, sessao, TipoXp.SERIES, xpSeries, null, dia);
 		series.setDiaUnico(dia);
 		novos.add(series);
 		Set<UUID> premiados = new HashSet<>();
 		for (ExercicioSessao exercicio : sessao.getExercicios()) {
-			// Um plano pode repetir o exercicio no dia; o recorde vale uma vez por exercicio.
 			if (!premiados.contains(exercicio.getExercicio().getId()) && bateuRecorde(usuario, sessao, exercicio)) {
 				premiados.add(exercicio.getExercicio().getId());
 				novos.add(evento(usuario, sessao, TipoXp.RECORDE, Regras.XP_RECORDE,
 						exercicio.getExercicio().getId(), dia));
 			}
 		}
-		// Bonus pela sequencia que este treino estende; dias depois dele (treino sincronizado com atraso) nao contam.
 		Set<LocalDate> dias = diasDeTreino(eventos.findByUsuarioIdAndTipo(usuario.getId(), TipoXp.SERIES));
 		dias.removeIf(d -> d.isAfter(dia));
 		dias.add(dia);
@@ -188,7 +162,6 @@ public class GamificacaoService {
 		return novos;
 	}
 
-	/** Dias com treino valido: saldo de SERIES positivo no dia (apagar o treino estorna e libera o dia). */
 	private static Set<LocalDate> diasDeTreino(List<XpEvent> eventos) {
 		return eventos.stream()
 				.filter(e -> e.getTipo() == TipoXp.SERIES)
@@ -197,14 +170,9 @@ public class GamificacaoService {
 				.collect(Collectors.toCollection(HashSet::new));
 	}
 
-	/**
-	 * Estorna o XP de uma sessao apagada com eventos de pontos negativos (o registro e append-only).
-	 * O evento SERIES original so perde o dia_unico, para que o dia possa render XP de novo.
-	 */
 	public void estornar(UUID sessaoId) {
 		List<XpEvent> estornos = new ArrayList<>();
 		for (XpEvent original : eventos.findBySessaoIdIn(List.of(sessaoId))) {
-			// Conquista e desafio creditados permanecem (#37 e #38): apagar um treino nao os desfaz.
 			if (original.getPontos() <= 0 || original.getTipo() == TipoXp.CONQUISTA || original.getTipo() == TipoXp.DESAFIO) {
 				continue;
 			}
@@ -216,12 +184,7 @@ public class GamificacaoService {
 		eventos.saveAll(estornos);
 	}
 
-	/**
-	 * Recorde = carga maior que a melhor ja registrada no exercicio. A primeira vez que o exercicio
-	 * aparece no historico nao e recorde: nao ha marca anterior para superar.
-	 */
 	private boolean bateuRecorde(Usuario usuario, Sessao sessao, ExercicioSessao exercicio) {
-		// Peso corporal (api#43): recorde = mais reps numa serie (ou etapa); a carga e ignorada.
 		if (exercicio.getExercicio().isPesoCorporal()) {
 			int maisRepsAgora = exercicio.getSeries().stream()
 					.filter(s -> s.isConcluida() && s.getReps() != null)
@@ -272,7 +235,6 @@ public class GamificacaoService {
 		Regras.Streak streak = Regras.streak(dias, hoje);
 		Conquistas.Totais totais = totais(todos);
 		int nivel = totais.nivel();
-		// Conquistada = a regra da agora ou ja foi creditada (a conquista gravada nunca "desconquista").
 		Set<String> creditadas = codigosCreditados(todos);
 		List<ConquistaResponse> conquistas = Conquistas.avaliar(totais, historico(usuario.getId(), null, null, todos)).stream()
 				.map(c -> c.conquistada() || !creditadas.contains(c.codigo()) ? c
@@ -280,7 +242,6 @@ public class GamificacaoService {
 								c.meta(), c.oculta()))
 				.toList();
 
-		// Desafios da semana de hoje; cumprido tambem se o XP ja foi creditado (apagar o treino nao tira).
 		int recordesSemana = recordesNaSemana(todos, hoje);
 		List<DesafioResponse> desafios = Desafios.TODOS.stream()
 				.map(d -> {
@@ -295,11 +256,6 @@ public class GamificacaoService {
 				Desafios.fimDaSemana(hoje));
 	}
 
-	/**
-	 * Totais da fatia 2 das conquistas: o banco soma por exercicio de cada treino (sem carregar serie por serie) e o resto
-	 * e feito em memoria. {@code atual} e o treino sendo concluido ou na previa (null no resumo), que entra com o {@code fim}
-	 * dado; os validos vem do saldo de SERIES em {@code todos}, que ja inclui o deste treino.
-	 */
 	private HistoricoDeTreinos.Totais historico(UUID usuarioId, UUID atual, Instant fim, List<XpEvent> todos) {
 		UUID idAtual = atual == null ? SEM_TREINO_ATUAL : atual;
 		List<TreinoDaConta> treinos = sessoes.treinosDaConta(usuarioId, idAtual).stream()
@@ -315,13 +271,11 @@ public class GamificacaoService {
 				HistoricoDeTreinos.blocosComDrop(sessoes.seriesComDrop(usuarioId)), pesoAte, diasPorPlano, relogio.getZone());
 	}
 
-	/** Totais das conquistas a partir dos eventos (estornos tem pontos negativos e descontam). */
 	private static Conquistas.Totais totais(List<XpEvent> todos) {
 		long xp = todos.stream().mapToLong(XpEvent::getPontos).sum();
 		Set<LocalDate> dias = diasDeTreino(todos);
 		int recordes = todos.stream().filter(e -> e.getTipo() == TipoXp.RECORDE).mapToInt(e -> Integer.signum(e.getPontos())).sum();
 
-		// Recordes que valem (saldo positivo por sessao e exercicio, descontando estornos).
 		Set<UUID> exerciciosComRecorde = new HashSet<>();
 		boolean diaInspirado = false;
 		for (java.util.Map<UUID, Integer> porExercicio : todos.stream()
@@ -334,13 +288,11 @@ public class GamificacaoService {
 			exerciciosComRecorde.addAll(valendo);
 			diaInspirado |= valendo.size() >= Regras.RECORDES_DIA_INSPIRADO;
 		}
-		// A melhor sequencia nao depende de "hoje".
 		int melhorStreak = Regras.streak(dias, LocalDate.MAX).melhor();
 		return new Conquistas.Totais(dias.size(), melhorStreak, Regras.melhorSemanasFirmes(dias), recordes,
 				exerciciosComRecorde.size(), Regras.nivel(xp), Regras.voltouDepoisDePausa(dias), diaInspirado);
 	}
 
-	/** XP ganho e exercicios com recorde, por sessao (para as telas de treino e historico). */
 	@Transactional(readOnly = true)
 	public java.util.Map<UUID, Ganho> ganhos(java.util.Collection<UUID> sessaoIds) {
 		if (sessaoIds.isEmpty()) {
@@ -351,15 +303,12 @@ public class GamificacaoService {
 						Collectors.collectingAndThen(Collectors.toList(), Ganho::de)));
 	}
 
-	/** Conquista creditada num treino, com o XP que rendeu. */
 	public record ConquistaGanha(String codigo, String nome, int xp) {
 	}
 
-	/** Desafio da semana cumprido num treino, com o XP que rendeu. */
 	public record DesafioGanho(String codigo, String nome, int xp) {
 	}
 
-	/** XP total da sessao, o detalhe por tipo, os exercicios com recorde e as conquistas creditadas. */
 	public record Ganho(int xp, int xpSeries, int xpRecordes, int xpStreak, int xpConquistas, int xpDesafios,
 			List<UUID> recordes, List<ConquistaGanha> conquistas, List<DesafioGanho> desafios) {
 

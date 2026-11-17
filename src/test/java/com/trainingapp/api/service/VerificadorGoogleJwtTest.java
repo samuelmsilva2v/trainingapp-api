@@ -34,11 +34,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-/**
- * O token do Google e assinado com a chave privada deles; aqui geramos uma chave RSA local e um token no mesmo formato
- * (RS256, emissor, destinatario, validade e as claims email/email_verified/name) para provar o que a API aceita e rejeita.
- * A troca do codigo do popup por tokens usa um "Google" simulado (endpoint de tokens).
- */
 class VerificadorGoogleJwtTest {
 
 	static final String CLIENT_ID = "meu-cliente.apps.googleusercontent.com";
@@ -54,13 +49,11 @@ class VerificadorGoogleJwtTest {
 		outraChave = new RSAKeyGenerator(2048).keyID("k1").generate();
 	}
 
-	/** Um verificador que valida com a chave local; a troca de codigo nao e usada nestes testes. */
 	VerificadorGoogleJwt verificador(String clientId) throws Exception {
 		return new VerificadorGoogleJwt(clientId, SEGREDO, NimbusJwtDecoder.withPublicKey(chave.toRSAPublicKey()).build(),
 				RestClient.create());
 	}
 
-	/** Um verificador cujo "Google" (endpoint de tokens) e simulado; o servidor simulado vem em {@code servidor[0]}. */
 	VerificadorGoogleJwt verificadorComGoogleSimulado(String segredo, MockRestServiceServer[] servidor) throws Exception {
 		RestClient.Builder construtor = RestClient.builder();
 		servidor[0] = MockRestServiceServer.bindTo(construtor).build();
@@ -96,8 +89,6 @@ class VerificadorGoogleJwtTest {
 	String respostaDeTokensCom(String idToken) {
 		return "{\"access_token\":\"x\",\"id_token\":\"" + idToken + "\"}";
 	}
-
-	// --- validacao do ID token ---
 
 	@Test
 	void aceitaTokenValidoEDevolveAIdentidade() throws Exception {
@@ -160,8 +151,6 @@ class VerificadorGoogleJwtTest {
 		assertThatThrownBy(() -> verificador(null).verificar(token(chave, c -> c)))
 				.isInstanceOf(ErroDeAutenticacaoException.class);
 	}
-
-	// --- troca do codigo do popup por tokens ---
 
 	@Test
 	void trocaOCodigoPeloIdTokenComOSegredoDoClienteEValidaOToken() throws Exception {
@@ -229,7 +218,7 @@ class VerificadorGoogleJwtTest {
 
 			assertThatThrownBy(() -> v.verificarCodigo("c")).isInstanceOfSatisfying(ErroDeAutenticacaoException.class,
 					e -> assertThat(e.status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
-			google[0].verify(); // nenhuma chamada esperada, e o servidor simulado falharia se houvesse uma
+			google[0].verify();
 		}
 	}
 }

@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/** Séries concluídas do exercício no último treino concluído em que ele apareceu (coluna "Anterior" da execução). */
 public record AnteriorResponse(UUID exercicioId, UUID sessaoId, Instant iniciadaEm, List<SerieAnterior> series) {
 
 	public record SerieAnterior(int ordem, Integer reps, BigDecimal carga, TipoSerie tipo) {

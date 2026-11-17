@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Conquistas derivadas dos eventos (nada e gravado): so dependem de totais ja calculados, entao
- * ajustar ou acrescentar uma regra aqui nao exige migracao. Cada familia tem faixas em ordem crescente
- * de meta; os codigos antigos foram mantidos para nao mudar o que o front ja conhece.
- */
 final class Conquistas {
 
 	private Conquistas() {
@@ -23,11 +18,9 @@ final class Conquistas {
 	private record Faixa(String codigo, String nome, String descricao, int meta) {
 	}
 
-	/** Nome de cada codigo, para mostrar as conquistas creditadas num treino. */
 	static final Map<String, String> NOMES = avaliar(new Totais(0, 0, 0, 0, 0, 1, false, false), HistoricoDeTreinos.Totais.ZERO).stream()
 			.collect(Collectors.toMap(ConquistaResponse::codigo, ConquistaResponse::nome));
 
-	/** {@code h}: totais da fatia 2 (api#36), que leem treinos e series, e nao so os eventos de XP. */
 	static List<ConquistaResponse> avaliar(Totais t, HistoricoDeTreinos.Totais h) {
 		List<ConquistaResponse> lista = new ArrayList<>();
 		familia(lista, "Constância", t.treinos(),
@@ -63,7 +56,6 @@ final class Conquistas {
 				new Faixa("DE_VOLTA", "De volta", "Volte a treinar depois de 14 dias ou mais parado.", 1));
 		familia(lista, "Dia inspirado", t.diaInspirado() ? 1 : 0,
 				new Faixa("DIA_INSPIRADO", "Dia inspirado", "Bata 3 recordes no mesmo treino.", 1));
-		// Fatia 2 (api#36).
 		familia(lista, "Volume total", (int) Math.min(Integer.MAX_VALUE, h.toneladas()),
 				new Faixa("VOLUME_10T", "10 toneladas", "Levante 10 t somando todos os treinos.", 10),
 				new Faixa("VOLUME_100T", "100 toneladas", "Levante 100 t somando todos os treinos.", 100),
@@ -84,7 +76,6 @@ final class Conquistas {
 				new Faixa("DROPSET_1", "Primeiro drop-set", "Conclua um drop-set.", 1),
 				new Faixa("DROPSET_25", "Queima total", "Conclua 25 drop-sets.", 25),
 				new Faixa("DROPSET_100", "Mestre do drop-set", "Conclua 100 drop-sets.", 100));
-		// Peso corporal (api#43).
 		familia(lista, "Reps de peso corporal", (int) Math.min(Integer.MAX_VALUE, h.repsPesoCorporal()),
 				new Faixa("REPS_PESO_CORPORAL_500", "Peso pena", "Some 500 reps em exercícios de peso corporal.", 500),
 				new Faixa("REPS_PESO_CORPORAL_2000", "Calistênico", "Some 2.000 reps em exercícios de peso corporal.", 2000),
@@ -109,7 +100,6 @@ final class Conquistas {
 		}
 	}
 
-	/** Conquista oculta, de faixa unica: o front so a mostra depois de feita. */
 	private static void oculta(List<ConquistaResponse> lista, String nome, boolean feita, String codigo, String descricao) {
 		lista.add(new ConquistaResponse(codigo, nome, descricao, feita, nome, 1, feita ? 1 : 0, 1, true));
 	}

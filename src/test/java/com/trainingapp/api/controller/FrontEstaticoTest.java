@@ -34,7 +34,6 @@ class FrontEstaticoTest {
 
 	static Path criarPastaDoFront() {
 		try {
-			// O segredo fica ao lado da pasta do front, como o application.properties fica ao lado do dist.
 			Path raiz = Files.createTempDirectory("front");
 			Files.writeString(raiz.resolve("segredo.txt"), "SEGREDO");
 			Path pasta = Files.createDirectory(raiz.resolve("browser"));
@@ -57,7 +56,6 @@ class FrontEstaticoTest {
 
 	@Test
 	void raizEncaminhaParaOIndexEArquivosSaoServidosSemCache() throws Exception {
-		// MockMvc nao executa o forward; so registra o destino.
 		mvc.perform(get("/"))
 				.andExpect(status().isOk())
 				.andExpect(forwardedUrl("/index.html"));

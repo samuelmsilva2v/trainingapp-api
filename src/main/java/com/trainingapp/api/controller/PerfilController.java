@@ -50,7 +50,6 @@ public class PerfilController {
 		return PerfilResponse.de(repository.save(usuario), feedback.ativo());
 	}
 
-	/** Os bytes da foto propria; a rota exige Bearer, por isso o app a busca como blob. */
 	@GetMapping("/foto")
 	public ResponseEntity<byte[]> foto() {
 		FotoPerfil foto = fotos.obter(usuarioAtual.obter());
@@ -58,7 +57,6 @@ public class PerfilController {
 				.cacheControl(CacheControl.noStore()).body(foto.getBytes());
 	}
 
-	/** Corpo: a imagem crua (JPEG, PNG ou WebP, ate 5 MB). */
 	@PutMapping("/foto")
 	@Transactional
 	public PerfilResponse enviarFoto(@RequestBody byte[] imagem) {

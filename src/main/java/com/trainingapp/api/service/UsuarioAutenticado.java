@@ -11,7 +11,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
-/** O nome da autenticacao e o id do usuario (claim "sub" do JWT). */
 @Component
 public class UsuarioAutenticado implements UsuarioAtual {
 

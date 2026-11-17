@@ -29,11 +29,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Login com Google pelo fluxo de codigo: o front abre o popup do Google e entrega um codigo de uso unico; aqui ele e
- * trocado (com o client secret) por tokens e o ID token e conferido: assinatura (chaves publicas do Google), validade,
- * emissor e destinatario (nosso client id).
- */
 @Component
 public class VerificadorGoogleJwt implements VerificadorGoogle {
 
@@ -41,9 +36,7 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 
 	private static final String CHAVES = "https://www.googleapis.com/oauth2/v3/certs";
 	private static final String TOKENS = "https://oauth2.googleapis.com/token";
-	// O popup do Google Identity Services (initCodeClient com ux_mode popup) usa este redirect_uri na troca do codigo.
-	// A documentacao do Google diz que e a origem da pagina; se a troca falhar com redirect_uri_mismatch (o log traz o
-	// motivo devolvido pelo Google), troque por "http://localhost:4200" e o endereco real do app.
+	// Se a troca falhar com redirect_uri_mismatch, trocar pela origem real do app (o log traz o motivo).
 	private static final String REDIRECT_DO_POPUP = "postmessage";
 	private static final Set<String> EMISSORES = Set.of("https://accounts.google.com", "accounts.google.com");
 
@@ -54,11 +47,9 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 
 	@Autowired
 	public VerificadorGoogleJwt(AuthProperties props) {
-		// O decoder so busca as chaves publicas do Google no primeiro uso.
 		this(props.googleClientId(), props.googleClientSecret(), NimbusJwtDecoder.withJwkSetUri(CHAVES).build(), restComTimeout());
 	}
 
-	// Os testes passam um decoder com uma chave local e um RestClient simulado, no lugar do Google.
 	VerificadorGoogleJwt(String clientId, String clientSecret, NimbusJwtDecoder decoder, RestClient rest) {
 		this.clientId = clientId;
 		this.clientSecret = clientSecret;
@@ -108,7 +99,6 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 			throw recusado();
 		}
 		catch (RestClientResponseException e) {
-			// invalid_grant (codigo vencido ou ja usado), redirect_uri_mismatch, invalid_client (secret errado)...
 			log.warn("O Google recusou a troca do codigo: {} {}", e.getStatusCode(), e.getResponseBodyAsString());
 			throw recusado();
 		}
@@ -122,7 +112,6 @@ public class VerificadorGoogleJwt implements VerificadorGoogle {
 		return verificar(idToken);
 	}
 
-	/** Valida o ID token. Separado da troca do codigo para ser testado com um token gerado localmente. */
 	Identidade verificar(String idToken) {
 		if (clientId == null || clientId.isBlank()) {
 			throw naoConfigurado();

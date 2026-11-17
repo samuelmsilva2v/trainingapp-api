@@ -17,7 +17,6 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Relato de bug ou sugestao. O contexto (plataforma, versao, tela, user agent) vem do app, sem a pessoa digitar. */
 @Entity
 @Table(name = "feedback")
 @Getter
@@ -54,7 +53,6 @@ public class Feedback {
 	@Column(length = 500)
 	private String userAgent;
 
-	// Pelo Clock (e nao @CreationTimestamp): o limite diario conta pelo dia desse mesmo relogio.
 	@Column(nullable = false)
 	private Instant criadoEm;
 }

@@ -13,7 +13,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Access token curto (JWT HS256) com o id do usuario em "sub"; a sessao longa fica no refresh token. */
 @Service
 public class TokenAcessoService {
 

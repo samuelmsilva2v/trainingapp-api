@@ -14,7 +14,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/** Uma serie registrada: carga e repeticoes reais. */
 @Entity
 @Table(name = "serie_sessao")
 @Getter

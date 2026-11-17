@@ -31,21 +31,14 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-/**
- * Cadastro, login (senha e Google), sessao longa por refresh token e recuperacao de senha. A lista de e-mails
- * permitidos vale em todo ponto de entrada (cadastro, login, Google e renovacao). Falhas de autenticacao nao
- * desfazem a transacao, para o que ja foi apagado (token vencido) continuar apagado.
- */
 @Service
 @Transactional(noRollbackFor = ErroDeAutenticacaoException.class)
 public class AuthService {
 
-	/** Tempo sem usar o app ate o login vencer; cada renovacao recomeca a contagem. */
 	public static final Duration REFRESH_VALIDADE = Duration.ofDays(365);
 
 	static final Duration CONFIRMACAO_VALIDADE = Duration.ofHours(24);
 	static final Duration REDEFINICAO_VALIDADE = Duration.ofHours(1);
-	// Teto por IP, somando todos os e-mails: sem ele um IP tenta quantos e-mails quiser, e cada tentativa custa um bcrypt.
 	public static final int LIMITE_POR_IP = 30;
 
 	public record Login(AcessoResponse acesso, String refresh) {
@@ -83,20 +76,17 @@ public class AuthService {
 		this.props = props;
 		this.relogio = relogio;
 		this.urlBase = urlBase.endsWith("/") ? urlBase.substring(0, urlBase.length() - 1) : urlBase;
-		// Comparado quando o e-mail nao existe, para o tempo de resposta nao revelar quais e-mails tem conta.
+		// Comparado quando o e-mail nao existe, para o tempo de resposta nao revelar quem tem conta.
 		this.hashFalso = encoder.encode("senha-que-ninguem-usa");
 	}
-
-	// --- cadastro e confirmacao ---
 
 	public void cadastrar(CadastroRequest r, String ip) {
 		limite.tentar("cadastro:" + ip);
 		String email = normalizar(r.email());
 		exigirPermitido(email);
 		validarSenha(r.senha());
-		// O hash vem antes da busca para o tempo de resposta ser o mesmo exista a conta ou nao.
 		String senhaHash = encoder.encode(r.senha());
-		// Responde igual exista a conta ou nao (nada de 409), para nao revelar quem tem cadastro; o dono e avisado por e-mail.
+		// Responde igual exista a conta ou nao (sem 409), para nao revelar quem tem cadastro.
 		Usuario existente = usuarios.findByEmail(email).orElse(null);
 		if (existente != null) {
 			fila.enfileirar(email, "Você já tem conta no TrainingApp", ("Olá, %s!%n%nAlguém tentou criar uma conta no TrainingApp "
@@ -110,15 +100,13 @@ public class AuthService {
 		u.setNome(r.nome().trim());
 		u.setEmail(email);
 		u.setSenhaHash(senhaHash);
-		// O id e atribuido aqui, entao o save faz merge e devolve a copia gerenciada; so ela pode ser referenciada.
+		// Com o id ja atribuido o save faz merge: so a copia devolvida e gerenciada.
 		enviarLink(usuarios.save(u), TipoTokenEmail.CONFIRMACAO);
 	}
 
 	public void confirmarEmail(String token) {
 		consumir(token, TipoTokenEmail.CONFIRMACAO).setEmailVerificado(true);
 	}
-
-	// --- login ---
 
 	public Login entrar(LoginRequest r, String ip) {
 		String email = normalizar(r.email());
@@ -131,7 +119,7 @@ public class AuthService {
 		if (!confere) {
 			throw new ErroDeAutenticacaoException(UNAUTHORIZED, "E-mail ou senha incorretos");
 		}
-		limite.limpar(chave); // acertou a senha: quem so falta confirmar o e-mail nao gasta tentativas
+		limite.limpar(chave);
 		if (!u.isEmailVerificado()) {
 			throw new ErroDeAutenticacaoException(FORBIDDEN,
 					"Confirme seu e-mail pelo link que enviamos. Perdeu o link? Use \"Esqueci a senha\".");
@@ -140,13 +128,11 @@ public class AuthService {
 		return iniciarSessao(u);
 	}
 
-	/** Web: o codigo de uso unico do popup do Google. */
 	public Login entrarComGoogle(String codigo, String ip) {
 		limite.tentar("google:" + ip, LIMITE_POR_IP);
 		return entrarComo(google.verificarCodigo(codigo));
 	}
 
-	/** App Android: o ID token que o Credential Manager entregou (o popup do Google nao abre em WebView). */
 	public Login entrarComGoogleIdToken(String idToken, String ip) {
 		limite.tentar("google:" + ip, LIMITE_POR_IP);
 		return entrarComo(google.verificarIdToken(idToken));
@@ -164,13 +150,11 @@ public class AuthService {
 					.orElseGet(() -> criarComGoogle(g, email));
 		}
 		exigirPermitido(u.getEmail());
-		// A URL da foto do Google pode mudar: todo login com Google traz a atual. O tipo da foto nao muda aqui.
 		u.setFotoGoogleUrl(g.foto());
 		return iniciarSessao(u);
 	}
 
-	// Mesmo e-mail de uma conta de senha: vira a mesma conta. Se aquele e-mail nunca foi confirmado, a senha foi
-	// definida por alguem que nao provou ser o dono; descarta a senha em vez de entregar a conta a ela.
+	// Senha de e-mail nunca confirmado foi definida por quem nao provou ser o dono: e descartada.
 	private Usuario vincularGoogle(Usuario u, String sub) {
 		if (u.getGoogleSub() != null) {
 			throw new ErroDeAutenticacaoException(FORBIDDEN, "Este e-mail já está ligado a outra conta Google");
@@ -181,7 +165,6 @@ public class AuthService {
 			tokensEmail.deleteByUsuarioIdAndTipo(u.getId(), TipoTokenEmail.CONFIRMACAO);
 		}
 		u.setGoogleSub(sub);
-		// Primeiro vinculo: quem nao tinha foto passa a usar a do Google; quem ja enviou uma, continua com ela.
 		if (u.getFotoTipo() == FotoTipo.PADRAO) u.setFotoTipo(FotoTipo.GOOGLE);
 		return u;
 	}
@@ -198,9 +181,6 @@ public class AuthService {
 		return usuarios.save(u);
 	}
 
-	// --- sessao longa ---
-
-	/** Troca o refresh token por um access token novo e empurra o vencimento do refresh. */
 	public AcessoResponse renovar(String refresh) {
 		if (refresh == null || refresh.isBlank()) {
 			throw new ErroDeAutenticacaoException(UNAUTHORIZED, "Sessão expirada");
@@ -224,14 +204,10 @@ public class AuthService {
 		}
 	}
 
-	/** O access token em uso continua valendo ate vencer (15 min); depois disso nenhum aparelho renova. */
 	public void sairDeTodosOsAparelhos() {
 		refreshTokens.deleteByUsuarioId(usuarioAtual.obter().getId());
 	}
 
-	// --- senha ---
-
-	/** Responde igual exista a conta ou nao, para nao revelar quem tem cadastro. */
 	public void esqueciSenha(String emailInformado, String ip) {
 		limite.tentar("esqueci:" + ip);
 		usuarios.findByEmail(normalizar(emailInformado))
@@ -239,7 +215,6 @@ public class AuthService {
 				.ifPresent(u -> enviarLink(u, TipoTokenEmail.REDEFINICAO));
 	}
 
-	/** Receber o link prova que o e-mail e do usuario: confirma o e-mail, define a senha e derruba todos os aparelhos. */
 	public void redefinirSenha(String token, String novaSenha) {
 		validarSenha(novaSenha);
 		Usuario u = consumir(token, TipoTokenEmail.REDEFINICAO);
@@ -258,10 +233,9 @@ public class AuthService {
 		if (!senhaConfere(senhaAtual, u.getSenhaHash())) {
 			throw new RegraDeNegocioException("Senha atual incorreta");
 		}
-		limite.limpar(chave); // a senha atual estava certa: uma senha nova fraca nao gasta tentativas
+		limite.limpar(chave);
 		validarSenha(novaSenha);
 		u.setSenhaHash(encoder.encode(novaSenha));
-		// Os outros aparelhos saem; este, que fez a troca, continua logado.
 		RefreshToken atual = refreshAtual == null ? null
 				: refreshTokens.findByTokenHash(Tokens.hash(refreshAtual)).filter(t -> t.getUsuario().getId().equals(u.getId())).orElse(null);
 		if (atual == null) {
@@ -272,13 +246,7 @@ public class AuthService {
 		}
 	}
 
-	// --- exclusao da conta ---
-
-	/**
-	 * Apaga a conta e todos os dados dela, sem volta. Exige provar quem esta pedindo, porque um access token roubado nao
-	 * pode bastar para destruir uma conta: a senha (conta com senha) ou um login novo no Google (conta so do Google: o
-	 * codigo do popup na web ou o ID token no app, da mesma conta Google ligada a esta).
-	 */
+	// Exige senha ou login Google novo: um access token roubado nao pode bastar para apagar a conta.
 	public void excluirConta(String senha, String codigo, String idToken) {
 		Usuario u = usuarioAtual.obter();
 		String chave = "excluir:" + u.getId();
@@ -301,8 +269,6 @@ public class AuthService {
 		limite.limpar(chave);
 		exclusao.apagar(u);
 	}
-
-	// --- apoio ---
 
 	private Login iniciarSessao(Usuario u) {
 		String refresh = Tokens.novo();
@@ -337,7 +303,6 @@ public class AuthService {
 		}
 	}
 
-	/** Link de uso unico: apaga o token ao usar e rejeita o vencido. */
 	private Usuario consumir(String token, TipoTokenEmail tipo) {
 		ErroDeAutenticacaoException invalido = new ErroDeAutenticacaoException(BAD_REQUEST, "Link inválido ou expirado");
 		TokenEmail t = tokensEmail.findByTokenHashAndTipo(Tokens.hash(token), tipo).orElseThrow(() -> invalido);
@@ -354,7 +319,6 @@ public class AuthService {
 		}
 	}
 
-	/** Senha forte, so ao definir uma (cadastro, redefinir, trocar); o login nao exige, para contas antigas continuarem entrando. */
 	private void validarSenha(String senha) {
 		String problema = RegrasDeSenha.problema(senha);
 		if (problema != null) {

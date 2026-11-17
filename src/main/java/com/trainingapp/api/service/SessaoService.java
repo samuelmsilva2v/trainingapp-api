@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class SessaoService {
 
-	// Sem registro retroativo: a sessao precisa ter comecado recentemente.
 	private static final Duration JANELA_INICIO = Duration.ofHours(24);
 	private static final Duration TOLERANCIA_RELOGIO = Duration.ofMinutes(5);
 
@@ -82,7 +81,6 @@ public class SessaoService {
 		return new HojeResponse(plano.getId(), plano.getNome(), plano.getDias().size(), proximo, emAndamento);
 	}
 
-	/** Pula o dia da rotacao sem registrar treino. */
 	public HojeResponse pular() {
 		UUID usuarioId = usuarioAtual.obter().getId();
 		if (sessoes.findFirstByUsuarioIdAndEstado(usuarioId, EstadoSessao.EM_ANDAMENTO).isPresent()) {
@@ -111,13 +109,11 @@ public class SessaoService {
 	public SessaoResponse obter(UUID id) {
 		Sessao sessao = sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id));
-		// Em andamento: o XP devolvido e a previa exata do que o treino renderia se fosse concluido agora.
 		return sessao.getEstado() == EstadoSessao.EM_ANDAMENTO
 				? SessaoResponse.de(sessao, gamificacao.previa(sessao), imagens)
 				: resposta(sessao);
 	}
 
-	/** Para cada exercicio, as series concluidas do ultimo treino concluido em que ele apareceu. */
 	@Transactional(readOnly = true)
 	public List<AnteriorResponse> anteriores(List<UUID> exercicioIds) {
 		UUID usuarioId = usuarioAtual.obter().getId();
@@ -127,7 +123,6 @@ public class SessaoService {
 				.toList();
 	}
 
-	/** Apaga um treino encerrado e estorna o XP e os recordes dele; a rotacao nao volta atras. */
 	public void excluir(UUID id) {
 		Sessao sessao = sessoes.findByIdAndUsuarioId(id, usuarioAtual.obter().getId())
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada: " + id));
@@ -138,10 +133,6 @@ public class SessaoService {
 		sessoes.delete(sessao);
 	}
 
-	/**
-	 * Upsert idempotente. Sessao encerrada nao muda mais (reenvios devolvem o que ja esta salvo) e, em andamento, uma
-	 * escrita mais antiga que a salva da 409 com a sessao atual: o ultimo a escrever vence, e quem perdeu fica sabendo.
-	 */
 	public SessaoResponse salvar(UUID id, SessaoRequest request) {
 		Usuario usuario = usuarioAtual.obter();
 		Sessao existente = sessoes.findByIdAndUsuarioId(id, usuario.getId()).orElse(null);
@@ -157,7 +148,7 @@ public class SessaoService {
 			}
 		}
 
-		// O inicio so e definido na criacao: muda-lo depois furaria a janela do retroativo (XP em dias passados).
+		// O inicio so vale o da criacao: muda-lo furaria a janela do retroativo.
 		Instant iniciadaEm = existente != null ? existente.getIniciadaEm() : request.iniciadaEm();
 		validar(request, iniciadaEm, existente == null);
 		validarIdsLivres(id, request);
@@ -233,7 +224,7 @@ public class SessaoService {
 			if (e.metaRepsMin() > e.metaRepsMax()) {
 				throw new RegraDeNegocioException("metaRepsMin nao pode ser maior que metaRepsMax");
 			}
-			int dropsSeguidos = -1; // -1: ainda nao houve serie normal para o drop pertencer
+			int dropsSeguidos = -1;
 			for (SessaoRequest.SerieRequest s : e.series()) {
 				if (!ids.add(s.id())) {
 					throw new RegraDeNegocioException("Id repetido na sessao: " + s.id());
@@ -245,7 +236,7 @@ public class SessaoService {
 					if (++dropsSeguidos > Blocos.MAX_DROPS) {
 						throw new RegraDeNegocioException("No maximo " + Blocos.MAX_DROPS + " drops por serie");
 					}
-					continue; // o concluida do drop vem da serie normal do bloco
+					continue;
 				}
 				dropsSeguidos = 0;
 				if (s.concluida() && (s.reps() == null || s.reps() < 1)) {
@@ -255,12 +246,11 @@ public class SessaoService {
 		}
 	}
 
-	/** Id de exercicio ou serie que ja e de outra sessao: o merge em cascata moveria aquela linha para esta sessao. */
 	private void validarIdsLivres(UUID id, SessaoRequest request) {
 		List<UUID> exercicioIds = request.exercicios().stream().map(SessaoRequest.ExercicioRequest::id).toList();
 		List<UUID> serieIds = request.exercicios().stream().flatMap(e -> e.series().stream())
 				.map(SessaoRequest.SerieRequest::id).toList();
-		// Sem consulta com lista vazia: "in ()" e invalido no Postgres.
+		// "in ()" e invalido no Postgres.
 		if ((!exercicioIds.isEmpty() && sessoes.contarExerciciosDeOutraSessao(exercicioIds, id) > 0)
 				|| (!serieIds.isEmpty() && sessoes.contarSeriesDeOutraSessao(serieIds, id) > 0)) {
 			throw new RegraDeNegocioException("Id de exercicio ou serie ja utilizado em outra sessao");
@@ -278,10 +268,7 @@ public class SessaoService {
 				});
 	}
 
-	/**
-	 * Atualiza as colecoes no lugar, casando por id. Recriar tudo faria o Hibernate inserir antes
-	 * de apagar e estourar a chave primaria dos ids reaproveitados pelo cliente.
-	 */
+	// Atualiza no lugar: recriar as colecoes faria o Hibernate inserir antes de apagar e estourar a PK dos ids reaproveitados.
 	private void reconciliar(Sessao sessao, SessaoRequest request, Usuario usuario) {
 		Map<UUID, Exercicio> catalogo = exercicios.disponiveis(request.exercicios().stream()
 				.map(SessaoRequest.ExercicioRequest::exercicioId).distinct().toList(), usuario);
@@ -332,7 +319,6 @@ public class SessaoService {
 			serie.setCarga(s.carga());
 			serie.setTipo(s.tipoOuNormal());
 			if (serie.getTipo() == TipoSerie.DROP) {
-				// O drop-set e uma serie so: o drop segue o check da serie normal (e so conta se teve repeticao).
 				serie.setConcluida(blocoConcluido && s.reps() != null && s.reps() >= 1);
 			}
 			else {

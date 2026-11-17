@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Relato de bug ou sugestao: 404 com o feedback desligado, 429 acima do limite diario. */
 @RestController
 @RequestMapping("/api/feedback")
 public class FeedbackController {

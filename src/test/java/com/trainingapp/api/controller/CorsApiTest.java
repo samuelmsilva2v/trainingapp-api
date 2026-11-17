@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** O app Android (https://localhost) chama a API por outra origem; nenhuma outra origem ganha CORS nem passa a ser barrada. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -46,7 +45,6 @@ class CorsApiTest {
 				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
 				.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
 
-		// Como antes do CORS: um Origin que nao bate com o host (proxy mal configurado) nao vira 403; segue para o login.
 		mvc.perform(post("/api/auth/login").header(HttpHeaders.ORIGIN, "https://apptraining.duckdns.org")
 				.contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"ninguem@teste.com\",\"senha\":\"errada\"}"))
 				.andExpect(status().isUnauthorized())

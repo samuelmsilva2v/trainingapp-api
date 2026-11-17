@@ -44,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Sem @WithMockUser: aqui o login e os tokens sao de verdade. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -52,9 +51,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthApiTest {
 
 	static final String SENHA = "Senha-Forte-123!";
-	static final String EMAIL = "maria@teste.com"; // esta na lista de permitidos (application-test.properties)
+	static final String EMAIL = "maria@teste.com";
 	static final Pattern TOKEN = Pattern.compile("token=([A-Za-z0-9_-]+)");
-	// O freio de tentativas e por IP e vive entre os testes: cada requisicao usa um IP novo, salvo quando o teste quer bater no freio.
 	static final AtomicInteger IPS = new AtomicInteger();
 
 	@Autowired
@@ -75,8 +73,6 @@ class AuthApiTest {
 	@MockitoBean
 	VerificadorGoogle google;
 
-	// --- acesso protegido ---
-
 	@Test
 	void apiExigeToken() throws Exception {
 		mvc.perform(get("/api/perfil")).andExpect(status().isUnauthorized());
@@ -85,20 +81,16 @@ class AuthApiTest {
 				.andExpect(jsonPath("$.googleClientId").value("cliente-de-teste.apps.googleusercontent.com"));
 	}
 
-	// --- cadastro, confirmacao e login com senha ---
-
 	@Test
 	void cadastroConfirmacaoELoginComSenha() throws Exception {
 		post("/api/auth/cadastro", cadastro("  Maria ", "Maria@Teste.com")).andExpect(status().isCreated());
 
-		// Antes de confirmar o e-mail nao entra.
 		login(EMAIL, SENHA).andExpect(status().isForbidden());
 
 		EmailPendente email = ultimoEmailPara(EMAIL);
 		assertThat(email.getAssunto()).contains("Confirme");
 		assertThat(email.getCorpo()).contains("http://localhost:4200/confirmar-email?token=");
 		post("/api/auth/confirmar-email", "{\"token\":\"%s\"}".formatted(token(email))).andExpect(status().isNoContent());
-		// Link de uso unico.
 		post("/api/auth/confirmar-email", "{\"token\":\"%s\"}".formatted(token(email))).andExpect(status().isBadRequest());
 
 		MvcResult entrou = login(EMAIL, SENHA).andExpect(status().isOk())
@@ -109,7 +101,6 @@ class AuthApiTest {
 				.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/api/auth")))
 				.andReturn();
 
-		// O access token abre a API como a Maria (nome "Maria", e-mail em minusculas).
 		mvc.perform(get("/api/perfil").header(HttpHeaders.AUTHORIZATION, "Bearer " + acesso(entrou)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.nome").value("Maria"))
@@ -120,7 +111,6 @@ class AuthApiTest {
 	@Test
 	void cadastroRespeitaListaDeEmailsESenha() throws Exception {
 		post("/api/auth/cadastro", cadastro("Intruso", "intruso@fora.com")).andExpect(status().isForbidden());
-		// Senha fraca: 422 com a mensagem da regra (falta de tamanho, maiuscula, minuscula, numero ou simbolo).
 		for (String fraca : new String[] { "Curt@1", "sem-maiuscula-1!", "SEM-MINUSCULA-1!", "Sem-Numero-Aqui!", "SemSimbolo123" }) {
 			post("/api/auth/cadastro", cadastro("Maria", EMAIL).replace(SENHA, fraca)).andExpect(status().isUnprocessableContent())
 					.andExpect(jsonPath("$.detail").value(containsString("8 ou mais caracteres")));
@@ -134,7 +124,6 @@ class AuthApiTest {
 		post("/api/auth/cadastro", cadastro("Maria", EMAIL)).andExpect(status().isCreated());
 		String senhaHash = usuarios.findByEmail(EMAIL).orElseThrow().getSenhaHash();
 
-		// Mesma resposta de um cadastro novo: quem testa e-mails nao descobre quem tem conta.
 		post("/api/auth/cadastro", cadastro("Outra Maria", EMAIL).replace(SENHA, "Outra-Senha-9")).andExpect(status().isCreated());
 
 		assertThat(usuarios.findAll().stream().filter(u -> u.getEmail().equals(EMAIL))).hasSize(1);
@@ -164,15 +153,12 @@ class AuthApiTest {
 		for (int i = 0; i < 4; i++) {
 			login(EMAIL, "errada-errada", ip);
 		}
-		// Bloqueado: nem a senha certa passa, ate o tempo de espera acabar.
 		login(EMAIL, SENHA, ip).andExpect(status().isTooManyRequests());
-		// Outro IP nao e afetado.
 		login(EMAIL, SENHA).andExpect(status().isOk());
 	}
 
 	@Test
 	void umIpNaoTentaEmailsSemFimNemGoogleSemFim() throws Exception {
-		// O freio por e-mail+IP nao basta: trocando de e-mail o mesmo IP nunca o atingiria, e cada tentativa custa um bcrypt.
 		String ip = ipNovo();
 		for (int i = 0; i < AuthService.LIMITE_POR_IP; i++) {
 			login("ninguem" + i + "@teste.com", "errada-errada", ip).andExpect(status().isUnauthorized());
@@ -189,13 +175,10 @@ class AuthApiTest {
 
 	@Test
 	void emailEnormeNoLoginOuNoEsqueciSenhaDa400() throws Exception {
-		// O e-mail do login vira chave do freio de tentativas, que fica na memoria: tem de ter teto.
 		String enorme = "a".repeat(255) + "@teste.com";
 		login(enorme, "qualquer").andExpect(status().isBadRequest());
 		post("/api/auth/esqueci-senha", "{\"email\":\"%s\"}".formatted(enorme)).andExpect(status().isBadRequest());
 	}
-
-	// --- sessao longa ---
 
 	@Test
 	void refreshRenovaOAcessoEEmpurraOVencimento() throws Exception {
@@ -209,7 +192,6 @@ class AuthApiTest {
 				.andReturn();
 		mvc.perform(get("/api/perfil").header(HttpHeaders.AUTHORIZATION, "Bearer " + acesso(renovou))).andExpect(status().isOk());
 
-		// 300 dias parados nao venceram; a renovacao zerou a contagem.
 		assertThat(refreshTokens.findAll().get(0).getUltimoUsoEm()).isAfter(Instant.now().minusSeconds(60));
 	}
 
@@ -241,8 +223,6 @@ class AuthApiTest {
 				.andExpect(status().isNoContent());
 		renovar(refresh(b)).andExpect(status().isUnauthorized());
 	}
-
-	// --- senha ---
 
 	@Test
 	void esqueciSenhaNaoRevelaContasERedefinirDerrubaOsAparelhos() throws Exception {
@@ -284,12 +264,11 @@ class AuthApiTest {
 		criarContaConfirmada(EMAIL);
 		MvcResult a = login(EMAIL, SENHA).andReturn();
 		trocarSenha(a, SENHA, "fraca123").andExpect(status().isUnprocessableContent());
-		login(EMAIL, SENHA).andExpect(status().isOk()); // a senha antiga continua valendo
+		login(EMAIL, SENHA).andExpect(status().isOk());
 
 		post("/api/auth/esqueci-senha", "{\"email\":\"%s\"}".formatted(EMAIL)).andExpect(status().isAccepted());
 		String token = token(ultimoEmailPara(EMAIL));
 		post("/api/auth/redefinir-senha", "{\"token\":\"%s\",\"senha\":\"fraca123\"}".formatted(token)).andExpect(status().isUnprocessableContent());
-		// O link nao foi gasto: com uma senha forte ele ainda vale.
 		post("/api/auth/redefinir-senha", "{\"token\":\"%s\",\"senha\":\"Outra-Senha-456!\"}".formatted(token)).andExpect(status().isNoContent());
 	}
 
@@ -307,8 +286,6 @@ class AuthApiTest {
 		login(EMAIL, SENHA).andExpect(status().isUnauthorized());
 		login(EMAIL, "Nova-Senha-789!").andExpect(status().isOk());
 	}
-
-	// --- app Android: refresh no corpo ---
 
 	@Test
 	void appRecebeORefreshNoCorpoSemCookieERenovaESaiPeloCorpo() throws Exception {
@@ -353,8 +330,6 @@ class AuthApiTest {
 		renovarPeloCorpo(refreshA).andExpect(status().isOk());
 		renovarPeloCorpo(refreshB).andExpect(status().isUnauthorized());
 	}
-
-	// --- Google ---
 
 	@Test
 	void googleCriaContaNovaEReaproveitaNoSegundoLogin() throws Exception {
@@ -415,7 +390,6 @@ class AuthApiTest {
 
 	@Test
 	void googleDescartaASenhaDeContaQueNuncaConfirmouOEmail() throws Exception {
-		// Alguem se cadastrou com o e-mail da Maria sem provar que e dela; quando a Maria entra pelo Google, a senha dele some.
 		post("/api/auth/cadastro", cadastro("Impostor", EMAIL)).andExpect(status().isCreated());
 		when(google.verificarCodigo("cred")).thenReturn(new Identidade("sub-1", EMAIL, true, "Maria"));
 
@@ -426,8 +400,6 @@ class AuthApiTest {
 		assertThat(u.isEmailVerificado()).isTrue();
 		assertThat(u.getSenhaHash()).isNull();
 	}
-
-	// --- foto do perfil (api#48) ---
 
 	@Test
 	void contaCriadaPeloGoogleComecaComAFotoDoGoogleEOLoginAtualizaAUrl() throws Exception {
@@ -454,7 +426,6 @@ class AuthApiTest {
 		MvcResult vinculo = google("cred").andExpect(status().isOk()).andReturn();
 		assertThat(usuarios.findByEmail(EMAIL).orElseThrow().getFotoTipo()).isEqualTo(FotoTipo.GOOGLE);
 
-		// Removeu a foto do Google: os logins seguintes nao a trazem de volta.
 		mvc.perform(MockMvcRequestBuilders.delete("/api/perfil/foto").header(HttpHeaders.AUTHORIZATION, "Bearer " + acesso(vinculo)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.fotoTipo").value("PADRAO"));
@@ -477,8 +448,6 @@ class AuthApiTest {
 			assertThat(conta.getFotoGoogleUrl()).isEqualTo("https://foto/1");
 		});
 	}
-
-	// --- apoio ---
 
 	String cadastro(String nome, String email) {
 		return "{\"nome\":\"%s\",\"email\":\"%s\",\"senha\":\"%s\"}".formatted(nome, email, SENHA);

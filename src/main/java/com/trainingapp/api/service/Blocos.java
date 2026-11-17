@@ -8,19 +8,13 @@ import com.trainingapp.api.model.TipoSerie;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Agrupa as series de um exercicio em blocos: uma serie normal seguida dos drops dela. Um bloco conta como uma
- * serie (no "X/Y", nas series minimas do treino e no XP); o servidor ja grava os drops com o concluida da serie normal.
- */
 public final class Blocos {
 
-	/** Maximo de drops depois de uma serie, no plano e na execucao. */
 	public static final int MAX_DROPS = 3;
 
 	private Blocos() {
 	}
 
-	/** As series ja em ordem; um drop sem serie normal antes dele nao forma bloco (a validacao do PUT o rejeita). */
 	public static List<List<SerieSessao>> de(List<SerieSessao> series) {
 		List<List<SerieSessao>> blocos = new ArrayList<>();
 		for (SerieSessao s : series) {
@@ -34,15 +28,10 @@ public final class Blocos {
 		return blocos;
 	}
 
-	/** Blocos cuja serie normal foi concluida. */
 	public static int concluidos(List<SerieSessao> series) {
 		return (int) de(series).stream().filter(b -> b.getFirst().isConcluida()).count();
 	}
 
-	/**
-	 * XP dos blocos concluidos: cada um vale como uma serie, pelo volume somado das etapas, ou pelas reps x fator no
-	 * peso corporal (a carga gravada e ignorada).
-	 */
 	public static int xp(ExercicioSessao exercicio) {
 		Exercicio x = exercicio.getExercicio();
 		int xp = 0;

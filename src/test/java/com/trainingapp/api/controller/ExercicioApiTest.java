@@ -74,7 +74,6 @@ class ExercicioApiTest {
 	void naoListaCardioAlongamentoPliometriaNemStrongman() throws Exception {
 		mvc.perform(get("/api/exercicios").param("grupo", "CARDIO")).andExpect(jsonPath("$.length()").value(0));
 		mvc.perform(get("/api/exercicios")).andExpect(jsonPath("$.length()").value(876 - 14 - 123 - 61 - 21));
-		// Peso corporal fica, com o fator de XP do catalogo.
 		mvc.perform(get("/api/exercicios").param("busca", "barra fixa pronada")).andExpect(jsonPath("$.length()").value(1));
 		org.assertj.core.api.Assertions.assertThat(exercicios.findBySlug("Pullups").orElseThrow().getFatorXp())
 				.isEqualByComparingTo("2.0");

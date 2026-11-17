@@ -17,7 +17,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/** Uma pesagem por usuario por dia: registrar de novo no mesmo dia substitui o peso. */
 @Entity
 @Table(name = "peso_registro", uniqueConstraints = @UniqueConstraint(columnNames = { "usuario_id", "data" }))
 @Getter

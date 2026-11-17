@@ -11,7 +11,6 @@ class RegrasTest {
 
 	private static final LocalDate D = LocalDate.of(2026, 10, 1);
 
-	/** Serie sem drop: um bloco de uma etapa. */
 	private static int serie(String carga, Integer reps) {
 		return Regras.xpDoBloco(Collections.singletonList(carga == null ? null : new BigDecimal(carga)),
 				Collections.singletonList(reps));
@@ -20,13 +19,12 @@ class RegrasTest {
 	@Test
 	void serieRendeVolumeDivididoPor40() {
 		assertThat(serie("60", 10)).isEqualTo(15);
-		assertThat(serie("100", 5)).isEqualTo(13); // 12,5 arredonda para cima
+		assertThat(serie("100", 5)).isEqualTo(13);
 		assertThat(serie("32.5", 12)).isEqualTo(10);
 	}
 
 	@Test
 	void dropSetValeOVolumeSomadoComoUmaSerieSo() {
-		// (600 + 50 x 8 + 40 x 6) / 40 = 31; o teto de 100 vale para o bloco inteiro.
 		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("60"), new BigDecimal("50"), new BigDecimal("40")), List.of(10, 8, 6)))
 				.isEqualTo(31);
 		assertThat(Regras.xpDoBloco(List.of(new BigDecimal("200"), new BigDecimal("160")), List.of(15, 12))).isEqualTo(100);
@@ -34,11 +32,11 @@ class RegrasTest {
 
 	@Test
 	void pesoCorporalRendeRepsVezesOFatorEntre5E100() {
-		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(10), 2.0)).isEqualTo(20); // barra fixa
-		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(15), 0.5)).isEqualTo(8); // 7,5 arredonda para cima
-		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(6), 0.5)).isEqualTo(5); // minimo
-		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(60), 2.0)).isEqualTo(100); // maximo
-		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(8, 6), 1.0)).isEqualTo(14); // drop antigo: reps somadas
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(10), 2.0)).isEqualTo(20);
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(15), 0.5)).isEqualTo(8);
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(6), 0.5)).isEqualTo(5);
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(60), 2.0)).isEqualTo(100);
+		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(8, 6), 1.0)).isEqualTo(14);
 		assertThat(Regras.xpDoBlocoPesoCorporal(List.of(0), 1.0)).isZero();
 	}
 
@@ -142,7 +140,7 @@ class RegrasTest {
 	@Test
 	void sequenciaAtualMorreQuandoOUltimoTreinoPassouDaTolerancia() {
 		var treinos = List.of(D, D.plusDays(1));
-		assertThat(Regras.streak(treinos, D.plusDays(4)).atual()).isEqualTo(2); // 2 folgas ate hoje
+		assertThat(Regras.streak(treinos, D.plusDays(4)).atual()).isEqualTo(2);
 		assertThat(Regras.streak(treinos, D.plusDays(5)).atual()).isZero();
 		assertThat(Regras.streak(treinos, D.plusDays(5)).melhor()).isEqualTo(2);
 	}
@@ -152,7 +150,6 @@ class RegrasTest {
 		assertThat(Regras.streak(List.of(D, D, D), D)).isEqualTo(new Regras.Streak(1, 1, 0, false));
 	}
 
-	/** {@code n} dias de treino seguidos a partir de {@code inicio}. */
 	private static List<LocalDate> seguidos(LocalDate inicio, int n) {
 		return inicio.datesUntil(inicio.plusDays(n)).toList();
 	}
@@ -161,7 +158,6 @@ class RegrasTest {
 		return java.util.stream.Stream.concat(a.stream(), b.stream()).toList();
 	}
 
-	/** Congelamentos guardados no dia do ultimo treino. */
 	private static int congelamentos(List<LocalDate> treinos) {
 		return Regras.streak(treinos, treinos.getLast()).congelamentos();
 	}
@@ -183,7 +179,7 @@ class RegrasTest {
 	void congelamentoEUsadoSozinhoDepoisDaFolga() {
 		var treinos = seguidos(D, 7);
 		var ultimo = treinos.getLast();
-		assertThat(Regras.streak(treinos, ultimo.plusDays(3))).isEqualTo(new Regras.Streak(7, 7, 1, false)); // ainda folga
+		assertThat(Regras.streak(treinos, ultimo.plusDays(3))).isEqualTo(new Regras.Streak(7, 7, 1, false));
 		assertThat(Regras.streak(treinos, ultimo.plusDays(4))).isEqualTo(new Regras.Streak(7, 7, 0, true));
 		assertThat(Regras.streak(treinos, ultimo.plusDays(5))).isEqualTo(new Regras.Streak(7, 7, 0, true));
 		assertThat(Regras.streak(treinos, ultimo.plusDays(6))).isEqualTo(new Regras.Streak(0, 7, 0, false));
@@ -209,12 +205,10 @@ class RegrasTest {
 
 	@Test
 	void progressoRecomecaDepoisDoUso() {
-		// 21 dias: 2 guardados; usa 1 e precisa de mais 14 para voltar a 2.
 		var antes = seguidos(D, 21);
 		var depois = antes.getLast().plusDays(4);
 		assertThat(congelamentos(juntos(antes, seguidos(depois, 13)))).isEqualTo(1);
 		assertThat(congelamentos(juntos(antes, seguidos(depois, 14)))).isEqualTo(2);
-		// 7 dias: 1 guardado; usa e precisa de mais 7.
 		var semana = seguidos(D, 7);
 		var volta = semana.getLast().plusDays(4);
 		assertThat(congelamentos(juntos(semana, seguidos(volta, 6)))).isZero();
@@ -223,7 +217,7 @@ class RegrasTest {
 
 	@Test
 	void quebraSemCongelamentoSuficienteZeraSequenciaEProgresso() {
-		var semana = seguidos(D, 7); // 1 congelamento, mas a folga pede 2
+		var semana = seguidos(D, 7);
 		var volta = semana.getLast().plusDays(6);
 		var depois = juntos(semana, seguidos(volta, 6));
 		assertThat(Regras.streak(depois, depois.getLast())).isEqualTo(new Regras.Streak(6, 7, 0, false));
@@ -232,11 +226,11 @@ class RegrasTest {
 
 	@Test
 	void semanasFirmesContamSemanasSeguidasCom3Treinos() {
-		LocalDate seg = LocalDate.of(2026, 10, 5); // segunda
-		var tresPorSemana = List.of(seg, seg.plusDays(2), seg.plusDays(6), // domingo ainda e a mesma semana
+		LocalDate seg = LocalDate.of(2026, 10, 5);
+		var tresPorSemana = List.of(seg, seg.plusDays(2), seg.plusDays(6),
 				seg.plusWeeks(1), seg.plusWeeks(1).plusDays(1), seg.plusWeeks(1).plusDays(3));
 		assertThat(Regras.melhorSemanasFirmes(tresPorSemana)).isEqualTo(2);
-		assertThat(Regras.melhorSemanasFirmes(List.of(seg, seg, seg, seg.plusDays(1)))).isZero(); // dias repetidos contam uma vez
+		assertThat(Regras.melhorSemanasFirmes(List.of(seg, seg, seg, seg.plusDays(1)))).isZero();
 		assertThat(Regras.melhorSemanasFirmes(List.of())).isZero();
 	}
 
@@ -249,14 +243,14 @@ class RegrasTest {
 				dias.add(seg.plusWeeks(semana).plusDays(d));
 			}
 		}
-		dias.add(seg.plusWeeks(1)); // so 1 treino na semana 1
+		dias.add(seg.plusWeeks(1));
 		assertThat(Regras.melhorSemanasFirmes(dias)).isEqualTo(3);
 	}
 
 	@Test
 	void deVoltaExige14DiasSemTreinoEntreDoisTreinos() {
-		assertThat(Regras.voltouDepoisDePausa(List.of(D, D.plusDays(15)))).isTrue(); // 14 dias parado entre eles
-		assertThat(Regras.voltouDepoisDePausa(List.of(D, D.plusDays(14)))).isFalse(); // 13 dias parado
+		assertThat(Regras.voltouDepoisDePausa(List.of(D, D.plusDays(15)))).isTrue();
+		assertThat(Regras.voltouDepoisDePausa(List.of(D, D.plusDays(14)))).isFalse();
 		assertThat(Regras.voltouDepoisDePausa(List.of(D))).isFalse();
 	}
 }

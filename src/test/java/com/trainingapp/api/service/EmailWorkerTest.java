@@ -46,10 +46,6 @@ class EmailWorkerTest {
 		worker = new EmailWorker(repository, smtp, relogio, "TrainingApp <nao-responda@teste.com>");
 	}
 
-	/**
-	 * Enfileira e devolve a linha criada, ja "vencida" ha 1 segundo: o teste processa o e-mail no mesmo instante em que o
-	 * cria, e sem isso a comparacao de proximaTentativaEm com "agora" dependeria de diferencas de microssegundos.
-	 */
 	private EmailPendente enfileirar(String corpo) {
 		fila.enfileirar("maria@teste.com", "Assunto", corpo);
 		EmailPendente email = repository.findAll().stream().filter(e -> e.getCorpo().equals(corpo)).findFirst().orElseThrow();
@@ -68,7 +64,7 @@ class EmailWorkerTest {
 		assertThat(email.getCorpo()).isEmpty();
 
 		worker.enviarPendentes();
-		verify(smtp).send(any(SimpleMailMessage.class)); // nao reenvia
+		verify(smtp).send(any(SimpleMailMessage.class));
 	}
 
 	@Test
@@ -97,11 +93,9 @@ class EmailWorkerTest {
 		assertThat(email.getErro()).contains("SMTP fora do ar");
 		assertThat(email.getProximaTentativaEm()).isAfter(Instant.now(relogio).plus(Duration.ofSeconds(30)));
 
-		// Ainda dentro da espera: o worker nem tenta.
 		worker.enviarPendentes();
 		assertThat(email.getTentativas()).isEqualTo(1);
 
-		// Depois de cinco falhas desiste, mas o e-mail fica guardado com o erro.
 		for (int i = 1; i < EmailWorker.MAX_TENTATIVAS; i++) {
 			email.setProximaTentativaEm(Instant.now(relogio).minusSeconds(1));
 			worker.enviarPendentes();

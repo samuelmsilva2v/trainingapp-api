@@ -24,7 +24,6 @@ class LimiteDeTentativasTest {
 
 	@Test
 	void rajadaParalelaNaMesmaChavePassaNoMaximoOLimite() throws Exception {
-		// Era o furo: checar e contar em passos separados deixava todas as requisicoes da rajada passarem pela checagem.
 		int requisicoes = 200;
 		ExecutorService pool = Executors.newFixedThreadPool(requisicoes);
 		CountDownLatch largada = new CountDownLatch(1);
@@ -61,7 +60,7 @@ class LimiteDeTentativasTest {
 		limite.tentar("k", 3);
 
 		assertThatThrownBy(() -> limite.tentar("k", 3)).isInstanceOf(ErroDeAutenticacaoException.class);
-		limite.tentar("outra-chave", 3); // o bloqueio e por chave
+		limite.tentar("outra-chave", 3);
 	}
 
 	@Test

@@ -29,7 +29,6 @@ class HistoricoDeTreinosTest {
 	private final List<ExercicioDoTreino> exercicios = new ArrayList<>();
 	private final TreeMap<LocalDate, BigDecimal> pesos = new TreeMap<>();
 
-	/** Treino que termina no dia e hora dados (Sao Paulo). */
 	private UUID treino(String fimLocal, UUID plano, int diaOrdem) {
 		UUID id = UUID.randomUUID();
 		treinos.add(new TreinoDaConta(id, java.time.LocalDateTime.parse(fimLocal).atZone(SP).toInstant(), plano, diaOrdem));
@@ -41,7 +40,6 @@ class HistoricoDeTreinosTest {
 				0L, 0));
 	}
 
-	/** Exercicio de peso corporal: carga gravada (ignorada), reps somadas e a serie com mais reps. */
 	private void pesoCorporal(UUID treino, String volume, long reps, int maisReps) {
 		exercicios.add(new ExercicioDoTreino(treino, UUID.randomUUID(), GrupoMuscular.COSTAS, Equipamento.PESO_CORPORAL,
 				new BigDecimal(volume), new BigDecimal("80"), reps, maisReps));
@@ -57,7 +55,7 @@ class HistoricoDeTreinosTest {
 		pesoCorporal(b, "9000", 45, 25);
 		pesoCorporal(invalido, "9000", 500, 60);
 		var t = totais(Set.of(a, b));
-		assertThat(t.toneladas()).isEqualTo(2); // so a barra
+		assertThat(t.toneladas()).isEqualTo(2);
 		assertThat(t.treinoPesado()).isFalse();
 		assertThat(t.repsPesoCorporal()).isEqualTo(75);
 		assertThat(t.serieLonga()).isEqualTo(25);
@@ -73,16 +71,16 @@ class HistoricoDeTreinosTest {
 		UUID b = treino("2026-10-27T18:00", null, 0);
 		UUID invalido = treino("2026-10-27T19:00", null, 0);
 		exercicio(a, GrupoMuscular.PEITO, Equipamento.BARRA, "6000", "60");
-		exercicio(a, GrupoMuscular.COSTAS, Equipamento.CABO, "4000", "40"); // treino a: 10 t
+		exercicio(a, GrupoMuscular.COSTAS, Equipamento.CABO, "4000", "40");
 		exercicio(b, GrupoMuscular.PEITO, Equipamento.BARRA, "9999", "70");
 		exercicio(invalido, GrupoMuscular.PEITO, Equipamento.BARRA, "50000", "80");
 		var t = totais(Set.of(a, b));
-		assertThat(t.toneladas()).isEqualTo(19); // 19.999 kg
+		assertThat(t.toneladas()).isEqualTo(19);
 		assertThat(t.treinoPesado()).isTrue();
 		assertThat(t.variedade()).isEqualTo(3);
 
 		var abaixo = HistoricoDeTreinos.de(treinos, Set.of(b), exercicios, List.of(), pesos, Map.of(), SP);
-		assertThat(abaixo.treinoPesado()).isFalse(); // 9.999 kg
+		assertThat(abaixo.treinoPesado()).isFalse();
 	}
 
 	@Test
@@ -94,8 +92,8 @@ class HistoricoDeTreinosTest {
 		exercicio(seg, GrupoMuscular.OMBROS, Equipamento.HALTERES, "1", "1");
 		exercicio(ter, GrupoMuscular.TRICEPS, Equipamento.CABO, "1", "1");
 		exercicio(ter, GrupoMuscular.GLUTEOS, Equipamento.MAQUINA, "1", "1");
-		assertThat(totais(Set.of(seg, ter)).corpoCompleto()).isFalse(); // falta abdomen
-		UUID domingoSeguinte = treino("2026-11-02T18:00", null, 0); // segunda da outra semana
+		assertThat(totais(Set.of(seg, ter)).corpoCompleto()).isFalse();
+		UUID domingoSeguinte = treino("2026-11-02T18:00", null, 0);
 		exercicio(domingoSeguinte, GrupoMuscular.ABDOMEN, Equipamento.PESO_CORPORAL, "1", "1");
 		assertThat(totais(Set.of(seg, ter, domingoSeguinte)).corpoCompleto()).isFalse();
 		UUID qua = treino("2026-10-28T18:00", null, 0);
@@ -116,20 +114,20 @@ class HistoricoDeTreinosTest {
 		exercicio(barra, GrupoMuscular.QUADRICEPS, Equipamento.BARRA, "800", "100");
 		t = totais(Set.of(maquina, barra));
 		assertThat(t.clube100()).isTrue();
-		assertThat(t.maisForte()).isTrue(); // 100 kg >= 80 kg
+		assertThat(t.maisForte()).isTrue();
 	}
 
 	@Test
 	void maisForteUsaAPesagemMaisRecenteAteODiaDoTreino() {
 		UUID barra = treino("2026-10-27T18:00", null, 0);
 		exercicio(barra, GrupoMuscular.PEITO, Equipamento.BARRA, "800", "80");
-		assertThat(totais(Set.of(barra)).maisForte()).isFalse(); // sem pesagem ate o dia
-		pesos.put(LocalDate.of(2026, 10, 28), new BigDecimal("70")); // depois do treino: nao vale
+		assertThat(totais(Set.of(barra)).maisForte()).isFalse();
+		pesos.put(LocalDate.of(2026, 10, 28), new BigDecimal("70"));
 		assertThat(totais(Set.of(barra)).maisForte()).isFalse();
 		pesos.put(LocalDate.of(2026, 10, 20), new BigDecimal("85"));
-		assertThat(totais(Set.of(barra)).maisForte()).isFalse(); // 80 < 85
+		assertThat(totais(Set.of(barra)).maisForte()).isFalse();
 		pesos.put(LocalDate.of(2026, 10, 25), new BigDecimal("79.5"));
-		assertThat(totais(Set.of(barra)).maisForte()).isTrue(); // vale a mais recente ate o dia
+		assertThat(totais(Set.of(barra)).maisForte()).isTrue();
 	}
 
 	@Test
@@ -137,7 +135,7 @@ class HistoricoDeTreinosTest {
 		UUID cedo = treino("2026-10-26T05:59", null, 0);
 		UUID tarde = treino("2026-10-27T22:01", null, 0);
 		UUID anoNovo = treino("2027-01-01T10:00", null, 0);
-		var t = totais(Set.of()); // nenhum valido: as ocultas nao exigem treino valido
+		var t = totais(Set.of());
 		assertThat(t.madrugador()).isTrue();
 		assertThat(t.coruja()).isTrue();
 		assertThat(t.anoNovo()).isTrue();
@@ -157,7 +155,7 @@ class HistoricoDeTreinosTest {
 		UUID b = treino("2026-10-27T18:00", PLANO, 1);
 		UUID c = treino("2026-10-28T18:00", PLANO, 2);
 		assertThat(totais(Set.of(a, b, c)).rotacaoCompleta()).isTrue();
-		assertThat(totais(Set.of(a, c)).rotacaoCompleta()).isFalse(); // pulou o dia 1 (o abandonado nem e valido)
+		assertThat(totais(Set.of(a, c)).rotacaoCompleta()).isFalse();
 	}
 
 	@Test
@@ -170,7 +168,7 @@ class HistoricoDeTreinosTest {
 
 		treinos.clear();
 		UUID unico = treino("2026-10-26T18:00", OUTRO_PLANO, 0);
-		assertThat(totais(Set.of(unico)).rotacaoCompleta()).isFalse(); // plano de 1 dia
+		assertThat(totais(Set.of(unico)).rotacaoCompleta()).isFalse();
 	}
 
 	@Test
@@ -180,16 +178,16 @@ class HistoricoDeTreinosTest {
 		List<Object[]> linhas = List.of(
 				new Object[] { sessao, ex, 0, TipoSerie.NORMAL, true },
 				new Object[] { sessao, ex, 1, TipoSerie.DROP, true },
-				new Object[] { sessao, ex, 2, TipoSerie.DROP, true }, // mesmo bloco: conta uma vez
+				new Object[] { sessao, ex, 2, TipoSerie.DROP, true },
 				new Object[] { sessao, ex, 3, TipoSerie.NORMAL, false },
-				new Object[] { sessao, ex, 4, TipoSerie.DROP, false }, // bloco nao concluido
+				new Object[] { sessao, ex, 4, TipoSerie.DROP, false },
 				new Object[] { sessao, ex, 5, TipoSerie.NORMAL, true },
 				new Object[] { sessao, ex, 6, TipoSerie.DROP, true });
 		assertThat(HistoricoDeTreinos.blocosComDrop(linhas)).hasSize(2);
 		UUID valido = UUID.randomUUID();
 		var t = HistoricoDeTreinos.de(List.of(), Set.of(valido), List.of(), List.of(valido, valido, UUID.randomUUID()), new TreeMap<>(),
 				Map.of(), SP);
-		assertThat(t.dropSets()).isEqualTo(2); // so os blocos de treinos validos
+		assertThat(t.dropSets()).isEqualTo(2);
 	}
 
 	@Test

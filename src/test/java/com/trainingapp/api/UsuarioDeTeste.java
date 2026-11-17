@@ -8,10 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/**
- * O usuario que os testes de API usam via {@code @WithMockUser(username = UsuarioDeTeste.ID)}.
- * Criado na subida do contexto, so no perfil de teste (o app nao tem mais usuario padrao).
- */
 @Component
 @Profile("test")
 public class UsuarioDeTeste implements SmartInitializingSingleton {

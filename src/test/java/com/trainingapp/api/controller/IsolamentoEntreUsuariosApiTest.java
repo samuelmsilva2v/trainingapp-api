@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Com o cadastro aberto, o filtro por usuario e a unica barreira entre contas: o outro usuario nao le nem altera nada. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -80,7 +79,6 @@ class IsolamentoEntreUsuariosApiTest {
 		mvc.perform(get("/api/sessoes/" + sessao).with(outro)).andExpect(status().isNotFound());
 		mvc.perform(delete("/api/sessoes/" + sessao).with(outro)).andExpect(status().isNotFound());
 
-		// Nem usar o exercicio proprio do atleta num plano ou num treino dele.
 		mvc.perform(post("/api/planos").with(outro).contentType(MediaType.APPLICATION_JSON).content(planoCom(exercicio)))
 				.andExpect(status().isUnprocessableContent());
 		mvc.perform(put("/api/sessoes/" + UUID.randomUUID()).with(outro).contentType(MediaType.APPLICATION_JSON)
@@ -94,7 +92,6 @@ class IsolamentoEntreUsuariosApiTest {
 	@Test
 	void outroUsuarioNaoReaproveitaIdsDoTreinoDoAtleta() throws Exception {
 		String proprio = criarExercicio(outro);
-		// O id da sessao, de um exercicio ou de uma serie do atleta: o merge levaria a linha para o outro usuario.
 		mvc.perform(put("/api/sessoes/" + sessao).with(outro).contentType(MediaType.APPLICATION_JSON)
 				.content(sessaoCom(UUID.randomUUID(), proprio, UUID.randomUUID()))).andExpect(status().isUnprocessableContent());
 		UUID nova = UUID.randomUUID();

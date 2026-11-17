@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Sem TRAININGAPP_FEEDBACK_EMAIL o feedback fica desligado. */
 @SpringBootTest(properties = "trainingapp.feedback.email=")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

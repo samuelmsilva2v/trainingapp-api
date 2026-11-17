@@ -30,7 +30,6 @@ import java.util.List;
 @EnableConfigurationProperties(AuthProperties.class)
 public class SegurancaConfig {
 
-	// Sem sessao nem CSRF: a API so aceita Bearer. O cookie do refresh (SameSite=Strict, POST) so serve em /api/auth.
 	@Bean
 	SecurityFilterChain filtros(HttpSecurity http, @Value("${trainingapp.cors.origens:https://localhost}") List<String> origens)
 			throws Exception {
@@ -41,17 +40,11 @@ public class SegurancaConfig {
 						.requestMatchers("/api/auth/sair-todos", "/api/auth/trocar-senha", "/api/auth/excluir-conta").authenticated()
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/**").authenticated()
-						// Front estatico (perfil online), health e o resto.
 						.anyRequest().permitAll())
 				.oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
 		return http.build();
 	}
 
-	/**
-	 * CORS so para as origens listadas (o app Android roda em https://localhost). Qualquer outra origem nao recebe
-	 * configuracao e segue como antes: a web, na mesma origem, nunca depende de o proxy repassar host e esquema certos.
-	 * Sem credenciais: o app usa Bearer e o refresh no corpo, nunca o cookie.
-	 */
 	static CorsConfigurationSource cors(List<String> origens) {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(origens);

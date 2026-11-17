@@ -13,7 +13,6 @@ public interface PlanoRepository extends JpaRepository<Plano, UUID> {
 
 	List<Plano> findByUsuarioIdOrderByCriadoEmDesc(UUID usuarioId);
 
-	/** Id e quantidade de dias de cada plano da conta (para a conquista "Rotacao completa"). */
 	@Query("select p.id, size(p.dias) from Plano p where p.usuario.id = :usuarioId")
 	List<Object[]> diasPorPlano(@Param("usuarioId") UUID usuarioId);
 

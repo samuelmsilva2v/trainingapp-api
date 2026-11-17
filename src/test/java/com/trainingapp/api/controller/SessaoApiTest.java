@@ -85,7 +85,6 @@ class SessaoApiTest {
 		Instant recente = agora().minus(1, ChronoUnit.HOURS);
 		salvar(UUID.randomUUID(), "CONCLUIDA", recente, recente.plusSeconds(60), serie(UUID.randomUUID(), 8, "62.5", true),
 				serie(UUID.randomUUID(), 6, "62.5", false)).andExpect(status().isOk());
-		// Em andamento nao conta como anterior.
 		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), 5, "99", true))
 				.andExpect(status().isOk());
 
@@ -97,7 +96,6 @@ class SessaoApiTest {
 				.andExpect(jsonPath("$[0].series[0].reps").value(8))
 				.andExpect(jsonPath("$[0].series[0].carga").value(62.5));
 
-		// Exercicio sem historico: lista vazia.
 		mvc.perform(get("/api/sessoes/anteriores").param("exercicioIds", UUID.randomUUID().toString()))
 				.andExpect(jsonPath("$.length()").value(0));
 	}
@@ -114,7 +112,6 @@ class SessaoApiTest {
 
 		mvc.perform(get("/api/sessoes")).andExpect(status().isOk());
 
-		// Sem batch fetch sao 1 + 10 (exercicios) + 10 (series) queries.
 		org.junit.jupiter.api.Assertions.assertTrue(stats.getPrepareStatementCount() < 10,
 				"queries: " + stats.getPrepareStatementCount());
 	}
@@ -193,12 +190,10 @@ class SessaoApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.exercicios[0].series.length()").value(1));
 
-		// Reenvio igual: continua uma sessao com uma serie.
 		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio, null, serie(serie1, null, null, false))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.exercicios[0].series.length()").value(1));
 
-		// Reenvio com a serie preenchida e uma nova, reaproveitando ids.
 		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio.plusSeconds(60), null,
 				serie(serie1, 10, "62.5", true), serie(serie2, null, null, false))
 				.andExpect(status().isOk())
@@ -223,7 +218,6 @@ class SessaoApiTest {
 		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio.plusSeconds(30), null, serie(s, 5, "20", true))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.exercicios[0].series[0].reps").value(12));
-		// Concluir com o relogio atrasado tambem nao passa em silencio.
 		salvar(sessao, exSessao, "CONCLUIDA", inicio, inicio.plusSeconds(60), inicio.plusSeconds(60), serie(s, 5, "20", true))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.estado").value("EM_ANDAMENTO"));
@@ -257,19 +251,15 @@ class SessaoApiTest {
 		salvar(UUID.randomUUID(), "CONCLUIDA", ontem, ontem.plusSeconds(3600), serie(UUID.randomUUID(), 8, "60", true))
 				.andExpect(status().isUnprocessableContent());
 
-		// Fim no futuro (XP farmavel em dias futuros).
 		salvar(UUID.randomUUID(), "CONCLUIDA", agora(), agora().plus(2, ChronoUnit.DAYS), serie(UUID.randomUUID(), 8, "60", true))
 				.andExpect(status().isUnprocessableContent());
 
-		// atualizadoEm no futuro (travaria as proximas escritas).
 		salvar(UUID.randomUUID(), UUID.randomUUID(), "EM_ANDAMENTO", agora(), agora().plus(2, ChronoUnit.DAYS), null,
 				serie(UUID.randomUUID(), 8, "60", true)).andExpect(status().isUnprocessableContent());
 
-		// Concluida sem finalizadaEm.
 		salvar(UUID.randomUUID(), "CONCLUIDA", agora(), null, serie(UUID.randomUUID(), 8, "60", true))
 				.andExpect(status().isUnprocessableContent());
 
-		// Serie concluida sem repeticao.
 		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), null, "60", true))
 				.andExpect(status().isUnprocessableContent());
 	}
@@ -282,12 +272,10 @@ class SessaoApiTest {
 		Instant inicio = agora();
 		salvar(sessao, exSessao, "EM_ANDAMENTO", inicio, inicio, null, serie(s, 8, "60", true)).andExpect(status().isOk());
 
-		// Inicio e fim levados para um ano atras: o XP cairia naquele dia.
 		Instant anoPassado = inicio.minus(365, ChronoUnit.DAYS);
 		salvar(sessao, exSessao, "CONCLUIDA", anoPassado, inicio.plusSeconds(60), anoPassado.plusSeconds(3600), serie(s, 8, "60", true))
 				.andExpect(status().isUnprocessableContent());
 
-		// So o inicio reenviado diferente: fica o salvo.
 		salvar(sessao, exSessao, "EM_ANDAMENTO", anoPassado, inicio.plusSeconds(120), null, serie(s, 8, "60", true))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.iniciadaEm").value(inicio.toString()));
@@ -333,12 +321,9 @@ class SessaoApiTest {
 		mvc.perform(get("/api/sessoes/" + UUID.randomUUID())).andExpect(status().isNotFound());
 	}
 
-	// --- drop-set ---
-
 	@Test
 	void dropSetEhUmaSerieSoEODropSegueOCheckDaSerieNormal() throws Exception {
 		UUID sessao = UUID.randomUUID();
-		// O cliente manda o drop como nao concluido; vale o check da serie normal. Drop sem repeticao nao conta.
 		salvar(sessao, "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), 10, "60", true),
 				drop(UUID.randomUUID(), 8, "45", false), drop(UUID.randomUUID(), null, "35", true))
 				.andExpect(status().isOk())
@@ -347,7 +332,6 @@ class SessaoApiTest {
 				.andExpect(jsonPath("$.exercicios[0].series[1].concluida").value(true))
 				.andExpect(jsonPath("$.exercicios[0].series[2].concluida").value(false));
 
-		// Desmarcar a serie normal desmarca o bloco inteiro.
 		salvar(sessao, UUID.randomUUID(), "EM_ANDAMENTO", agora(), agora().plusSeconds(1), null,
 				serie(UUID.randomUUID(), 10, "60", false), drop(UUID.randomUUID(), 8, "45", true))
 				.andExpect(status().isOk())
@@ -357,7 +341,6 @@ class SessaoApiTest {
 	@Test
 	void dropSetRendeXpComoUmaSerieSoPeloVolumeSomado() throws Exception {
 		Instant inicio = agora();
-		// 2 series de 60 x 10 (15 XP cada) e uma terceira com 2 drops: (600 + 50 x 8 + 40 x 6) / 40 = 31 XP.
 		salvar(UUID.randomUUID(), "CONCLUIDA", inicio, inicio.plusSeconds(60), serie(UUID.randomUUID(), 10, "60", true),
 				serie(UUID.randomUUID(), 10, "60", true), serie(UUID.randomUUID(), 10, "60", true),
 				drop(UUID.randomUUID(), 8, "50", true), drop(UUID.randomUUID(), 6, "40", true))
@@ -372,9 +355,8 @@ class SessaoApiTest {
 
 	@Test
 	void doisDropsNaoValemPorDuasSeriesNoMinimoDoTreino() throws Exception {
-		// De dia: as ocultas de horario (Madrugador, Coruja) valem mesmo em treino invalido e dariam XP de madrugada.
-		// shortcut: em 1 e 2 de janeiro o meio-dia recente pode liberar "Ano novo"; travar o Clock se isso incomodar.
 		ZonedDateTime agora = ZonedDateTime.now();
+		// shortcut: em 1 e 2 de janeiro o meio-dia recente pode liberar "Ano novo"; travar o Clock se isso incomodar.
 		ZonedDateTime meioDia = agora.with(LocalTime.NOON);
 		Instant inicio = (meioDia.plusMinutes(1).isAfter(agora) ? meioDia.minusDays(1) : meioDia).toInstant();
 		salvar(UUID.randomUUID(), "CONCLUIDA", inicio, inicio.plusSeconds(60), serie(UUID.randomUUID(), 10, "60", true),
@@ -404,8 +386,6 @@ class SessaoApiTest {
 				.andExpect(jsonPath("$[0].series[1].tipo").value("DROP"))
 				.andExpect(jsonPath("$[0].series[1].carga").value(45));
 	}
-
-	// --- helpers ---
 
 	private void concluir(UUID sessao, int diaOrdem, String diaNome) throws Exception {
 		Instant inicio = agora();

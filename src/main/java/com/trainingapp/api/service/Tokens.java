@@ -7,7 +7,6 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
-/** Tokens opacos (refresh e links de e-mail): 256 bits aleatorios; so o SHA-256 vai para o banco. */
 final class Tokens {
 
 	private static final SecureRandom ALEATORIO = new SecureRandom();

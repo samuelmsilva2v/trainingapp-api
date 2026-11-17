@@ -23,11 +23,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Totais das conquistas da fatia 2 (api#36), calculados em memoria a partir do que o banco ja somou por exercicio de cada
- * treino. Puro (sem banco), entao cada regra e testada direto. So contam treinos validos, menos nos horarios (ocultas),
- * que olham qualquer treino concluido.
- */
 final class HistoricoDeTreinos {
 
 	private HistoricoDeTreinos() {
@@ -44,7 +39,6 @@ final class HistoricoDeTreinos {
 	static final BigDecimal CLUBE_KG = new BigDecimal("100");
 	private static final int MACROGRUPOS = 6;
 
-	/** Macrogrupos do "Corpo completo": os 18 grupos do catalogo nao cabem numa semana. */
 	static String macrogrupo(GrupoMuscular grupo) {
 		return switch (grupo) {
 			case PEITO -> "peito";
@@ -57,14 +51,6 @@ final class HistoricoDeTreinos {
 		};
 	}
 
-	/**
-	 * @param treinos treinos concluidos (e o atual, na previa, com a hora de termino ja resolvida)
-	 * @param validos ids dos treinos validos (1o do dia, 3+ series)
-	 * @param exercicios agregados por exercicio de cada treino
-	 * @param blocosComDrop a sessao de cada bloco concluido com drop (um item por bloco)
-	 * @param pesoAte pesagens por data, para achar a mais recente ate o dia do treino
-	 * @param diasPorPlano dias de cada plano que ainda existe
-	 */
 	static Totais de(List<TreinoDaConta> treinos, Set<UUID> validos, List<ExercicioDoTreino> exercicios, List<UUID> blocosComDrop,
 			NavigableMap<LocalDate, BigDecimal> pesoAte, Map<UUID, Integer> diasPorPlano, ZoneId fuso) {
 		Map<UUID, LocalDate> diaDoTreino = new HashMap<>();
@@ -84,7 +70,6 @@ final class HistoricoDeTreinos {
 		long repsPesoCorporal = 0;
 		int serieLonga = 0;
 		for (ExercicioDoTreino e : validosEx) {
-			// Peso corporal (api#43): a carga e ignorada; as reps contam a parte.
 			boolean pesoCorporal = e.equipamento() == Equipamento.PESO_CORPORAL;
 			if (pesoCorporal) {
 				repsPesoCorporal += e.reps() == null ? 0 : e.reps();
@@ -101,7 +86,6 @@ final class HistoricoDeTreinos {
 			}
 			if (e.equipamento() == Equipamento.BARRA && e.maiorCarga() != null) {
 				clube100 |= e.maiorCarga().compareTo(CLUBE_KG) >= 0;
-				// O peso que vale e a pesagem mais recente ate o dia do treino; sem pesagem ate ali, nao conta.
 				Map.Entry<LocalDate, BigDecimal> peso = dia == null ? null : pesoAte.floorEntry(dia);
 				maisForte |= peso != null && e.maiorCarga().compareTo(peso.getValue()) >= 0;
 			}
@@ -130,10 +114,6 @@ final class HistoricoDeTreinos {
 				madrugador, coruja, anoNovo, maisForte, repsPesoCorporal, serieLonga);
 	}
 
-	/**
-	 * Treinos do mesmo plano em sequencia (pela hora de termino) cobrindo os dias 0..n-1 na ordem. Treino de outro plano (ou
-	 * fora da vez) no meio quebra; plano com menos de 2 dias nao vale. Abandonados nem chegam aqui (nao sao validos).
-	 */
 	static boolean rotacaoCompleta(List<TreinoDaConta> validos, Map<UUID, Integer> diasPorPlano) {
 		UUID plano = null;
 		int esperado = 0;
@@ -161,14 +141,10 @@ final class HistoricoDeTreinos {
 		return false;
 	}
 
-	/**
-	 * Uma entrada (a sessao) por bloco concluido com pelo menos um drop: linhas (sessao, exercicio da sessao, ordem, tipo,
-	 * concluida) em ordem de exercicio e de serie. O drop so fica concluido com o bloco concluido e com repeticao.
-	 */
 	static List<UUID> blocosComDrop(List<Object[]> linhas) {
 		List<UUID> blocos = new ArrayList<>();
 		Object exercicio = null;
-		boolean contado = true; // so conta depois de achar a serie normal do bloco
+		boolean contado = true;
 		for (Object[] l : linhas) {
 			if (!Objects.equals(l[1], exercicio)) {
 				exercicio = l[1];
@@ -185,7 +161,6 @@ final class HistoricoDeTreinos {
 		return blocos;
 	}
 
-	/** Sessoes com treino valido: saldo positivo de SERIES (estorno desconta). */
 	static Set<UUID> validos(Map<UUID, Integer> saldoDeSeriesPorSessao) {
 		return saldoDeSeriesPorSessao.entrySet().stream().filter(s -> s.getValue() > 0).map(Map.Entry::getKey)
 				.collect(Collectors.toSet());

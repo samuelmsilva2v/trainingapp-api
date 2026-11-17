@@ -16,10 +16,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Documento completo da sessao: o cliente gera os ids (UUID) e reenvia a sessao inteira a cada
- * alteracao. A ordem das listas e a ordem de execucao.
- */
 public record SessaoRequest(
 		UUID planoId,
 		@NotBlank @Size(max = 100) String planoNome,
@@ -39,7 +35,6 @@ public record SessaoRequest(
 			@Min(1) @Max(100) int metaRepsMax,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal metaCarga,
 			@Min(0) @Max(1800) Integer metaDescansoSegundos,
-			/** Snapshot dos drops planejados em cada serie; ausente vale 0. */
 			@Min(0) @Max(Blocos.MAX_DROPS) Integer metaDrops,
 			@NotNull @Size(max = 50) @Valid List<SerieRequest> series) {
 	}
@@ -49,7 +44,6 @@ public record SessaoRequest(
 			@Min(0) @Max(1000) Integer reps,
 			@DecimalMin("0") @Digits(integer = 4, fraction = 2) BigDecimal carga,
 			boolean concluida,
-			/** Ausente vale NORMAL. O concluida de um drop e ignorado: vale o da serie normal do bloco. */
 			TipoSerie tipo) {
 
 		public TipoSerie tipoOuNormal() {

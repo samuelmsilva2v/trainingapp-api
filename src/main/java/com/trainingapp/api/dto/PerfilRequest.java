@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 
-/** O perfil inteiro: campo ausente vira nulo (lembrete de pesagem desligado). */
 public record PerfilRequest(@NotBlank @Size(max = 100) String nome, Integer lembretePesoDias) {
 
 	@AssertTrue(message = "lembretePesoDias deve ser 7, 15 ou 30")

@@ -16,10 +16,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Sessao de login de um aparelho. So o hash do token fica no banco; nao rotaciona e vence depois de um
- * periodo sem uso (cada renovacao empurra o vencimento). "Sair" apaga a linha.
- */
 @Entity
 @Table(name = "refresh_token")
 @Getter

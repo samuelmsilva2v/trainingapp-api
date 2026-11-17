@@ -15,7 +15,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/** Um exercicio dentro de um dia, com a meta uniforme para todas as series. */
 @Entity
 @Table(name = "exercicio_plano")
 @Getter
@@ -50,7 +49,6 @@ public class ExercicioPlano {
 
 	private Integer descansoSegundos;
 
-	/** Drops (0 a 3) depois de cada serie; 0 = series normais. */
 	@Column(nullable = false)
 	private int drops;
 }

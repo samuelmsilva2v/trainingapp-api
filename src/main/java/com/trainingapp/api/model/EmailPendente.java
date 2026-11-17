@@ -14,10 +14,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Fila de e-mails (outbox): gravada na mesma transacao da operacao que a originou e enviada depois por
- * {@code EmailWorker}, com nova tentativa se o SMTP falhar. O corpo (que carrega o link com o token) e apagado apos o envio.
- */
 @Entity
 @Table(name = "email_pendente")
 @Getter
@@ -44,13 +40,11 @@ public class EmailPendente {
 	@Column(nullable = false)
 	private Instant proximaTentativaEm;
 
-	// Nulo enquanto nao foi enviado.
 	private Instant enviadoEm;
 
 	@Column(length = 500)
 	private String erro;
 
-	// Reply-To; nulo = sem (so o feedback usa, com o e-mail de quem relatou).
 	private String responderPara;
 
 	@CreationTimestamp

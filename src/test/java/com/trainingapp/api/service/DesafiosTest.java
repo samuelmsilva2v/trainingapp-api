@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DesafiosTest {
 
-	// Semana ISO 44 de 2026: segunda 26/10 a domingo 01/11.
 	private static final LocalDate QUARTA = LocalDate.of(2026, 10, 28);
 	private static final Desafios.Desafio TRES = Desafios.TODOS.get(0);
 	private static final Desafios.Desafio RECORDE = Desafios.TODOS.get(1);
@@ -25,7 +24,7 @@ class DesafiosTest {
 	@Test
 	void tresTreinosContaSoOsDiasDaSemanaELimitaNaMeta() {
 		Set<LocalDate> dias = Set.of(LocalDate.of(2026, 10, 25), LocalDate.of(2026, 10, 26), LocalDate.of(2026, 10, 28));
-		assertThat(Desafios.progresso(TRES, dias, 0, QUARTA)).isEqualTo(2); // o domingo 25 e da semana anterior
+		assertThat(Desafios.progresso(TRES, dias, 0, QUARTA)).isEqualTo(2);
 		Set<LocalDate> cinco = Set.of(LocalDate.of(2026, 10, 26), LocalDate.of(2026, 10, 27), LocalDate.of(2026, 10, 28),
 				LocalDate.of(2026, 10, 29), LocalDate.of(2026, 10, 30));
 		assertThat(Desafios.progresso(TRES, cinco, 0, QUARTA)).isEqualTo(3);
@@ -33,11 +32,10 @@ class DesafiosTest {
 
 	@Test
 	void doisDiasSeguidosPrecisaDosDoisDentroDaSemana() {
-		// Domingo 01/11 e segunda 02/11 sao seguidos, mas de semanas diferentes.
 		assertThat(Desafios.progresso(SEGUIDOS, Set.of(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 2)), 0, QUARTA))
 				.isEqualTo(1);
 		assertThat(Desafios.progresso(SEGUIDOS, Set.of(LocalDate.of(2026, 10, 26), LocalDate.of(2026, 10, 28)), 0, QUARTA))
-				.isEqualTo(1); // com folga no meio
+				.isEqualTo(1);
 		assertThat(Desafios.progresso(SEGUIDOS, Set.of(LocalDate.of(2026, 10, 27), LocalDate.of(2026, 10, 28)), 0, QUARTA))
 				.isEqualTo(2);
 	}

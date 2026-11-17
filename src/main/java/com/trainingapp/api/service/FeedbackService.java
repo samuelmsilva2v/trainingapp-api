@@ -15,7 +15,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/** Grava o relato e o enfileira por e-mail para o destino configurado; sem destino, o feedback fica desligado. */
 @Service
 public class FeedbackService {
 

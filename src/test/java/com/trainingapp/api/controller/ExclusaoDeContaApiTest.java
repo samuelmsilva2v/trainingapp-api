@@ -50,7 +50,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.containsString;
 
-/** Excluir a conta apaga tudo do usuario (e so dele), exige provar quem pede e derruba os logins. Sem @WithMockUser: tokens reais. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -58,9 +57,8 @@ import static org.hamcrest.Matchers.containsString;
 class ExclusaoDeContaApiTest {
 
 	static final String SENHA = "Senha-Forte-123!";
-	static final String EMAIL = "maria@teste.com"; // esta na lista de permitidos (application-test.properties)
+	static final String EMAIL = "maria@teste.com";
 	static final Pattern TOKEN = Pattern.compile("token=([A-Za-z0-9_-]+)");
-	// O freio de tentativas por IP vive entre os testes: cada requisicao usa um IP novo.
 	static final AtomicInteger IPS = new AtomicInteger(1000);
 
 	@Autowired
@@ -125,7 +123,6 @@ class ExclusaoDeContaApiTest {
 		assertThat(emails.findAll().stream().filter(e -> EMAIL.equals(e.getResponderPara()))).isEmpty();
 		assertThat(feedbacks.findAll()).isEmpty();
 		assertThat(fotos.findById(maria.usuarioId())).isEmpty();
-		// O que nao e dele continua la.
 		assertThat(exercicios.findById(global.getId())).isPresent();
 		assertThat(exercicios.findById(deOutro.getId())).isPresent();
 		assertThat(usuarios.findById(UUID.fromString(UsuarioDeTeste.ID))).isPresent();
@@ -136,12 +133,10 @@ class ExclusaoDeContaApiTest {
 		Sessao maria = criarContaComSenha(EMAIL);
 		excluir(maria, "{\"senha\":\"" + SENHA + "\"}").andExpect(status().isNoContent());
 
-		// O access token ainda nao venceu, mas o dono nao existe mais.
 		mvc.perform(get("/api/perfil").header(HttpHeaders.AUTHORIZATION, "Bearer " + maria.acesso())).andExpect(status().isUnauthorized());
 		mvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh").cookie(new Cookie("refresh_token", maria.refresh())))
 				.andExpect(status().isUnauthorized());
 		post("/api/auth/login", "{\"email\":\"" + EMAIL + "\",\"senha\":\"" + SENHA + "\"}").andExpect(status().isUnauthorized());
-		// Quem excluiu pode se cadastrar de novo.
 		post("/api/auth/cadastro", "{\"nome\":\"Maria\",\"email\":\"" + EMAIL + "\",\"senha\":\"" + SENHA + "\"}").andExpect(status().isCreated());
 	}
 
@@ -166,7 +161,6 @@ class ExclusaoDeContaApiTest {
 		for (int i = 0; i < 5; i++) {
 			excluir(maria, "{\"senha\":\"errada-errada\"}").andExpect(status().isUnprocessableContent());
 		}
-		// Bloqueado: nem a senha certa passa, e a conta continua la.
 		excluir(maria, "{\"senha\":\"" + SENHA + "\"}").andExpect(status().isTooManyRequests());
 		assertThat(usuarios.findById(maria.usuarioId())).isPresent();
 	}
@@ -185,7 +179,6 @@ class ExclusaoDeContaApiTest {
 		Sessao maria = new Sessao(JsonPath.read(entrou.getResponse().getContentAsString(), "$.acesso"),
 				entrou.getResponse().getCookie("refresh_token").getValue(), usuarios.findByEmail(EMAIL).orElseThrow().getId());
 
-		// Conta sem senha: a senha nao serve, e o Google de outra conta tambem nao.
 		excluir(maria, "{\"senha\":\"" + SENHA + "\"}").andExpect(status().isUnprocessableContent());
 		excluir(maria, "{\"codigo\":\"outra-conta\"}").andExpect(status().isForbidden());
 		assertThat(usuarios.findById(maria.usuarioId())).isPresent();
@@ -210,9 +203,6 @@ class ExclusaoDeContaApiTest {
 		assertThat(usuarios.findById(maria.usuarioId())).isEmpty();
 	}
 
-	// --- apoio ---
-
-	/** Cria a conta pelo cadastro de verdade, confirma o e-mail pelo link da fila e entra. */
 	Sessao criarContaComSenha(String email) throws Exception {
 		post("/api/auth/cadastro", "{\"nome\":\"Maria\",\"email\":\"" + email + "\",\"senha\":\"" + SENHA + "\"}").andExpect(status().isCreated());
 		EmailPendente link = emails.findAll().stream().filter(e -> e.getDestinatario().equals(email))
@@ -225,7 +215,6 @@ class ExclusaoDeContaApiTest {
 				entrou.getResponse().getCookie("refresh_token").getValue(), usuarios.findByEmail(email).orElseThrow().getId());
 	}
 
-	/** Um plano usando um exercicio proprio e um treino concluido com 3 series (gera XP), tudo pela API. */
 	void popular(Sessao s) throws Exception {
 		String exercicio = JsonPath.read(comToken(s, MockMvcRequestBuilders.post("/api/exercicios"),
 				"{\"nome\":\"Supino proprio\",\"grupoMuscular\":\"PEITO\",\"equipamento\":\"BARRA\"}").andExpect(status().isCreated())

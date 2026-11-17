@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Linha do historico: totais calculados so sobre as series concluidas. */
 public record SessaoResumoResponse(
 		UUID id,
 		String planoNome,
@@ -21,7 +20,6 @@ public record SessaoResumoResponse(
 		int exercicios,
 		int seriesConcluidas,
 		BigDecimal volumeKg,
-		/** Reps concluidas em exercicios de peso corporal, que ficam fora do volume (api#43). */
 		int repsPesoCorporal,
 		int xpGanho,
 		int xpStreak,
@@ -40,7 +38,7 @@ public record SessaoResumoResponse(
 					continue;
 				}
 				if (r.getTipo() != TipoSerie.DROP) {
-					series++; // o drop-set conta como uma serie so; o volume inclui as etapas
+					series++;
 				}
 				if (pesoCorporal) {
 					repsPesoCorporal += r.getReps() == null ? 0 : r.getReps();

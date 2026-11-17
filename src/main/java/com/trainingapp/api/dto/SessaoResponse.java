@@ -31,9 +31,7 @@ public record SessaoResponse(
 		int xpConquistas,
 		int xpDesafios,
 		List<UUID> recordes,
-		/** Conquistas creditadas ao concluir este treino (ou que ele creditaria, na previa). */
 		List<GamificacaoService.ConquistaGanha> conquistas,
-		/** Desafios da semana cumpridos com este treino (ou que ele cumpriria, na previa). */
 		List<GamificacaoService.DesafioGanho> desafios) {
 
 	public record ExercicioResponse(
@@ -51,7 +49,6 @@ public record SessaoResponse(
 			Integer metaDescansoSegundos,
 			int metaDrops,
 			List<SerieResponse> series,
-			/** XP das series concluidas deste exercicio (0 se o treino nao rendeu XP). */
 			int xp) {
 	}
 

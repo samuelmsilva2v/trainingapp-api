@@ -21,17 +21,11 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Importa o catalogo empacotado em catalogo/exercicios.json. Idempotente: o slug
- * identifica cada exercicio, entao reexecutar atualiza em vez de duplicar, e os
- * exercicios criados pelo usuario (sem slug) nunca sao tocados.
- */
 @Component
 public class CatalogoImportador {
 
 	static final String ARQUIVO = "catalogo/exercicios.json";
 
-	/** Categorias do dataset fora de series x reps x kg: o exercicio fica indisponivel (some do seletor). */
 	static final Set<String> CATEGORIAS_OCULTAS = Set.of("cardio", "stretching", "plyometrics", "strongman");
 
 	record ItemCatalogo(String slug, String nome, GrupoMuscular grupoMuscular, Equipamento equipamento, String categoria,
@@ -49,7 +43,6 @@ public class CatalogoImportador {
 	@Transactional
 	public int importar() {
 		List<ItemCatalogo> itens = ler();
-		// Uma consulta so, sem os exercicios proprios dos usuarios; os ja gerenciados sao atualizados pelo dirty checking.
 		Map<String, Exercicio> existentes = repository.findBySlugIsNotNull().stream()
 				.collect(Collectors.toMap(Exercicio::getSlug, Function.identity()));
 		List<Exercicio> novos = new ArrayList<>();

@@ -17,7 +17,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 	}
 
-	// Corrida entre dois envios simultaneos: a chave unica barrou um deles; reenviar resolve (PUT idempotente).
+	// Corrida entre dois envios: a chave unica barrou um; reenviar resolve (PUT idempotente).
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ProblemDetail conflitoConcorrente(DataIntegrityViolationException e) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,

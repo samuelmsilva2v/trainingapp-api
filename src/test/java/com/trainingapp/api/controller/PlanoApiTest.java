@@ -119,7 +119,7 @@ class PlanoApiTest {
 				.content(plano("Drop", "{\"nome\":\"A\",\"exercicios\":[%s,%s]}".formatted(comDrops, item(supino, 3, 8, 12, null)))))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.dias[0].exercicios[0].drops").value(2))
-				.andExpect(jsonPath("$.dias[0].exercicios[1].drops").value(0)) // ausente vale 0
+				.andExpect(jsonPath("$.dias[0].exercicios[1].drops").value(0))
 				.andReturn().getResponse().getContentAsString(), "$.id");
 		mvc.perform(get("/api/planos/" + id)).andExpect(jsonPath("$.dias[0].exercicios[0].drops").value(2));
 
@@ -195,8 +195,6 @@ class PlanoApiTest {
 		mvc.perform(delete("/api/planos/" + ativo)).andExpect(status().isNoContent());
 		mvc.perform(get("/api/planos/" + maisRecente)).andExpect(jsonPath("$.ativo").value(true));
 	}
-
-	// --- helpers ---
 
 	private String criarExercicio(String nome) throws Exception {
 		String resposta = mvc.perform(post("/api/exercicios").contentType(MediaType.APPLICATION_JSON)

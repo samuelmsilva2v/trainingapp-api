@@ -31,10 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 
-/**
- * Na web o refresh token vai e volta so no cookie HttpOnly (path /api/auth) e o corpo traz so o access token. O app
- * Android (header {@value #CLIENTE}: android) nao tem o cookie: recebe o refresh no corpo do login e o manda no corpo.
- */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -52,7 +48,6 @@ public class AuthController {
 
 	@GetMapping("/config")
 	public AuthConfigResponse config() {
-		// Sem o segredo o login com Google nao funciona, entao o front nem mostra o botao.
 		return new AuthConfigResponse(props.googleConfigurado() ? props.googleClientId() : "");
 	}
 
@@ -80,7 +75,6 @@ public class AuthController {
 		return entregar(auth.entrarComGoogle(request.codigo(), http.getRemoteAddr()), cliente);
 	}
 
-	/** App Android: o ID token do Credential Manager, ja que o popup do Google nao abre em WebView. */
 	@PostMapping("/google/token")
 	public ResponseEntity<AcessoResponse> entrarComGoogleIdToken(@Valid @RequestBody GoogleTokenRequest request,
 			HttpServletRequest http, @RequestHeader(name = CLIENTE, required = false) String cliente) {
@@ -91,11 +85,10 @@ public class AuthController {
 	public ResponseEntity<AcessoResponse> renovar(@CookieValue(name = COOKIE, required = false) String refresh,
 			@Valid @RequestBody(required = false) RefreshRequest corpo) {
 		if (refresh == null) {
-			// App Android: o refresh vem no corpo e continua o mesmo (nao rotaciona), entao nao ha o que devolver alem do acesso.
 			return ResponseEntity.ok(auth.renovar(corpo == null ? null : corpo.refresh()));
 		}
 		AcessoResponse acesso = auth.renovar(refresh);
-		// Reenvia o mesmo cookie com 1 ano novo: o navegador o apagaria no fim do prazo original.
+		// Reenvia o cookie com prazo novo: o navegador o apagaria no fim do prazo original.
 		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie(refresh, AuthService.REFRESH_VALIDADE).toString()).body(acesso);
 	}
 

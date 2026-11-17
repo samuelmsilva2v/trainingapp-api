@@ -17,7 +17,6 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Link de uso unico enviado por e-mail (confirmar cadastro ou redefinir senha); so o hash fica no banco. */
 @Entity
 @Table(name = "token_email")
 @Getter

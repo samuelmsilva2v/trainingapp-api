@@ -24,7 +24,6 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Pesagens do usuario, uma por dia. Retroativo e permitido; data futura (no fuso do sistema) nao. */
 @RestController
 @RequestMapping("/api/peso")
 public class PesoController {

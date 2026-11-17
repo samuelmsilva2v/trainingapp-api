@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** Exercicio dentro da sessao, com o snapshot da meta do plano e as series realmente feitas. */
 @Entity
 @Table(name = "exercicio_sessao")
 @Getter

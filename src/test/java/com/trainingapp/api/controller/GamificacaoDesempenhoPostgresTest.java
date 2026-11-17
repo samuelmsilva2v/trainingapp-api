@@ -31,11 +31,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Criterio de desempenho da api#36: com 1.000 treinos de 30 series (uns 4 anos de uso), o {@code GET /api/gamificacao},
- * que agora le o historico inteiro para a fatia 2 das conquistas, responde em menos de 200 ms num Postgres real. Se um dia
- * passar disso, a fatia 2 passa a ser gravada ao concluir. Ignorado sem Docker.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -69,7 +64,7 @@ class GamificacaoDesempenhoPostgresTest {
 		}
 		semear(exercicios);
 
-		mvc.perform(get("/api/gamificacao")).andExpect(status().isOk()); // aquece (JIT, cache de consultas)
+		mvc.perform(get("/api/gamificacao")).andExpect(status().isOk());
 		mvc.perform(get("/api/gamificacao")).andExpect(status().isOk());
 		long melhor = Long.MAX_VALUE;
 		for (int i = 0; i < 5; i++) {
@@ -82,7 +77,6 @@ class GamificacaoDesempenhoPostgresTest {
 		assertThat(melhor).isLessThan(LIMITE_MS);
 	}
 
-	/** 1.000 treinos concluidos em dias seguidos, cada um com o evento SERIES que o torna valido. */
 	private void semear(List<UUID> exercicios) {
 		UUID usuario = UUID.fromString(UsuarioDeTeste.ID);
 		Instant base = Instant.now().minus(TREINOS + 1, ChronoUnit.DAYS);

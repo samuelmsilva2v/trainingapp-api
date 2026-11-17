@@ -20,10 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Um treino executado. O id vem do cliente (upsert idempotente) e os nomes e metas sao um
- * snapshot: editar ou excluir o plano nao altera o historico.
- */
 @Entity
 @Table(name = "sessao", uniqueConstraints = @UniqueConstraint(columnNames = "andamento_usuario_id"))
 @Getter
@@ -37,7 +33,7 @@ public class Sessao {
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private Usuario usuario;
 
-	// Sem chave estrangeira: o plano pode ser excluido e a sessao continua valida.
+	// Sem FK: o plano pode ser excluido e o historico continua.
 	private UUID planoId;
 
 	@Column(nullable = false, length = 100)
@@ -53,7 +49,7 @@ public class Sessao {
 	@Column(nullable = false, length = 20)
 	private EstadoSessao estado;
 
-	// Id do usuario so enquanto EM_ANDAMENTO; a chave unica garante uma sessao em andamento por usuario.
+	// Preenchido so EM_ANDAMENTO: a chave unica garante uma sessao em andamento por usuario.
 	@Column(name = "andamento_usuario_id")
 	private UUID andamentoUsuarioId;
 
@@ -62,7 +58,6 @@ public class Sessao {
 
 	private Instant finalizadaEm;
 
-	// Relogio do cliente: o ultimo a escrever vence.
 	@Column(nullable = false)
 	private Instant atualizadoEm;
 

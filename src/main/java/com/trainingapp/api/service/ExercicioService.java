@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class ExercicioService {
 
-	/** Teto de exercicios proprios por conta: com o cadastro aberto, um POST em laco nao incha o banco. */
 	public static final int LIMITE_POR_USUARIO = 200;
 
 	private final ExercicioRepository repository;
@@ -59,10 +58,6 @@ public class ExercicioService {
 		return ExercicioResponse.de(repository.save(exercicio), imagens);
 	}
 
-	/**
-	 * Os exercicios citados, garantindo que cada um e do catalogo ou do proprio usuario (nunca o exercicio proprio de
-	 * outra conta). Usado por planos e sessoes: e esta checagem que isola os exercicios entre usuarios.
-	 */
 	@Transactional(readOnly = true)
 	public Map<UUID, Exercicio> disponiveis(Collection<UUID> ids, Usuario usuario) {
 		Map<UUID, Exercicio> encontrados = repository.findAllById(ids).stream()
@@ -76,7 +71,6 @@ public class ExercicioService {
 		return encontrados;
 	}
 
-	// Busca ignora acento e caixa: "agachamento" acha "Agachamento", "triceps" acha "Tríceps".
 	private static String normalizar(String texto) {
 		return Normalizer.normalize(texto, Normalizer.Form.NFD)
 				.replaceAll("\\p{M}", "")

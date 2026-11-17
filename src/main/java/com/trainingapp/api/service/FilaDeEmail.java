@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 
-/** Entrada da fila de e-mails: grava na transacao de quem chama, entao o e-mail so existe se a operacao for confirmada. */
 @Service
 public class FilaDeEmail {
 
@@ -25,7 +24,6 @@ public class FilaDeEmail {
 		enfileirar(destinatario, assunto, corpo, null);
 	}
 
-	/** {@code responderPara} vai no Reply-To (nulo = sem). */
 	@Transactional
 	public void enfileirar(String destinatario, String assunto, String corpo, String responderPara) {
 		EmailPendente email = new EmailPendente();

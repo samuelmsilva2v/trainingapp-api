@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/** As regras de unicidade valem no banco, nao so na checagem de leitura (corrida entre dois envios). */
 @SpringBootTest
 @ActiveProfiles("test")
 @WithMockUser(username = UsuarioDeTeste.ID)

@@ -16,12 +16,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * Esvazia a fila de e-mails: envia por SMTP e, se falhar, tenta de novo com espera crescente (1, 2, 4 e 8 min) ate
- * {@value #MAX_TENTATIVAS} vezes. So liga com {@code spring.mail.host} definido. O SMTP nunca roda dentro de uma
- * transacao aberta: cada {@code save} abre a sua.
- * shortcut: assume uma unica instancia da API; com varias, dois workers poderiam enviar o mesmo e-mail (usar SKIP LOCKED).
- */
+// shortcut: assume uma unica instancia da API; com varias, dois workers poderiam enviar o mesmo e-mail (usar SKIP LOCKED).
 @Component
 @ConditionalOnProperty("spring.mail.host")
 public class EmailWorker {
@@ -60,7 +55,7 @@ public class EmailWorker {
 				mensagem.setText(email.getCorpo());
 				mailSender.send(mensagem);
 				email.setEnviadoEm(Instant.now(relogio));
-				email.setCorpo(""); // o corpo carrega o link com o token: nao fica no banco depois de enviado
+				email.setCorpo("");
 				email.setErro(null);
 			}
 			catch (RuntimeException e) {

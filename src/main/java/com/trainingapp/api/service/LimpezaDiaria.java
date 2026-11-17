@@ -13,10 +13,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
-/**
- * Apaga, uma vez por dia, o que nao serve mais: e-mails da fila com mais de {@link #RETENCAO_EMAIL} (enviados ou que
- * esgotaram as tentativas, ainda com o link no corpo), links de e-mail vencidos e logins sem uso alem da validade.
- */
 @Component
 public class LimpezaDiaria {
 

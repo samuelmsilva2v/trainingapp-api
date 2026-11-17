@@ -59,7 +59,6 @@ class PerfilApiTest {
 				.andExpect(status().isOk());
 		mvc.perform(get("/api/perfil")).andExpect(jsonPath("$.lembretePesoDias").value(15));
 
-		// Campo ausente vira nulo: lembrete desligado.
 		mvc.perform(put("/api/perfil").contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Samuel\"}"))
 				.andExpect(jsonPath("$.lembretePesoDias").isEmpty());
 	}
@@ -76,8 +75,6 @@ class PerfilApiTest {
 				.content("{\"nome\":\" \"}"))
 				.andExpect(status().isBadRequest());
 	}
-
-	// --- foto do perfil (api#48) ---
 
 	static final byte[] JPEG = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 1, 2, 3 };
 	static final byte[] PNG = { (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 9 };

@@ -76,7 +76,6 @@ class LimpezaDiariaTest {
 		assertThat(refreshTokens.existsById(loginEmUso)).isTrue();
 	}
 
-	// criadoEm e preenchido pelo Hibernate e nao muda pelo save: a data antiga entra por um update direto.
 	private UUID email(Instant criadoEm) {
 		EmailPendente e = new EmailPendente();
 		e.setDestinatario("maria@teste.com");

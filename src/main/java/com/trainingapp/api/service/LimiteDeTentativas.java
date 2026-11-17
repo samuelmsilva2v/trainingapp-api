@@ -9,10 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Freio simples contra forca bruta: {@value #MAXIMO} tentativas por chave dentro de 15 minutos bloqueiam a chave por 15 minutos.
- * shortcut: contador em memoria, vale para uma instancia so e zera ao reiniciar; com mais de uma instancia, mover para o banco ou Redis.
- */
+// shortcut: contador em memoria, vale para uma instancia so e zera ao reiniciar; com mais de uma, mover para o banco ou Redis.
 @Component
 public class LimiteDeTentativas {
 
@@ -33,11 +30,7 @@ public class LimiteDeTentativas {
 		tentar(chave, MAXIMO);
 	}
 
-	/**
-	 * Conta uma tentativa e responde 429 se a chave ja esta bloqueada; na {@code maximo}-esima, bloqueia as seguintes.
-	 * Quem chama conta ANTES de conferir a senha e chama {@link #limpar} se acertar: checar primeiro e contar so depois
-	 * (o bcrypt demora) deixaria uma rajada de requisicoes paralelas passar toda pela checagem.
-	 */
+	// Conta antes de conferir a senha: checar e contar depois deixaria uma rajada paralela passar.
 	public void tentar(String chave, int maximo) {
 		Instant agora = Instant.now(relogio);
 		if (contagens.size() > 10_000) {

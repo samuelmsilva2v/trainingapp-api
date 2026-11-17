@@ -52,7 +52,7 @@ class ConquistasTest {
 		}
 		assertThat(lista).filteredOn(ConquistaResponse::oculta).extracting(ConquistaResponse::codigo)
 				.containsExactlyInAnyOrder("MADRUGADOR", "CORUJA", "ANO_NOVO");
-		assertThat(lista).hasSize(25 + 17 + 6) // fatia 1 (25 faixas) + fatia 2 (17) + peso corporal (6)
+		assertThat(lista).hasSize(25 + 17 + 6)
 				.extracting(ConquistaResponse::codigo).doesNotHaveDuplicates();
 	}
 }

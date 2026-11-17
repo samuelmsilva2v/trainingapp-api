@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.Instant;
 
-/** Foto propria do perfil (api#48): enviar vira PROPRIA, remover volta a PADRAO e nao ha volta a foto do Google. */
 @Service
 @Transactional
 public class FotosDePerfil {
@@ -55,7 +54,6 @@ public class FotosDePerfil {
 		return fotos.findById(usuario.getId()).orElseThrow(() -> new RecursoNaoEncontradoException("Sem foto própria"));
 	}
 
-	/** Pelo começo dos bytes, nao pelo Content-Type de quem enviou. */
 	static String formato(byte[] b) {
 		if (comeca(b, 0, 0xFF, 0xD8, 0xFF)) return "image/jpeg";
 		if (comeca(b, 0, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)) return "image/png";

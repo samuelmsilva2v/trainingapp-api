@@ -6,10 +6,6 @@ import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Desafios semanais fixos (api#38): os mesmos toda semana ISO (segunda a domingo), contando so treinos validos. O XP vai
- * num evento DESAFIO com o codigo {@code <desafio>:<ano>-W<semana>}, que a chave unica de xp_event credita uma vez.
- */
 final class Desafios {
 
 	private Desafios() {
@@ -35,21 +31,15 @@ final class Desafios {
 		return !data.isBefore(inicioDaSemana(dia)) && !data.isAfter(fimDaSemana(dia));
 	}
 
-	/** Codigo do evento: o do desafio e a semana ISO, ex.: TRES_TREINOS:2026-W44. */
 	static String codigo(Desafio d, LocalDate dia) {
 		return "%s:%d-W%02d".formatted(d.codigo(), dia.get(IsoFields.WEEK_BASED_YEAR), dia.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
 	}
 
-	/** O desafio de um codigo de evento (a parte antes da semana); null se nao for de desafio. */
 	static Desafio deCodigo(String codigoDoEvento) {
 		String base = codigoDoEvento.split(":")[0];
 		return TODOS.stream().filter(d -> d.codigo().equals(base)).findFirst().orElse(null);
 	}
 
-	/**
-	 * Progresso do desafio na semana de {@code dia}, ate a meta. "2 dias seguidos" sao dias de calendario consecutivos com
-	 * os dois dentro da semana: domingo e a segunda seguinte nao contam juntos.
-	 */
 	static int progresso(Desafio d, Set<LocalDate> diasDeTreino, int recordesNaSemana, LocalDate dia) {
 		int valor = switch (d.codigo()) {
 			case "TRES_TREINOS" -> (int) diasDeTreino.stream().filter(t -> naSemana(t, dia)).count();

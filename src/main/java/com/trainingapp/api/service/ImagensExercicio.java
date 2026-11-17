@@ -6,11 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * URLs das fotos de um exercicio do catalogo (posicao inicial e final). O free-exercise-db guarda as fotos em
- * {@code <slug>/0.jpg} e {@code <slug>/1.jpg}; a base fica em configuracao para trocar de hospedagem sem mexer no codigo.
- * Exercicio do usuario (sem slug) nao tem foto.
- */
 @Component
 public class ImagensExercicio {
 

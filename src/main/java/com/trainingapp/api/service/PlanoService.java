@@ -22,7 +22,6 @@ import java.util.UUID;
 @Transactional
 public class PlanoService {
 
-	/** Teto de planos por conta: com o cadastro aberto, um POST em laco nao incha o banco. */
 	public static final int LIMITE_POR_USUARIO = 50;
 
 	private final PlanoRepository planos;
@@ -57,7 +56,6 @@ public class PlanoService {
 		}
 		Plano plano = new Plano();
 		plano.setUsuario(usuario);
-		// O primeiro plano do usuario ja nasce ativo.
 		plano.setAtivo(!planos.existsByUsuarioIdAndAtivoTrue(usuario.getId()));
 		aplicar(plano, request, usuario);
 		return PlanoResponse.de(planos.save(plano), imagens);
