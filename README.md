@@ -2,6 +2,12 @@
 
 Backend do **TrainingApp**, um app de treino para registrar séries, repetições e cargas, com elementos de gamificação (pontos, conquistas, streaks).
 
+O front fica em [trainingapp-web](https://github.com/samuelmsilva2v/trainingapp-web), que tem os prints de todas as telas. Alguns deles:
+
+| Hoje | Treino em andamento | Resultado (XP e recordes) | Histórico |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/prints/02-hoje.png" width="160" alt="Tela Hoje com o próximo treino da rotação"> | <img src="docs/prints/06-treino.png" width="160" alt="Execução do treino com descanso"> | <img src="docs/prints/08-resultado.png" width="160" alt="XP, recordes e conquistas do treino"> | <img src="docs/prints/09-historico.png" width="160" alt="Histórico de treinos"> |
+
 ## Stack
 
 - Java 21
