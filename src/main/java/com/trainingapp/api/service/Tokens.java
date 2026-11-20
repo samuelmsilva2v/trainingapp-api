@@ -15,7 +15,12 @@ final class Tokens {
 	}
 
 	static String novo() {
-		byte[] bytes = new byte[32];
+		return novo(32);
+	}
+
+	/** Token aleatorio em base64url: {@code bytes} bytes viram {@code ceil(bytes * 4 / 3)} caracteres. */
+	static String novo(int tamanhoEmBytes) {
+		byte[] bytes = new byte[tamanhoEmBytes];
 		ALEATORIO.nextBytes(bytes);
 		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}

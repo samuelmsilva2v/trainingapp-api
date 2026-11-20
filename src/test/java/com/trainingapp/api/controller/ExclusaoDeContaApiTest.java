@@ -11,6 +11,7 @@ import com.trainingapp.api.repository.ExercicioRepository;
 import com.trainingapp.api.repository.FeedbackRepository;
 import com.trainingapp.api.repository.FotoPerfilRepository;
 import com.trainingapp.api.repository.PesoRegistroRepository;
+import com.trainingapp.api.repository.PlanoCompartilhadoRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
 import com.trainingapp.api.repository.SessaoRepository;
@@ -85,6 +86,8 @@ class ExclusaoDeContaApiTest {
 	FeedbackRepository feedbacks;
 	@Autowired
 	FotoPerfilRepository fotos;
+	@Autowired
+	PlanoCompartilhadoRepository compartilhados;
 
 	@MockitoBean
 	VerificadorGoogle google;
@@ -106,6 +109,7 @@ class ExclusaoDeContaApiTest {
 		assertThat(refreshTokens.findAll()).isNotEmpty();
 		assertThat(feedbacks.findAll()).hasSize(1);
 		assertThat(fotos.findById(maria.usuarioId())).isPresent();
+		assertThat(compartilhados.findAll()).hasSize(1);
 		assertThat(emails.findAll().stream().filter(e -> EMAIL.equals(e.getResponderPara()))).hasSize(1);
 
 		excluir(maria, "{\"senha\":\"" + SENHA + "\"}").andExpect(status().isNoContent())
@@ -123,6 +127,7 @@ class ExclusaoDeContaApiTest {
 		assertThat(emails.findAll().stream().filter(e -> EMAIL.equals(e.getResponderPara()))).isEmpty();
 		assertThat(feedbacks.findAll()).isEmpty();
 		assertThat(fotos.findById(maria.usuarioId())).isEmpty();
+		assertThat(compartilhados.findAll()).isEmpty();
 		assertThat(exercicios.findById(global.getId())).isPresent();
 		assertThat(exercicios.findById(deOutro.getId())).isPresent();
 		assertThat(usuarios.findById(UUID.fromString(UsuarioDeTeste.ID))).isPresent();
@@ -223,6 +228,7 @@ class ExclusaoDeContaApiTest {
 		String plano = JsonPath.read(comToken(s, MockMvcRequestBuilders.post("/api/planos"),
 				"{\"nome\":\"ABC\",\"objetivo\":\"HIPERTROFIA\",\"dias\":[{\"nome\":\"Treino A\",\"exercicios\":[%s]}]}".formatted(item))
 				.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+		comToken(s, MockMvcRequestBuilders.post("/api/planos/" + plano + "/compartilhar"), "").andExpect(status().isCreated());
 		Instant inicio = Instant.now().minus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.SECONDS);
 		UUID sessao = UUID.randomUUID();
 		String series = String.join(",", serie(), serie(), serie());

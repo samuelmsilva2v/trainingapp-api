@@ -6,6 +6,7 @@ import com.trainingapp.api.repository.ExercicioRepository;
 import com.trainingapp.api.repository.FeedbackRepository;
 import com.trainingapp.api.repository.FotoPerfilRepository;
 import com.trainingapp.api.repository.PesoRegistroRepository;
+import com.trainingapp.api.repository.PlanoCompartilhadoRepository;
 import com.trainingapp.api.repository.PlanoRepository;
 import com.trainingapp.api.repository.RefreshTokenRepository;
 import com.trainingapp.api.repository.SessaoRepository;
@@ -33,11 +34,13 @@ public class ExclusaoDeConta {
 	private final UsuarioRepository usuarios;
 	private final EntityManager em;
 	private final FotoPerfilRepository fotos;
+	private final PlanoCompartilhadoRepository compartilhados;
 
 	public ExclusaoDeConta(XpEventRepository xp, SessaoRepository sessoes, PlanoRepository planos, ExercicioRepository exercicios,
 			PesoRegistroRepository pesos, RefreshTokenRepository refreshTokens, TokenEmailRepository tokensEmail,
 			EmailPendenteRepository emails, FeedbackRepository feedbacks, UsuarioRepository usuarios, EntityManager em,
-			FotoPerfilRepository fotos) {
+			FotoPerfilRepository fotos, PlanoCompartilhadoRepository compartilhados) {
+		this.compartilhados = compartilhados;
 		this.xp = xp;
 		this.sessoes = sessoes;
 		this.planos = planos;
@@ -68,6 +71,7 @@ public class ExclusaoDeConta {
 		emails.deleteByResponderPara(usuario.getEmail());
 		feedbacks.deleteByUsuarioId(id);
 		fotos.deleteById(id);
+		compartilhados.deleteByUsuarioId(id);
 		em.flush();
 		usuarios.delete(usuario);
 	}
