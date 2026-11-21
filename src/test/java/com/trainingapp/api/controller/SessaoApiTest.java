@@ -237,6 +237,16 @@ class SessaoApiTest {
 	}
 
 	@Test
+	void editarTreinoJaEncerradoEmOutroAparelhoDa409ComOTreinoEncerrado() throws Exception {
+		UUID sessao = UUID.randomUUID();
+		concluir(sessao, 0, "Treino A");
+
+		salvar(sessao, "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), 8, "60", true))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.estado").value("CONCLUIDA"));
+	}
+
+	@Test
 	void soUmaSessaoEmAndamentoPorVez() throws Exception {
 		salvar(UUID.randomUUID(), "EM_ANDAMENTO", agora(), null, serie(UUID.randomUUID(), null, null, false))
 				.andExpect(status().isOk());

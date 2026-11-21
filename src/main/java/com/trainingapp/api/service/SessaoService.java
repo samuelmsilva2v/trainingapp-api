@@ -141,6 +141,10 @@ public class SessaoService {
 		}
 		if (existente != null) {
 			if (existente.getEstado() != EstadoSessao.EM_ANDAMENTO) {
+				// Reenviar o encerramento e idempotente; seguir editando um treino ja encerrado (em outro aparelho) perderia as series.
+				if (request.estado() == EstadoSessao.EM_ANDAMENTO) {
+					throw new SessaoDesatualizadaException(resposta(existente));
+				}
 				return resposta(existente);
 			}
 			if (request.atualizadoEm().isBefore(existente.getAtualizadoEm())) {
