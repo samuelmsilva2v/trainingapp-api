@@ -6,8 +6,12 @@ import com.trainingapp.api.model.Objetivo;
 
 import java.util.List;
 
-/** A previa do plano que chegou por link; {@code compartilhadoPor} e o nome do perfil de quem gerou (nulo sem nome). */
-public record PlanoCompartilhadoResponse(String nome, Objetivo objetivo, String compartilhadoPor, List<DiaResponse> dias) {
+/**
+ * A previa do plano que chegou por link; {@code compartilhadoPor} e o primeiro nome do perfil de quem gerou (nulo sem
+ * nome) e {@code seu} diz se quem abriu e o proprio dono do link.
+ */
+public record PlanoCompartilhadoResponse(String nome, Objetivo objetivo, String compartilhadoPor, boolean seu,
+		List<DiaResponse> dias) {
 
 	public record DiaResponse(String nome, List<ItemResponse> exercicios) {
 	}

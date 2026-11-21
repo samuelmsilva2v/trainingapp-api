@@ -97,8 +97,11 @@ public class CompartilhamentoDePlano {
 		PlanoCompartilhado compartilhado = buscar(token);
 		Dados dados = ler(compartilhado);
 		Map<UUID, Exercicio> catalogo = porId(idsDoCatalogo(dados));
+		// Só o primeiro nome: o link pode chegar a qualquer pessoa, e o nome completo nem sai do servidor.
 		String nome = compartilhado.getUsuario().getNome();
-		return new PlanoCompartilhadoResponse(dados.nome(), dados.objetivo(), nome == null || nome.isBlank() ? null : nome,
+		String primeiroNome = nome == null || nome.isBlank() ? null : nome.trim().split("\\s+")[0];
+		boolean seu = compartilhado.getUsuario().getId().equals(usuarioAtual.obter().getId());
+		return new PlanoCompartilhadoResponse(dados.nome(), dados.objetivo(), primeiroNome, seu,
 				dados.dias().stream()
 						.map(d -> new PlanoCompartilhadoResponse.DiaResponse(d.nome(), d.exercicios().stream()
 								.map(i -> new PlanoCompartilhadoResponse.ItemResponse(i.nome(), i.grupoMuscular(), i.equipamento(),

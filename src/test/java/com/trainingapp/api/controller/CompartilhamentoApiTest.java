@@ -77,6 +77,20 @@ class CompartilhamentoApiTest {
 	}
 
 	@Test
+	void previaMostraSoOPrimeiroNomeEDizSeQuemAbriuEhODono() throws Exception {
+		Usuario dono = usuarios.findById(UUID.fromString(UsuarioDeTeste.ID)).orElseThrow();
+		dono.setNome("  Lucas Almeida Souza ");
+		usuarios.save(dono);
+		String token = compartilhar();
+
+		mvc.perform(get("/api/compartilhados/" + token).with(outro))
+				.andExpect(jsonPath("$.compartilhadoPor").value("Lucas"))
+				.andExpect(jsonPath("$.seu").value(false));
+		mvc.perform(get("/api/compartilhados/" + token))
+				.andExpect(jsonPath("$.seu").value(true));
+	}
+
+	@Test
 	void outraPessoaVeAPreviaESalvaUmaCopiaSemCargaComOExercicioProprioCopiado() throws Exception {
 		String token = compartilhar();
 		// Editar o original depois de gerar nao muda o link.
