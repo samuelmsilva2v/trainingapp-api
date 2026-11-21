@@ -166,6 +166,16 @@ class PlanoApiTest {
 	}
 
 	@Test
+	void objetivoEhOpcional() throws Exception {
+		String supino = criarExercicio("Supino");
+		String corpo = "{\"nome\":\"Sem objetivo\",\"dias\":[{\"nome\":\"A\",\"exercicios\":[%s]}]}"
+				.formatted(item(supino, 3, 8, 12, null));
+		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON).content(corpo))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.objetivo").doesNotExist());
+	}
+
+	@Test
 	void corpoInvalidoRetorna400() throws Exception {
 		mvc.perform(post("/api/planos").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"nome\":\"\",\"objetivo\":\"FORCA\",\"dias\":[]}"))

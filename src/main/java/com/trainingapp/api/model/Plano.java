@@ -41,7 +41,8 @@ public class Plano {
 	private String nome;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 30)
+	/** Opcional (V13): nulo quando a pessoa não escolheu um objetivo. */
+	@Column(length = 30)
 	private Objetivo objetivo;
 
 	@Column(nullable = false)

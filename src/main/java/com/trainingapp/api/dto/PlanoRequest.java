@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public record PlanoRequest(
 		@NotBlank @Size(max = 100) String nome,
-		@NotNull Objetivo objetivo,
+		Objetivo objetivo,
 		@NotEmpty @Size(max = 14) @Valid List<DiaRequest> dias) {
 
 	public record DiaRequest(
