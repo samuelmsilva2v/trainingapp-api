@@ -225,6 +225,11 @@ public class GamificacaoService {
 	}
 
 	@Transactional(readOnly = true)
+	public int nivel(Usuario usuario) {
+		return Regras.nivel(eventos.findByUsuarioId(usuario.getId()).stream().mapToLong(XpEvent::getPontos).sum());
+	}
+
+	@Transactional(readOnly = true)
 	public GamificacaoResponse resumo() {
 		Usuario usuario = usuarioAtual.obter();
 		List<XpEvent> todos = eventos.findByUsuarioId(usuario.getId());

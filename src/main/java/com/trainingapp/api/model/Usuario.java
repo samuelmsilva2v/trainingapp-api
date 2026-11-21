@@ -40,6 +40,10 @@ public class Usuario {
 
 	private Integer lembretePesoDias;
 
+	/** Nulo = a conta nunca escolheu; o app fica com o tema do aparelho. */
+	@Column(length = 30)
+	private String tema;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 10)
 	private FotoTipo fotoTipo = FotoTipo.PADRAO;

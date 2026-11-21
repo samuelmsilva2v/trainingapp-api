@@ -76,7 +76,47 @@ class PerfilApiTest {
 				.andExpect(status().isBadRequest());
 	}
 
-	static final byte[] JPEG = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 1, 2, 3 };
+	@Autowired
+	com.trainingapp.api.repository.XpEventRepository eventos;
+
+	@Autowired
+	com.trainingapp.api.repository.UsuarioRepository usuarios;
+
+	@Test
+	void temaLivreFicaNaConta() throws Exception {
+		mvc.perform(get("/api/perfil")).andExpect(jsonPath("$.tema").isEmpty());
+		mvc.perform(put("/api/perfil/tema").contentType(MediaType.APPLICATION_JSON).content("{\"tema\":\"claro\"}"))
+				.andExpect(status().isOk());
+		mvc.perform(get("/api/perfil")).andExpect(jsonPath("$.tema").value("claro"));
+	}
+
+	@Test
+	void temaTravadoRetorna422ELiberadoPeloNivelPassa() throws Exception {
+		mvc.perform(put("/api/perfil/tema").contentType(MediaType.APPLICATION_JSON).content("{\"tema\":\"chrome\"}"))
+				.andExpect(status().isUnprocessableContent());
+
+		// Nível 5 = 100 × 5^1,5 ≈ 1.118 XP.
+		com.trainingapp.api.model.XpEvent e = new com.trainingapp.api.model.XpEvent();
+		e.setUsuario(usuarios.getReferenceById(java.util.UUID.fromString(UsuarioDeTeste.ID)));
+		e.setSessaoId(java.util.UUID.randomUUID());
+		e.setTipo(com.trainingapp.api.model.TipoXp.SERIES);
+		e.setPontos(1200);
+		e.setDia(java.time.LocalDate.of(2026, 10, 1));
+		e.setDiaUnico(java.time.LocalDate.of(2026, 10, 1));
+		eventos.save(e);
+
+		mvc.perform(put("/api/perfil/tema").contentType(MediaType.APPLICATION_JSON).content("{\"tema\":\"chrome\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.tema").value("chrome"));
+	}
+
+	@Test
+	void temaDesconhecidoRetorna400() throws Exception {
+		mvc.perform(put("/api/perfil/tema").contentType(MediaType.APPLICATION_JSON).content("{\"tema\":\"rosa\"}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	static final byte[] JPEG ={ (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 1, 2, 3 };
 	static final byte[] PNG = { (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 9 };
 	static final byte[] WEBP = { 'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P', 9 };
 
